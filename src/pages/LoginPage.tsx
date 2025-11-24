@@ -53,12 +53,12 @@ const styles = {
     fontWeight: 'bold',
     marginLeft: '10px',
   },
-  // 이미지의 짙은 네이비 버튼 스타일
+  // 짙은 네이비 버튼 스타일
   loginBtn: {
     width: '100%',
     maxWidth: '400px',
     height: '60px',
-    backgroundColor: '#1f253b', // 이미지와 유사한 다크 네이비
+    backgroundColor: '#1f253b', //다크 네이비
     color: '#fff',
     border: 'none',
     fontSize: '16px',
@@ -74,7 +74,7 @@ const styles = {
   },
   btnText: {
     flex: 1,
-    textAlign: 'center' as const, // 텍스트는 중앙에 오도록 꼼수
+    textAlign: 'center' as const, // 텍스트는 중앙에 오도록
     marginLeft: '24px', // 화살표 크기만큼 밀어서 시각적 중앙 정렬
   },
 };
@@ -90,7 +90,7 @@ const LoginPage: React.FC = () => {
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault(); // 폼 전송 방지
 
-    // 1. 유효성 검사 (간단히)
+    // 1. 유효성 검사 (비어 있는지만)
     if (!username || !password) {
       alert('아이디와 비밀번호를 입력해주세요.');
       return;
@@ -111,7 +111,7 @@ const LoginPage: React.FC = () => {
     // localStorage.setItem('token', 'fake-jwt-token'); 
     
     alert(`환영합니다, ${username}님! 대시보드로 이동합니다.`);
-    navigate('/dashboard'); // 대시보드로 이동
+    navigate('/dashboard'); // 로그인시 대시보드로 이동
   };
 
   return (

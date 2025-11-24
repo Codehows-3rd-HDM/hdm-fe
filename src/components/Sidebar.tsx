@@ -86,19 +86,9 @@ const styles = {
 const Sidebar: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation(); // 현재 경로 확인용
-
-  // 기존 코드의 로직 유지: '닫힌 상태'를 관리 (Set 사용)
-  // 초기값을 빈 Set으로 하면 기본적으로 다 열려있게 됨.
-  // 이미지처럼 처음에 닫혀있길 원하면 초기값 세팅 로직을 수정해야 함.
-  // 여기서는 사용자 요청대로 '기존 코드(닫힌거 관리)' 방식을 따르되, 
-  // UX상 보통 닫혀있는게 기본이므로 로직을 살짝 뒤집거나, 
-  // 특정 메뉴만 열어두는 방식을 추천합니다. 
-  // -> 여기서는 사용자가 준 코드대로 "Set에 있으면 닫힘(즉 기본 열림)"으로 유지하되
-  //    초기에 모든 메뉴를 닫아두는 로직을 추가했습니다.
   
   const [closedDepth1, setClosedDepth1] = useState<Set<string>>(() => {
-    // 초기화: 모든 메뉴를 닫힌 상태로 시작하려면 모든 title을 Set에 넣어야 함
-    // 편의상 여기서는 '배출량 조회'와 '관리자 설정'을 닫아두는 예시로 작성
+    // 여기 Set에 넣으면 그 항목을 닫은 채로 시작
     return new Set(['관리자 설정']); 
   });
 
@@ -134,12 +124,9 @@ const Sidebar: React.FC = () => {
 
   return (
     <div style={styles.container}>
-      {/* 로고 영역 (이미지와 비슷하게) */}
+      {/* 로고 영역 */}
       <div style={styles.logoArea}>
-         {/* 실제 로고 이미지 경로로 교체하세요. 텍스트로 대체함 */}
          <img src="/rogo.png" alt="HDM Logo" style={{ maxWidth: '220px' }} />
-         {/* 이미지가 없다면 아래 텍스트 사용 */}
-         {/* <h2 style={{color: '#002c5f', margin: 0, fontSize: '20px', fontStyle: 'italic'}}>HDM</h2> */}
       </div>
 
       {menuItems.map((depth1) => {
@@ -185,11 +172,10 @@ const Sidebar: React.FC = () => {
     <div key={depth2Key}>
       {/* --- Level 2 --- */}
       <div
-        // [수정] 위에서 만든 스타일 함수에 isHighlight2 전달
+        //위에서 만든 스타일 함수에 isHighlight2 전달
         style={styles.depth2Item(isHighlight2)} 
         onClick={() => handleToggleDepth2(depth2Key, hasSub2, depth2.path)}
       >
-        {/* 물결 아이콘 색상도 활성화되면 파란색으로 변경하면 더 예쁩니다 */}
         <span style={{ 
             marginRight: '8px', 
             color: isHighlight2 ? '#007bff' : '#b0b0b0', // 여기도 조건부 색상 적용

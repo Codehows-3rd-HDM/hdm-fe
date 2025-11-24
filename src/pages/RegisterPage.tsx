@@ -86,7 +86,7 @@ const styles = {
   submitBtn: {
     width: '100%',
     height: '50px',
-    backgroundColor: '#4a9d9c', // 이미지의 청록색 계열
+    backgroundColor: '#4a9d9c', //청록색 계열
     color: '#fff',
     border: 'none',
     fontSize: '16px',
