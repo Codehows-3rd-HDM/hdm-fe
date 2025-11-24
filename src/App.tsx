@@ -1,6 +1,8 @@
 import React from 'react';
-import { BrowserRouter, Routes, Route, Outlet, useLocation } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Outlet, useLocation, Navigate } from 'react-router-dom';
 import Sidebar from './components/Sidebar';
+import RegisterPage from './pages/RegisterPage';
+import LoginPage from './pages/LoginPage';
 
 // [임시] 페이지가 없을 때 보여줄 플레이스홀더 컴포넌트
 const PagePlaceholder = ({ title }: { title: string }) => {
@@ -34,15 +36,15 @@ const App: React.FC = () => {
   return (
     <BrowserRouter>
       <Routes>
-        {/* 로그인/회원가입 등 사이드바가 없는 페이지가 있다면 MainLayout 밖에 정의 */}
-        <Route path="/login" element={<PagePlaceholder title="로그인 페이지" />} />
+        {/* 로그인 등 사이드바가 없는 페이지가 있다면 MainLayout 밖에 정의 */}
+        <Route path="/" element={<Navigate to="/login" replace />} />
+        <Route path="/login" element={<LoginPage />} />
 
         {/* 사이드바가 포함된 메인 레이아웃 */}
-        <Route path="/" element={<MainLayout />}>
+        <Route element={<MainLayout />}>
           
           {/* 1. 대시보드 (HDM-001) */}
           <Route path="dashboard" element={<PagePlaceholder title="통합 대시보드" />} />
-          <Route index element={<PagePlaceholder title="통합 대시보드" />} /> {/* 기본 경로 */}
 
           {/* 2. 배출량 조회 그룹 */}
           <Route path="emissions">
@@ -85,7 +87,7 @@ const App: React.FC = () => {
           </Route>
 
           {/* 5. 계정 */}
-          <Route path="register" element={<PagePlaceholder title="계정 등록" />} />
+          <Route path="register" element={<RegisterPage/>} />
         </Route>
       </Routes>
     </BrowserRouter>
