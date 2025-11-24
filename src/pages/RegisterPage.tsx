@@ -157,7 +157,7 @@ const RegisterPage: React.FC = () => {
         <User size={20} style={styles.icon} />
         <input
           type="text"
-          placeholder="Johnson Doe"
+          placeholder="병재 강"
           style={styles.input}
           value={username}
           onChange={(e) => setUsername(e.target.value)}
@@ -169,7 +169,7 @@ const RegisterPage: React.FC = () => {
         <Lock size={20} style={styles.icon} />
         <input
           type={showPassword ? "text" : "password"}
-          placeholder="********"
+          placeholder="****"
           style={styles.input}
           value={password}
           onChange={(e) => setPassword(e.target.value)}

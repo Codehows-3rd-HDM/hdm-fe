@@ -3,6 +3,8 @@ import { BrowserRouter, Routes, Route, Outlet, useLocation, Navigate } from 'rea
 import Sidebar from './components/Sidebar';
 import RegisterPage from './pages/RegisterPage';
 import LoginPage from './pages/LoginPage';
+import DataUploadPage from './pages/DataUploadPage';
+import VehicleRegisterPage from './pages/VehicleRegisterPage';
 
 // [임시] 페이지가 없을 때 보여줄 플레이스홀더 컴포넌트
 const PagePlaceholder = ({ title }: { title: string }) => {
@@ -64,7 +66,7 @@ const App: React.FC = () => {
           <Route path="admin">
             {/* 4-1. 차량 기본 데이터 관리 */}
             <Route path="vehicle">
-              <Route path="register" element={<PagePlaceholder title="출입차량 기본정보 등록" />} />
+              <Route path="register" element={<VehicleRegisterPage/>} />
               <Route path="manage" element={<PagePlaceholder title="출입차량 정보 관리" />} />
             </Route>
             
@@ -83,7 +85,7 @@ const App: React.FC = () => {
             {/* 4-4. 기타 관리 */}
             <Route path="dashboard-setting" element={<PagePlaceholder title="대시보드 관리" />} />
             <Route path="activity-manage" element={<PagePlaceholder title="저감활동 기록 관리" />} />
-            <Route path="data-upload" element={<PagePlaceholder title="출입 데이터 업로드 (HDM-035)" />} />
+            <Route path="data-upload" element={<DataUploadPage/>} />
           </Route>
 
           {/* 5. 계정 */}

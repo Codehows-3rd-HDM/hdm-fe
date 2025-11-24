@@ -3,13 +3,13 @@ import { useNavigate } from 'react-router-dom';
 import { User, Lock, ArrowRight } from 'lucide-react'; // 화살표 아이콘 추가
 
 const styles = {
-  // 화면 중앙 정렬을 위한 컨테이너 (스크롤바 문제 해결을 위해 height 100% 제거)
+  // 화면 중앙 정렬을 위한 컨테이너
   container: {
     display: 'flex',
     flexDirection: 'column' as const,
     alignItems: 'center',
     justifyContent: 'center',
-    minHeight: '100vh', // 화면 전체 높이 사용
+    minHeight: '90vh', // 화면 전체 높이 사용
     backgroundColor: '#fff',
     padding: '20px',
   },
@@ -106,7 +106,7 @@ const LoginPage: React.FC = () => {
     }).then(...)
     */
 
-    // 3. 성공 시나리오 (가정)
+    // 3. 성공 시나리오 (가정 jwt 필요 없을지도?)
     // 토큰 저장 로직 등은 나중에 추가
     // localStorage.setItem('token', 'fake-jwt-token'); 
     
@@ -124,7 +124,7 @@ const LoginPage: React.FC = () => {
           <User size={20} style={styles.icon} />
           <input
             type="text"
-            placeholder="Johnson Doe"
+            placeholder="현진 양"
             style={styles.input}
             value={username}
             onChange={(e) => setUsername(e.target.value)}
@@ -136,7 +136,7 @@ const LoginPage: React.FC = () => {
           <Lock size={20} style={styles.icon} />
           <input
             type={showPassword ? "text" : "password"}
-            placeholder="*********"
+            placeholder="****"
             style={styles.input}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
