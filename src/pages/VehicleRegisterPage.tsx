@@ -65,7 +65,7 @@ const styles = {
     padding: '30px',
     backgroundColor: '#fff',
     minHeight: '100%',
-    // [수정] boxSizing 추가하여 padding이 높이에 포함되도록 설정 (스크롤바 해결)
+    // boxSizing 추가하여 padding이 높이에 포함되도록 설정 (스크롤바 해결)
     boxSizing: 'border-box' as const, 
     fontFamily: '"Malgun Gothic", sans-serif',
   },

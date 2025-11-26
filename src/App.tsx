@@ -5,6 +5,7 @@ import RegisterPage from './pages/RegisterPage';
 import LoginPage from './pages/LoginPage';
 import DataUploadPage from './pages/DataUploadPage';
 import VehicleRegisterPage from './pages/VehicleRegisterPage';
+import DashboardPage from './pages/DashboardPage';
 
 // [임시] 페이지가 없을 때 보여줄 플레이스홀더 컴포넌트
 const PagePlaceholder = ({ title }: { title: string }) => {
@@ -25,10 +26,23 @@ const PagePlaceholder = ({ title }: { title: string }) => {
 // 메인 레이아웃 (사이드바 + 컨텐츠 영역)
 const MainLayout = () => {
   return (
-    <div style={{ display: 'flex', height: '100vh', overflow: 'hidden' }}>
+    <div style={{ display: 'flex', minHeight: '100vh', overflow: 'hidden' }}>
+      {/* 사이드바: 고정 너비, 자체적으로 내용이 많으면 스크롤(auto) */}
       <Sidebar />
-      <main style={{ flex: 1, overflowY: 'auto', backgroundColor: '#f4f7f9' }}>
-        <Outlet /> {/* 하위 라우트가 여기에 렌더링됨 */}
+      {/* 메인 영역: 
+          - flex: 1 (남은 공간 다 차지)
+          - height: '100%' 추가 (부모 높이인 100vh를 인지하도록)
+          - overflow-y: auto (내용이 길어지면 **여기서만** 스크롤바 생성)
+      */}
+      <main style={{ 
+          flex: 1, 
+          height: '100%', // 높이 100% 설정으로 스크롤 영역 명확화
+          overflowY: 'auto', 
+          backgroundColor: '#f4f7f9',
+          position: 'relative' 
+      }}>
+        {/* Outlet은 실제 페이지 컴포넌트가 렌더링되는 위치 */}
+        <Outlet />
       </main>
     </div>
   );
@@ -46,7 +60,7 @@ const App: React.FC = () => {
         <Route element={<MainLayout />}>
           
           {/* 1. 대시보드 (HDM-001) */}
-          <Route path="dashboard" element={<PagePlaceholder title="통합 대시보드" />} />
+          <Route path="dashboard" element={<DashboardPage/>} />
 
           {/* 2. 배출량 조회 그룹 */}
           <Route path="emissions">
