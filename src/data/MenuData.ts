@@ -40,9 +40,9 @@ export const menuItems: MenuItem[] = [
         // API 그룹: HDM-013 ~ 025 (Vehicle 관련)
         items: [
           { title: '출입차량의 기본정보 등록', path: '/admin/vehicle/register' },
+          { title: '출입차량 정보 관리', path: '/admin/vehicle/manage' },
           { title: '업체명과 주소지 정보 관리', path: '/admin/company/manage' },
           { title: '차종과 연비 정보 관리', path: '/admin/car-category/manage' },
-          { title: '출입차량 정보 관리', path: '/admin/vehicle/manage' },
           { title: '생산공정 정보 관리', path: '/admin/process/manage' },
           { title: '운행목적 정보 관리', path: '/admin/purpose/manage' },
           { title: '생산품목 구분 정보 관리', path: '/admin/product-class/manage' },

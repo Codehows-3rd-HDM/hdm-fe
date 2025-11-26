@@ -89,7 +89,8 @@ const Sidebar: React.FC = () => {
   
   const [closedDepth1, setClosedDepth1] = useState<Set<string>>(() => {
     // 여기 Set에 넣으면 그 항목을 닫은 채로 시작
-    return new Set(['관리자 설정']); 
+    return new Set(['']); 
+    // return new Set(['관리자 설정']); 
   });
 
   const [closedDepth2, setClosedDepth2] = useState<Set<string>>(new Set(['출입 차량의 기본 데이터 관리']));

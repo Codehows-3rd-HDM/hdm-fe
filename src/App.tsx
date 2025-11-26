@@ -4,8 +4,19 @@ import Sidebar from './components/Sidebar';
 import RegisterPage from './pages/RegisterPage';
 import LoginPage from './pages/LoginPage';
 import DataUploadPage from './pages/DataUploadPage';
-import VehicleRegisterPage from './pages/VehicleRegisterPage';
+import VehicleRegisterPage from './pages/admin/VehicleRegisterPage';
 import DashboardPage from './pages/DashboardPage';
+import VehicleManagementPage from './pages/admin/VehicleManagementPage';
+import CompanyManagementPage from './pages/admin/CompanyManagementPage';
+import CarModelManagementPage from './pages/admin/CarModelManagementPage';
+import ProcessManagementPage from './pages/admin/ProcessManagementPage';
+import PurposeManagementPage from './pages/admin/PurposeManagementPage';
+import ProductManagementPage from './pages/admin/ProductManagementPage';
+import CompanyEmissionPage from './pages/Emissions inquiry/CompanyEmissionPage';
+import OperationPurposeEmissionPage from './pages/Emissions inquiry/OperationPurposeEmissionPage';
+import ProcessEmissionPage from './pages/Emissions inquiry/ProcessEmissionPage';
+import ProductEmissionPage from './pages/Emissions inquiry/ProductEmissionPage';
+import FuelEmissionPage from './pages/Emissions inquiry/FuelEmissionPage';
 
 // [임시] 페이지가 없을 때 보여줄 플레이스홀더 컴포넌트
 const PagePlaceholder = ({ title }: { title: string }) => {
@@ -65,11 +76,11 @@ const App: React.FC = () => {
           {/* 2. 배출량 조회 그룹 */}
           <Route path="emissions">
             <Route path="period" element={<PagePlaceholder title="기간별 탄소 총 배출량 (HDM-002)" />} />
-            <Route path="company" element={<PagePlaceholder title="납품 업체별 배출량 (HDM-003)" />} />
-            <Route path="purpose" element={<PagePlaceholder title="운행 목적별 배출량 (HDM-005)" />} />
-            <Route path="process" element={<PagePlaceholder title="생산 공정별 배출량 (HDM-007)" />} />
-            <Route path="product-class" element={<PagePlaceholder title="생산 품목 구분별 배출량 (HDM-008)" />} />
-            <Route path="fuel" element={<PagePlaceholder title="연료별 배출량 (HDM-009)" />} />
+            <Route path="company" element={<CompanyEmissionPage />} />
+            <Route path="purpose" element={<OperationPurposeEmissionPage />} />
+            <Route path="process" element={<ProcessEmissionPage />} />
+            <Route path="product-class" element={<ProductEmissionPage />} />
+            <Route path="fuel" element={<FuelEmissionPage />} />
             <Route path="target" element={<PagePlaceholder title="목표 대비 탄소 배출량 (HDM-010)" />} />
           </Route>
 
@@ -81,15 +92,15 @@ const App: React.FC = () => {
             {/* 4-1. 차량 기본 데이터 관리 */}
             <Route path="vehicle">
               <Route path="register" element={<VehicleRegisterPage/>} />
-              <Route path="manage" element={<PagePlaceholder title="출입차량 정보 관리" />} />
+              <Route path="manage" element={<VehicleManagementPage />} />
             </Route>
             
             {/* 4-2. 기준 정보 관리 (업체, 공정, 목적, 품목 등) */}
-            <Route path="company/manage" element={<PagePlaceholder title="업체명/주소지 관리" />} />
-            <Route path="car-category/manage" element={<PagePlaceholder title="차종/연비 정보 관리" />} />
-            <Route path="process/manage" element={<PagePlaceholder title="생산공정 정보 관리" />} />
-            <Route path="purpose/manage" element={<PagePlaceholder title="운행목적 정보 관리" />} />
-            <Route path="product-class/manage" element={<PagePlaceholder title="생산품목 구분 정보 관리" />} />
+            <Route path="company/manage" element={<CompanyManagementPage />} />
+            <Route path="car-category/manage" element={<CarModelManagementPage />} />
+            <Route path="process/manage" element={<ProcessManagementPage />} />
+            <Route path="purpose/manage" element={<PurposeManagementPage />} />
+            <Route path="product-class/manage" element={<ProductManagementPage />} />
 
             {/* 4-3. 배출 관련 설정 */}
             <Route path="emission-factor" element={<PagePlaceholder title="탄소 배출계수 관리 (HDM-027)" />} />

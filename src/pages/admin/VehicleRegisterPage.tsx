@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { RefreshCw, ChevronDown, Save } from 'lucide-react';
+import { RefreshCw } from 'lucide-react';
 
 // --- 1. 상수 데이터 정의 ---
 

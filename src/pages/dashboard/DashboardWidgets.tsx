@@ -42,7 +42,7 @@ const monthlyData = Array.from({ length: 12 }, (_, i) => ({
   name: `${i + 1}월`,
   // 실제 배출량 (랜덤)
   total: Math.floor(Math.random() * 500) + 500, 
-  // [수정] 목표 배출량 (월마다 다르게 랜덤하게 변동)
+  // 목표 배출량 (월마다 다르게 랜덤하게 변동)
   target: Math.floor(Math.random() * 200) + 1000, 
   // Scope1, 3 데이터
   scope1: Math.floor(Math.random() * 300) + 200,

@@ -167,15 +167,15 @@ const ExcelUploadModal: React.FC<ExcelUploadModalProps> = ({
     }
     setFileName(file.name);
 
-    // [로직] 여기서 실제 파일 파싱을 해야 하지만, UI 구현을 위해
+    // [로직] 여기서 실제 파일 파싱을 해야함, UI 구현을 위해
     // columns Props를 기반으로 더미 데이터를 생성합니다.
     const mockRows = Array.from({ length: 5 }).map((_, i) => {
       const row: any = {};
-      columns.forEach((col) => {
-        // 예: header가 '차량번호'면 값은 '차량번호_Data_1' 식
-        if (col.key.includes('date')) row[col.key] = `2025-07-0${i + 1}`;
-        else row[col.key] = `${col.header}_데이터_${i + 1}`;
-      });
+      // columns.forEach((col) => {
+      //   // 예: header가 '차량번호'면 값은 '차량번호_Data_1' 식
+      //   if (col.key.includes('date')) row[col.key] = `2025-07-0${i + 1}`;
+      //   else row[col.key] = `${col.header}_데이터_${i + 1}`;
+      // });
       return row;
     });
 
