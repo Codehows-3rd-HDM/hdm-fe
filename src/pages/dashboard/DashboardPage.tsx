@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Responsive, WidthProvider } from 'react-grid-layout';
-import { SummarySection, ScopeAnalysisSection, ComparisonSection, PurposePieSection } from './dashboard/DashboardWidgets';
-import { getBusinessYear } from '../utils/dateUtils';
+import { SummarySection, ScopeAnalysisSection, ComparisonSection, PurposePieSection } from './DashboardWidgets';
+import { getBusinessYear } from '../../utils/dateUtils';
 import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
 

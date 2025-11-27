@@ -71,7 +71,6 @@ const pieData = rawPieData.sort((a, b) => b.value - a.value);
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
 
-
 // ----------------------------------------------------------------------
 // [위젯 1] 종합 요약 & 월별 추이 (그래프 짤림 수정 & 값 표시 추가)
 // ----------------------------------------------------------------------
@@ -308,7 +307,6 @@ export const PurposePieSection = () => {
                     </span>
                 )}
             />
-
           </PieChart>
         </ResponsiveContainer>
       </div>

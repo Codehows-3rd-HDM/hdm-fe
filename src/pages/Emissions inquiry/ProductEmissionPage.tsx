@@ -21,7 +21,7 @@ const MOCK_DATA: AnalysisData[] = [
 const ProductEmissionPage: React.FC = () => {
   return (
     <CarbonAnalysisTemplate
-      title="생산 품목 구분별 탄소 배출량"
+      title="생산품목 구분별 탄소 배출량"
       hasScopeTabs={false}
       columns={COLUMNS}
       initialData={MOCK_DATA}

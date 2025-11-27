@@ -1,11 +1,11 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Outlet, useLocation, Navigate } from 'react-router-dom';
 import Sidebar from './components/Sidebar';
-import RegisterPage from './pages/RegisterPage';
+import RegisterPage from './pages/admin/RegisterPage';
 import LoginPage from './pages/LoginPage';
-import DataUploadPage from './pages/DataUploadPage';
+import DataUploadPage from './pages/admin/DataUploadPage';
 import VehicleRegisterPage from './pages/admin/VehicleRegisterPage';
-import DashboardPage from './pages/DashboardPage';
+import DashboardPage from './pages/dashboard/DashboardPage';
 import VehicleManagementPage from './pages/admin/VehicleManagementPage';
 import CompanyManagementPage from './pages/admin/CompanyManagementPage';
 import CarModelManagementPage from './pages/admin/CarModelManagementPage';
@@ -17,6 +17,8 @@ import OperationPurposeEmissionPage from './pages/Emissions inquiry/OperationPur
 import ProcessEmissionPage from './pages/Emissions inquiry/ProcessEmissionPage';
 import ProductEmissionPage from './pages/Emissions inquiry/ProductEmissionPage';
 import FuelEmissionPage from './pages/Emissions inquiry/FuelEmissionPage';
+import './App.css'
+import TargetComparisonPage from './pages/Emissions inquiry/TargetComparisonPage';
 
 // [임시] 페이지가 없을 때 보여줄 플레이스홀더 컴포넌트
 const PagePlaceholder = ({ title }: { title: string }) => {
@@ -37,22 +39,24 @@ const PagePlaceholder = ({ title }: { title: string }) => {
 // 메인 레이아웃 (사이드바 + 컨텐츠 영역)
 const MainLayout = () => {
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', overflow: 'hidden' }}>
-      {/* 사이드바: 고정 너비, 자체적으로 내용이 많으면 스크롤(auto) */}
-      <Sidebar />
-      {/* 메인 영역: 
-          - flex: 1 (남은 공간 다 차지)
-          - height: '100%' 추가 (부모 높이인 100vh를 인지하도록)
-          - overflow-y: auto (내용이 길어지면 **여기서만** 스크롤바 생성)
-      */}
-      <main style={{ 
-          flex: 1, 
-          height: '100%', // 높이 100% 설정으로 스크롤 영역 명확화
-          overflowY: 'auto', 
-          backgroundColor: '#f4f7f9',
-          position: 'relative' 
-      }}>
-        {/* Outlet은 실제 페이지 컴포넌트가 렌더링되는 위치 */}
+    // className="app-container" 추가
+    <div className="app-container" style={{ display: 'flex', minHeight: '100vh', overflow: 'hidden' }}>
+      
+      {/* 사이드바: 프린트 시 숨길 대상 */}
+      <div className="sidebar">
+        <Sidebar />
+      </div>
+      
+      {/* 메인 영역 */}
+      <main 
+        className="main-content"
+        style={{ 
+            flex: 1, 
+            height: '100%', 
+            overflowY: 'auto', 
+            backgroundColor: '#f4f7f9',
+            position: 'relative' 
+        }}>
         <Outlet />
       </main>
     </div>
@@ -81,7 +85,7 @@ const App: React.FC = () => {
             <Route path="process" element={<ProcessEmissionPage />} />
             <Route path="product-class" element={<ProductEmissionPage />} />
             <Route path="fuel" element={<FuelEmissionPage />} />
-            <Route path="target" element={<PagePlaceholder title="목표 대비 탄소 배출량 (HDM-010)" />} />
+            <Route path="target" element={<TargetComparisonPage />} />
           </Route>
 
           {/* 3. 저감 활동 */}

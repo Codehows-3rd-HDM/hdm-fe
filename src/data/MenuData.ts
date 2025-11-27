@@ -21,7 +21,7 @@ export const menuItems: MenuItem[] = [
       { title: '납품 업체별', path: '/emissions/company' },           // API: /company/emission
       { title: '운행 목적별', path: '/emissions/purpose' },           // API: /purpose/emission
       { title: '생산 공정별', path: '/emissions/process' },           // API: /process/emission
-      { title: '생산 품목 구분별', path: '/emissions/product-class' }, // API: /product-class/emission
+      { title: '생산품목 구분별', path: '/emissions/product-class' }, // API: /product-class/emission
       { title: '연료별', path: '/emissions/fuel' },                   // API: /fuel/emission
       { title: '목표 대비 탄소 배출량', path: '/emissions/target' },   // API: /target/compare
     ],

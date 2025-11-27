@@ -41,8 +41,8 @@ const CarbonAnalysisTemplate: React.FC<CarbonAnalysisTemplateProps> = ({
   // 차트 선택 상태 (체크박스)
   // 초기값: 데이터 상위 5개 선택
   const [checkedItems, setCheckedItems] = useState<Set<string>>(() => {
-    const top5 = initialData.sort((a, b) => b.totalEmission - a.totalEmission).slice(0, 5).map(d => d.name);
-    return new Set(top5);
+    const top3 = initialData.sort((a, b) => b.totalEmission - a.totalEmission).slice(0, 3).map(d => d.name);
+    return new Set(top3);
   });
   const [chartSearchQuery, setChartSearchQuery] = useState(''); // 5번 영역 검색
 
@@ -153,11 +153,61 @@ const CarbonAnalysisTemplate: React.FC<CarbonAnalysisTemplateProps> = ({
       else setCheckedItems(new Set());
   };
 
+  //Recharts v2 이상에서는 <Legend payload>가 타입에서 막혀 있어서 바로 못 씀. 커스템 Legend
+  const CustomLegend = ({ payload }: any) => {
+    if (!payload) return null;
+
+    // payload: [{ value: name, color, payload: { name, totalEmission, ratio, ... } }]
+    const sorted = [...payload]
+        .sort((a, b) => b.payload.totalEmission - a.payload.totalEmission) // 정렬
+        .slice(0, 5); // 상위 4개
+
+    return (
+        <ul style={{ 
+            listStyle: 'none', 
+            padding: 0, 
+            margin: 0, 
+            width: '100%', 
+            fontSize: '15px' 
+        }}>
+            {sorted.map((entry: any, index: number) => (
+                <li 
+                    key={`legend-item-${index}`} 
+                    style={{ 
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        marginBottom: '6px'
+                    }}
+                >
+                    {/* square icon */}
+                    <span 
+                        style={{
+                            width: 12,
+                            height: 12,
+                            backgroundColor: entry.color,
+                            borderRadius: '3px' // square
+                        }}
+                    />
+
+                    {/* label formatting */}
+                    <span style={{ color: '#333' }}>
+                        {entry.value} : <b>{entry.payload.ratio}%</b>
+                    </span>
+                </li>
+            ))}
+        </ul>
+    );
+};
+
+
+
+
   // --- 렌더링 ---
   return (
     <div ref={componentRef} style={{ padding: '30px', minHeight: '100%', fontFamily: 'Malgun Gothic, sans-serif' }}>
       
-      {/* 9. 헤더 (타이틀 & 버튼) */}
+      {/* 헤더 (타이틀 & 버튼) */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
         <h2 style={{ fontSize: '24px', fontWeight: 'bold', color: '#333' }}>{title}</h2>
         <div style={{ display: 'flex', gap: '10px' }}>
@@ -170,7 +220,7 @@ const CarbonAnalysisTemplate: React.FC<CarbonAnalysisTemplateProps> = ({
         </div>
       </div>
 
-      {/* 1. Scope 탭 (조건부 렌더링) */}
+      {/* Scope 탭 (조건부 렌더링) */}
       {hasScopeTabs && (
         <div style={{ display: 'flex', borderBottom: '1px solid #ddd', marginBottom: '20px' }}>
           {SCOPE_TABS.map(tab => (
@@ -194,7 +244,7 @@ const CarbonAnalysisTemplate: React.FC<CarbonAnalysisTemplateProps> = ({
         </div>
       )}
 
-      {/* 2. 연도/월 선택 필터 */}
+      {/* 연도/월 선택 필터 */}
       <div style={{ display: 'flex', gap: '20px', marginBottom: '20px', backgroundColor: '#fff', padding: '15px', borderRadius: '8px', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}>
         <div style={{ display: 'flex', flexDirection: 'column' }}>
             <label style={{ fontSize: '12px', fontWeight: 'bold', marginBottom: '5px' }}>▼ 연도 선택</label>
@@ -231,12 +281,12 @@ const CarbonAnalysisTemplate: React.FC<CarbonAnalysisTemplateProps> = ({
         )}
       </div>
 
-      {/* 3, 4, 5. 차트 영역 */}
+      {/* 차트 영역 */}
       {/* 데이터가 있을 때만 표시 */}
       {processedData.length > 0 && (
-        <div style={{ display: 'flex', gap: '20px', marginBottom: '30px', height: '400px' }}>
+        <div style={{ display: 'flex', gap: '20px', marginBottom: '30px', height: '500px' }}>
             
-            {/* 3. 파이 차트 (항상 표시, 중앙 정렬) */}
+            {/* 파이 차트 (항상 표시, 중앙 정렬) */}
             <div style={{ 
                 flex: selectedMonth === 'all' ? 1 : '0 0 100%', // 월 선택 시 전체 너비 사용
                 backgroundColor: '#fff', borderRadius: '8px', padding: '20px', 
@@ -247,7 +297,7 @@ const CarbonAnalysisTemplate: React.FC<CarbonAnalysisTemplateProps> = ({
                     {selectedYear === 'all' ? '전체' : selectedYear}년 {selectedMonth === 'all' ? '연간' : `${selectedMonth}월`} {title}
                 </h4>
                 {/* 파이 차트 중앙 텍스트 */}
-                <div style={{ position: 'absolute', top: '55%', left: '50%', transform: 'translate(-50%, -50%)', textAlign: 'center', pointerEvents: 'none' }}>
+                <div style={{ position: 'absolute', top: '40%', left: '50%', transform: 'translate(-50%, -50%)', textAlign: 'center', pointerEvents: 'none' }}>
                     <div style={{ fontSize: '20px', fontWeight: 'bold' }}>100%</div>
                     <div style={{ fontSize: '12px', color: '#666' }}>Total</div>
                 </div>
@@ -265,16 +315,19 @@ const CarbonAnalysisTemplate: React.FC<CarbonAnalysisTemplateProps> = ({
                                 <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                             ))}
                         </Pie>
-                        <Legend 
-                            layout="horizontal" verticalAlign="bottom" align="center" 
-                            // formatter={(value, entry: any) => `${value} (${entry.payload.payload.ratio}%)`}
+                        <Legend
+                            layout="horizontal"
+                            verticalAlign="bottom"
+                            align="center"
+                            content={<CustomLegend />}
                         />
+
                         <RechartsTooltip formatter={(value: number) => value.toLocaleString()} />
                     </PieChart>
                 </ResponsiveContainer>
             </div>
 
-            {/* 4. 라인 차트 (월이 '전체'일 때만 표시) */}
+            {/* 라인 차트 (월이 '전체'일 때만 표시) */}
             {selectedMonth === 'all' && (
                 <div style={{ flex: 2, backgroundColor: '#fff', borderRadius: '8px', padding: '20px', boxShadow: '0 2px 4px rgba(0,0,0,0.05)', display: 'flex', flexDirection: 'column' }}>
                     <h4 style={{ margin: '0 0 20px 0' }}>{selectedYear}년 월별 추이</h4>
@@ -297,7 +350,7 @@ const CarbonAnalysisTemplate: React.FC<CarbonAnalysisTemplateProps> = ({
                 </div>
             )}
 
-            {/* 5. 차트 데이터 선택 사이드바 (월이 '전체'일 때만 표시) */}
+            {/* 차트 데이터 선택 사이드바 (월이 '전체'일 때만 표시) */}
             {selectedMonth === 'all' && (
                 <div style={{ width: '250px', backgroundColor: '#fff', borderRadius: '8px', padding: '15px', boxShadow: '0 2px 4px rgba(0,0,0,0.05)', display: 'flex', flexDirection: 'column' }}>
                     <div style={{ marginBottom: '10px', position: 'relative' }}>
@@ -335,9 +388,9 @@ const CarbonAnalysisTemplate: React.FC<CarbonAnalysisTemplateProps> = ({
         </div>
       )}
 
-      {/* 6. 메인 검색바 */}
+      {/* 메인 검색바 */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '15px', backgroundColor: '#f0f4f8', padding: '15px', borderRadius: '8px' }}>
-        <span style={{ fontWeight: 'bold', color: '#007bff' }}>{title.split(' ')[0]}</span>
+        <span style={{ fontWeight: 'bold', color: '#007bff' }}>{title.split(' ')[0]} {title.split(' ')[1]}</span>
         <select 
             value={searchColumn} 
             onChange={(e) => setSearchColumn(e.target.value)}
@@ -414,21 +467,6 @@ const CarbonAnalysisTemplate: React.FC<CarbonAnalysisTemplateProps> = ({
             </tbody>
         </table>
       </div>
-
-      <style>{`
-        @media print {
-            body * {
-                visibility: hidden;
-            }
-            #root, #root * {
-                visibility: visible;
-            }
-            /* 사이드바 등 숨기기 (App.tsx 구조에 따라 조정 필요) */
-            .sidebar { display: none !important; }
-            button { display: none !important; }
-            select { appearance: none; border: none; }
-        }
-      `}</style>
     </div>
   );
 };
