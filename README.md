@@ -28,6 +28,48 @@ src
 
 ㄴpages
 
+    ㄴadmin (관리자)
+
+      ㄴCarModelManagementPage.tsx (차종 및 연비 기준정보 관리)
+
+      ㄴCompanyManagementPage.tsx (업체명 및 주소지 기준정보 관리)
+
+      ㄴDataUploadPage.tsx (나이스파크, 에스원 데이터 업로드)
+
+      ㄴProcessManagementPage.tsx (생산 공정 기준정보 관)
+
+      ㄴProductManagementPage.tsx (생산 품목 구분 기준정보 관)
+
+      ㄴPurposeManagementPage.tsx (운행 목적 기준정보 관)
+
+      ㄴRegisterPage.tsx (계정 생성)
+
+      ㄴVehicleManagementPage.tsx (출입 차량 기준정보 관리)
+
+      ㄴVehicleRegisterPage.tsx (등록 페이지 6)
+
+    ㄴdashboard (대시보드)
+
+      ㄴDashboardPage.tsx (위젯을 부르는 대시보드)
+
+      ㄴDashboardWidgets.tsx (대시보드 각 영역 위젯 구)
+
+    ㄴEmissions inquiry (배출량 조회)
+
+      ㄴCompanyEmissionPage.tsx (납품 업체별 탄소 배출)
+
+      ㄴFuelEmissionPage.tsx (연료별 탄소 배출)
+
+      ㄴOperationPurposeEmissionPage.tsx (운행 목적별 탄소 배)
+
+      ㄴProcessEmissionPage.tsx (생산 공정별 탄소 배출)
+
+      ㄴProductEmissionPage.tsx (생산품목 구분별 탄소 배출)
+
+      ㄴTargetComparisonPage.tsx (목표 대비 탄소 배출)
+
+    ㄴLoginPage.tsx (로그인)
+
 ㄴtypes (인터페이스 타입정의)
 
     ㄴanalysis.ts (탄소 배출량 조회)

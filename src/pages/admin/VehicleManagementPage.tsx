@@ -2,7 +2,6 @@ import React from 'react';
 import StandardDataManagementTable from '../../components/management/StandardDataManagementTable';
 import { type VehicleData, VEHICLE_COLUMNS } from '../../types/data';
 
-// 등록 페이지의 IntegratedFormData 필드와 100% 일치하는 Mock Data
 const MOCK_VEHICLE_DATA: VehicleData[] = [
   { 
     id: 1, 
