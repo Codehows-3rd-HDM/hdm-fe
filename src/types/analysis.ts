@@ -1,5 +1,3 @@
-// src/types/analysis.ts
-
 export interface AnalysisColumn {
   id: string;
   header: string;

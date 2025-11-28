@@ -1,5 +1,3 @@
-// src/types/data.ts
-
 // --- 공통 인터페이스 (ColumnDefinition) ---
 export interface ColumnDefinition<T> {
   id: keyof T | 'actions';

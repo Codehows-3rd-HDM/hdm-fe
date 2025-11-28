@@ -5,7 +5,7 @@ import {
 } from 'recharts';
 import { Search, Printer, Download, CheckSquare, Square } from 'lucide-react';
 import type { AnalysisColumn, AnalysisData, ScopeType } from '../../types/analysis';
-// import { useReactToPrint } from 'react-to-print'; // (선택사항) 없으면 window.print() 사용
+// import { useReactToPrint } from 'react-to-print'; // (선택사항) 일단 window.print() 사용
 
 // --- 스타일 및 상수 ---
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d', '#ffc658'];

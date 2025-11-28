@@ -47,7 +47,7 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
   
-  // --- [수정 1] 정렬 및 필터링 로직 개선 ---
+  // --- 정렬 및 필터링 로직 개선 ---
   const searchableColumns = useMemo(() => 
     columns.filter(col => col.searchable && col.id !== 'actions').map(col => col.id as keyof T)
   , [columns]);
@@ -55,7 +55,7 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
   const filteredData = useMemo(() => {
     let result = [...data]; // 원본 불변성 유지
 
-    // 1. 검색
+    // 검색
     if (searchQuery) {
         result = result.filter(row => {
             if (searchColumn === 'all') {
@@ -68,7 +68,7 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
         });
     }
 
-    // 2. 정렬 (숫자와 문자 구분하여 자연스러운 정렬)
+    // 정렬 (숫자와 문자 구분하여 자연스러운 정렬)
     if (currentSort) {
         const { key, direction } = currentSort;
         result.sort((a, b) => {
@@ -170,13 +170,13 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
     ));
   };
 
-  // --- [수정 3] 입력 필드 렌더링 헬퍼 함수 (타입별 분기) ---
+  // --- 입력 필드 렌더링 헬퍼 함수 (타입별 분기) ---
   const renderInput = (row: T, col: ColumnDefinition<T>) => {
       const value = row[col.id as keyof T];
       const rowId = row.id;
       const fieldKey = col.id as keyof T;
 
-      // 1. 드롭다운 (Select)
+      // 드롭다운 (Select)
       if (col.inputType === 'select' && col.selectOptions) {
           return (
               <select
