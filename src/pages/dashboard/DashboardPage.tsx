@@ -31,22 +31,12 @@ const DashboardPage: React.FC = () => {
 
   const [layouts, setLayouts] = useState(initialLayouts);
 
-  // 레이아웃 변경 시 호출 (위치 이동 후 저장 로직을 여기에 추가)
-  const onLayoutChange = (currentLayout: any, allLayouts: any) => {
-    setLayouts(allLayouts);
-    console.log('📌 [레이아웃 변경됨]', allLayouts);
-    // TODO: 변경된 레이아웃을 LocalStorage나 DB에 저장하여 사용자 설정 유지 가능
-  };
-
   return (
     <div style={{ padding: '20px', backgroundColor: '#f4f7f9', minHeight: '100%' ,boxSizing: 'border-box' as const}}>
       <div style={{ marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <h2 style={{ fontSize: '24px', color: '#333', fontWeight: 'bold' }}>
           통합 대시보드 ({currentYear}년)
         </h2>
-        {/* <span style={{ fontSize: '13px', color: '#666', backgroundColor: '#e9ecef', padding: '5px 10px', borderRadius: '4px' }}>
-            ℹ️ 위젯을 드래그하여 위치를 변경할 수 있습니다.
-        </span> */}
       </div>
 
       <ResponsiveGridLayout
@@ -59,7 +49,6 @@ const DashboardPage: React.FC = () => {
         draggableHandle=".grid-drag-handle" // 특정 영역(핸들)을 잡아야만 드래그 되게 할 수도 있음 (현재는 전체)
         isDraggable={true}
         isResizable={true}
-        onLayoutChange={onLayoutChange}
         margin={[15, 15]} // 아이템 간 간격
       >
         {/* 1. 영역 1: 종합 요약 */}

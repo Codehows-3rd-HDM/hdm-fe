@@ -10,7 +10,7 @@ export interface MenuItem {
 export const menuItems: MenuItem[] = [
   {
     title: '대시보드',
-    path: '/dashboard', // API: /dashboard
+    path: '/dashboard', 
     icon: Home,
   },
   {
@@ -28,7 +28,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     title: '저감활동 기록 조회',
-    path: '/activities', // API: /reduction
+    path: '/activities', 
     icon: Clock,
   },
   {
@@ -37,7 +37,6 @@ export const menuItems: MenuItem[] = [
     items: [
       {
         title: '출입 차량의 기본 데이터 관리',
-        // API 그룹: HDM-013 ~ 025 (Vehicle 관련)
         items: [
           { title: '출입차량의 기본정보 등록', path: '/admin/vehicle/register' },
           { title: '출입차량 정보 관리', path: '/admin/vehicle/manage' },

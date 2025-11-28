@@ -190,6 +190,7 @@ const VehicleBasicRegisterPage: React.FC = () => {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
+  // 리셋
   const handleReset = () => {
     setIsResetting(true);
     setTimeout(() => setIsResetting(false), 500);
@@ -214,7 +215,6 @@ const VehicleBasicRegisterPage: React.FC = () => {
             if (!formData.carNumber.trim()) return alert("차량번호를 입력해주세요.");
             if (!formData.purpose) return alert("운행목적을 선택해주세요.");
             if (!formData.vendorName) return alert("업체명을 입력해주세요.");
-            // [수정] 필수값 유효성 검사 추가
             if (!formData.distance) return alert("편도거리를 입력해주세요.");
             if (!validateNumeric(formData.distance, "편도거리")) return;
             
@@ -243,7 +243,7 @@ const VehicleBasicRegisterPage: React.FC = () => {
             if (!validateNumeric(formData.fuelEfficiency, "연비")) return;
             break;
 
-        case PAGE_OPTIONS[3]: // 생산공정 (신규 등록)
+        case PAGE_OPTIONS[3]: // 생산공정 
             if (!formData.processName.trim()) return alert("등록할 공정명을 입력해주세요.");
             break;
 
@@ -252,16 +252,16 @@ const VehicleBasicRegisterPage: React.FC = () => {
             if (!formData.scope) return alert("Scope를 선택해주세요.");
             break;
 
-        case PAGE_OPTIONS[5]: // 생산품목
+        case PAGE_OPTIONS[5]: // 생산품목 구분
             if (!formData.productClass.trim()) return alert("등록할 품목구분명을 입력해주세요.");
             break;
     }
 
     alert(`${currentPage} 정보가 정상적으로 등록되었습니다.`);
-    // handleReset(); 
+    handleReset(); 
   };
 
-  // --- 폼 렌더링 ---
+  // --- 폼 렌더링 ---    {/* 필수값 '*' 표시  */}
   const renderFormFields = () => {
     switch (currentPage) {
       // 1. 출입 차량 기준정보 등록
@@ -288,7 +288,6 @@ const VehicleBasicRegisterPage: React.FC = () => {
               <label style={styles.label}>사원번호 :</label>
               <input type="number" name="employeeId" value={formData.employeeId} onChange={handleChange} style={styles.input} min="0" placeholder="숫자만 입력" />
             </div>
-            {/* [수정] 필수값 표시 (*) 추가 */}
             <div style={styles.fieldGroup}>
               <label style={styles.label}>편도거리 (km) <span style={{color:'red'}}>*</span> :</label>
               <input type="number" name="distance" value={formData.distance} onChange={handleChange} style={styles.input} min="0" placeholder="0 이상의 숫자" />
@@ -451,6 +450,7 @@ const VehicleBasicRegisterPage: React.FC = () => {
   };
 
   return (
+    // 드롭박스
     <div style={styles.container}>
       <div style={styles.headerArea}>
         <div style={{ position: 'relative' }}>
@@ -464,7 +464,7 @@ const VehicleBasicRegisterPage: React.FC = () => {
                 ))}
             </select>
         </div>
-
+        {/* 리셋 버튼 */}
         <button 
             style={{ 
                 ...styles.resetBtn, 
@@ -476,11 +476,11 @@ const VehicleBasicRegisterPage: React.FC = () => {
             <RefreshCw size={20} />
         </button>
       </div>
-
+      {/* 드롭박스 선택에 따른 입력 필드 */}
       <div style={styles.formGrid}>
         {renderFormFields()}
       </div>
-
+      {/* 등록 버튼 */}
       <div style={styles.footer}>
         <button 
             style={styles.submitBtn}

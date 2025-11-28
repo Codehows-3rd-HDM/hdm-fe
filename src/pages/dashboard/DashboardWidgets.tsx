@@ -72,7 +72,7 @@ const pieData = rawPieData.sort((a, b) => b.value - a.value);
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
 
 // ----------------------------------------------------------------------
-// [위젯 1] 종합 요약 & 월별 추이 (그래프 짤림 수정 & 값 표시 추가)
+// [위젯 1] 종합 요약 & 월별 추이
 // ----------------------------------------------------------------------
 export const SummarySection = () => {
   const totalEmission = 8000;
@@ -110,7 +110,7 @@ export const SummarySection = () => {
         <ResponsiveContainer width="100%" height="100%">
           <BarChart 
             data={simpleBarData} 
-            margin={{ top: 20, right: 30, left: 30, bottom: 20 }} // [수정 2] 마진 확보 (라벨 짤림 방지)
+            margin={{ top: 20, right: 30, left: 30, bottom: 20 }} // 마진 확보 (라벨 짤림 방지)
             barSize={40} // 막대 두께
           >
             <CartesianGrid strokeDasharray="3 3" vertical={false} />
@@ -124,7 +124,7 @@ export const SummarySection = () => {
             <Tooltip cursor={{fill: 'transparent'}} />
             
             <Bar dataKey="value" radius={[5, 5, 0, 0]}>
-                {/* [수정 5] 값 텍스트 표시 (막대 위) */}
+                {/* 값 텍스트 표시 (막대 위) */}
                 <LabelList dataKey="value" position="top" fill="#333" fontSize={12} formatter={(val: number) => val.toLocaleString()} />
                 {
                   simpleBarData.map((entry, index) => (
@@ -142,7 +142,7 @@ export const SummarySection = () => {
         <ResponsiveContainer width="100%" height="100%">
           <ComposedChart 
             data={monthlyData}
-            margin={{ top: 20, right: 10, left: -20, bottom: 10 }} // [수정 2] 마진 조절
+            margin={{ top: 20, right: 10, left: -20, bottom: 20 }}
           >
             <CartesianGrid strokeDasharray="3 3" vertical={false} />
             <XAxis dataKey="name" fontSize={11} />
@@ -172,7 +172,7 @@ export const ScopeAnalysisSection = () => {
         <ResponsiveContainer width="100%" height="100%">
           <ComposedChart 
             data={monthlyData}
-            margin={{ top: 20, right: 10, left: -20, bottom: 0 }} // 마진 확보
+            margin={{ top: 20, right: 10, left: -20, bottom: 0 }}
           >
             <CartesianGrid strokeDasharray="3 3" vertical={false} />
             <XAxis dataKey="name" fontSize={11} />
@@ -195,7 +195,7 @@ export const ScopeAnalysisSection = () => {
         <ResponsiveContainer width="100%" height="100%">
           <BarChart 
             data={yearlyHistoryData}
-            margin={{ top: 30, right: 10, left: -20, bottom: 0 }} // [수정 2] 상단 마진을 넉넉히 줘서 합계 라벨 공간 확보
+            margin={{ top: 30, right: 10, left: -20, bottom: 0 }} // 상단 마진을 넉넉히 줘서 합계 라벨 공간 확보
           >
             <CartesianGrid strokeDasharray="3 3" vertical={false} />
             <XAxis dataKey="year" fontSize={11} />
@@ -203,7 +203,7 @@ export const ScopeAnalysisSection = () => {
             <Tooltip />
             <Legend wrapperStyle={{ fontSize: '11px' }} />
 
-            {/* [수정 5] 값 텍스트 표시: Scope1 (내부), Scope3 (내부) */}
+            {/* 값 텍스트 표시: Scope1 (내부), Scope3 (내부) */}
             <Bar dataKey="scope1" name="Scope 1" stackId="a" fill="#0056b3" barSize={30}>
                  {/* 바 내부에 값 표시 (흰색) */}
                 <LabelList dataKey="scope1" position="center" fill="#fff" fontSize={10} />
@@ -221,7 +221,7 @@ export const ScopeAnalysisSection = () => {
 
 
 // ----------------------------------------------------------------------
-// [위젯 3] 비교 분석 (기존 유지, 마진만 살짝 수정)
+// [위젯 3] 비교 분석
 // ----------------------------------------------------------------------
 export const ComparisonSection = () => {
   return (
@@ -248,7 +248,7 @@ export const ComparisonSection = () => {
 
 
 // ----------------------------------------------------------------------
-// [위젯 4] 운행 목적 파이 차트 (중앙 텍스트 정렬 & 데이터 정렬)
+// [위젯 4] 운행 목적 파이 차트
 // ----------------------------------------------------------------------
 
 export const PurposePieSection = () => {

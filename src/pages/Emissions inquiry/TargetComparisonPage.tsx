@@ -1,7 +1,8 @@
 import React, { useState, useMemo } from 'react';
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, 
-  Cell, ComposedChart, Line, LabelList 
+  Cell, ComposedChart, Line, LabelList, 
+  Legend
 } from 'recharts';
 import { Printer, Download, ChevronDown, TrendingUp, TrendingDown } from 'lucide-react';
 
@@ -25,7 +26,7 @@ const TargetComparisonPage: React.FC = () => {
   // --- 상태 관리 ---
   const [selectedScope, setSelectedScope] = useState<ScopeType>('total');
   
-  // [수정 1] 연도 선택: 1979년 ~ 현재 연도까지 동적 생성
+  // 연도 선택: 1979년 ~ 현재 연도까지 동적 생성
   const currentYear = new Date().getFullYear();
   const years = useMemo(() => {
       const yearList = [];
@@ -55,7 +56,7 @@ const TargetComparisonPage: React.FC = () => {
     const monthlyData: MonthlyTargetData[] = Array.from({ length: 12 }, (_, i) => {
         const baseMonthTarget = Math.floor(totalTarget / 12);
         
-        // [수정 2] 월별 목표치에도 변동(Variance) 부여
+        // 월별 목표치에도 변동(Variance) 부여
         // 목표치도 계절성이나 상황에 따라 조금씩 다를 수 있음을 표현
         const targetVariance = Math.floor(Math.random() * 150) - 75; 
         const actualVariance = Math.floor(Math.random() * 400) - 200; 
@@ -80,7 +81,7 @@ const TargetComparisonPage: React.FC = () => {
   const isExceeded = diff > 0; // 목표 초과 여부
   const statusColor = isExceeded ? COLORS.red : COLORS.green;
 
-  // 3번 차트용 데이터
+  // 차트용 데이터
   const annualChartData = [
       { name: `${selectedYear}년 총 배출량`, value: data.totalActual },
       { name: '목표 배출량', value: data.totalTarget }
@@ -143,7 +144,7 @@ const TargetComparisonPage: React.FC = () => {
       {/* 2. KPI 카드 (연도 선택 포함) */}
       <div style={{ display: 'flex', gap: '20px', marginBottom: '20px' }}>
         <div style={{ flex: 1, display: 'flex', gap: '20px', backgroundColor: '#fff', padding: '25px', borderRadius: '10px', border: '1px solid #ffc107', position: 'relative' }}>
-            {/* 실적 */}
+            {/* 총 배출량 */}
             <div style={{ flex: 1, paddingRight: '20px', borderRight: '1px solid #eee' }}>
                 <div style={{ fontSize: '13px', color: '#666', marginBottom: '5px' }}>{selectedYear}년도 총 배출량</div>
                 <div style={{ fontSize: '32px', fontWeight: 'bold', color: statusColor, marginBottom: '5px' }}>
@@ -156,7 +157,7 @@ const TargetComparisonPage: React.FC = () => {
                 <div style={{ fontSize: '11px', color: '#999', marginTop: '5px', textAlign: 'right' }}>*12월까지 기준</div>
             </div>
 
-            {/* 목표 */}
+            {/* 목표 배출량 */}
             <div style={{ flex: 1, paddingLeft: '20px' }}>
                 <div style={{ fontSize: '13px', color: '#666', marginBottom: '5px' }}>{selectedYear}년 목표 배출량</div>
                 <div style={{ fontSize: '32px', fontWeight: 'bold', color: '#333', marginBottom: '5px' }}>
@@ -191,7 +192,7 @@ const TargetComparisonPage: React.FC = () => {
         </div>
       </div>
 
-      {/* [수정 3] 연간 비교 차트 (가시성 개선) */}
+      {/* 연간 비교 차트 */}
       <div style={{ backgroundColor: '#fff', padding: '20px', borderRadius: '10px', border: '1px solid #ffc107', marginBottom: '30px', height: '350px' }}>
         <h3 style={{ textAlign: 'center', fontSize: '18px', fontWeight: 'bold', color: '#333', marginBottom: '5px' }}>
             {selectedYear}년 탄소 배출량 비교
@@ -233,8 +234,7 @@ const TargetComparisonPage: React.FC = () => {
                 <XAxis dataKey="month" tick={{ fontSize: 12 }} />
                 <YAxis />
                 <Tooltip formatter={(val: number) => val.toLocaleString()} />
-                {/* <Legend /> */}
-                
+                <Legend />
                 <Bar dataKey="actual" name={`${selectedYear}년 실적`} fill="#4a90e2" barSize={30} radius={[4, 4, 0, 0]} />
                 <Line type="monotone" dataKey="target" name="목표 배출량" stroke="#ff7300" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} />
             </ComposedChart>

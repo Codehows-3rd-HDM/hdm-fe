@@ -9,7 +9,7 @@ const styles = {
     flexDirection: 'column' as const,
     alignItems: 'center',
     justifyContent: 'center',
-    minHeight: '90vh', // 화면 전체 높이 사용
+    minHeight: '90vh', // 화면 전체 높이 사용 100vh하면 스크롤 2개 생김
     backgroundColor: '#fff',
     padding: '20px',
   },

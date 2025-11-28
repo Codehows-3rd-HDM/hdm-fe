@@ -195,7 +195,7 @@ const DataUploadPage: React.FC = () => {
     // 임시 로직: 2025년 7월일 때만 데이터가 이미 있다고 가정
     if (selectedYear === '2025' && selectedMonth === '7') {
       setIsDataExisting(true);
-      // 예시 데이터 채워넣기 (이미지처럼)
+      // 예시 데이터 채워넣기
       setNiceParkData([
         { carNumber: '178구5586', entryDate: '2025-10-29', entryTime: '17:26:20' },
         { carNumber: '96구3789', entryDate: '2025-10-29', entryTime: '16:45:04' },
@@ -217,7 +217,7 @@ const DataUploadPage: React.FC = () => {
 
   // --- 4. 파일 업로드 핸들러 ---
   
-  // (공통) 파일 읽기 및 가짜 파싱
+  // 파일 읽기 및 가짜 파싱
   const handleFileUpload = (file: File, type: 'nice' | 's1') => {
     if (!file.name.endsWith('.xlsx') && !file.name.endsWith('.xls')) {
       alert('엑셀 파일만 업로드 가능합니다.');
@@ -369,7 +369,7 @@ const DataUploadPage: React.FC = () => {
             <div style={styles.loadedText}>{niceParkData.length}개 데이터 로드됨</div>
           )}
 
-          {/* 미리보기 테이블 (Area 4) */}
+          {/* 미리보기 테이블 */}
           <h4 style={{ ...styles.sectionTitle, fontSize: '14px', marginTop: '10px' }}>나이스파크 출입차량 데이터</h4>
           <div style={styles.tableContainer}>
             <table style={styles.table}>
@@ -433,7 +433,7 @@ const DataUploadPage: React.FC = () => {
             <div style={styles.loadedText}>{s1Data.length}개 데이터 로드됨</div>
           )}
 
-          {/* 미리보기 테이블 (Area 5) */}
+          {/* 미리보기 테이블 */}
           <h4 style={{ ...styles.sectionTitle, fontSize: '14px', marginTop: '10px' }}>에스원 출입차량 데이터</h4>
           <div style={styles.tableContainer}>
             <table style={styles.table}>
@@ -467,7 +467,7 @@ const DataUploadPage: React.FC = () => {
 
       </div>
 
-      {/* --- 3. 하단 등록 버튼 (Area 6) --- */}
+      {/* --- 3. 하단 등록 버튼 --- */}
       <div style={styles.footer}>
         <button 
             style={styles.submitBtn} 

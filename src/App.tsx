@@ -67,7 +67,7 @@ const App: React.FC = () => {
   return (
     <BrowserRouter>
       <Routes>
-        {/* 로그인 등 사이드바가 없는 페이지가 있다면 MainLayout 밖에 정의 */}
+        {/* 로그인 등 사이드바가 없는 페이지가 있다면 MainLayout 밖에 정의 기본 경로 로그인으로*/}
         <Route path="/" element={<Navigate to="/login" replace />} />
         <Route path="/login" element={<LoginPage />} />
 
