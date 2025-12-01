@@ -45,7 +45,7 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
   const [selectedRows, setSelectedRows] = useState<number[]>([]);
   
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
+  const itemsPerPage = 15;
   
   // --- 정렬 및 필터링 로직 개선 ---
   const searchableColumns = useMemo(() => 
@@ -399,7 +399,7 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
       </div>
 
       {/* 9, 10. 하단 영역 (페이지네이션, 전체 수정 버튼) */}
-            {/* [수정] justifyContent: 'space-between' -> 'flex-end'로 변경하고, 
+            {/* justifyContent: 'space-between' -> 'flex-end'로 변경하고, 
                        페이지네이션은 중앙 정렬을 위해 별도의 <div>를 사용하여 감쌉니다. 
                        전체 버튼을 오른쪽으로 배치하기 위해 기존의 `space-between` 대신 세 영역을 명확히 구분합니다. 
             */}
