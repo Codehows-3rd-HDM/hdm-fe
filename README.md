@@ -6,7 +6,13 @@
 
 src
 
-ㄴcomponents (구성 요소)
+ㄴcomponents (공통 구성 요소)
+
+      ㄴactivity
+
+        ㄴActivityFormModal.tsx(저감 활동 기록 등록/상세 조회/삭제 모달)
+
+        ㄴActivityListTemplate.tsx(저감 활동 기록 조회 템플릿)
 
       ㄴanalysis
 
@@ -28,7 +34,13 @@ src
 
 ㄴpages
 
+    ㄴactivities (저감활동)
+
+      ㄴActivityInquiryPage.tsx(저감 활동 조회)
+
     ㄴadmin (관리자)
+
+      ㄴActivityManagementPage.tsx(저감 활동 관리)
 
       ㄴCarModelManagementPage.tsx (차종 및 연비 기준정보 관리)
 
@@ -60,7 +72,9 @@ src
 
       ㄴFuelEmissionPage.tsx (연료별 탄소 배출)
 
-      ㄴOperationPurposeEmissionPage.tsx (운행 목적별 탄소 배)
+      ㄴOperationPurposeEmissionPage.tsx (운행 목적별 탄소 배출)
+
+      ㄴPeriodEmissionPage.tsx(기간별 탄소 배출)
 
       ㄴProcessEmissionPage.tsx (생산 공정별 탄소 배출)
 
@@ -70,7 +84,13 @@ src
 
     ㄴLoginPage.tsx (로그인)
 
+ㄴstyles (스타일)
+
+    ㄴcommonStyles.ts(공통 스타일)
+
 ㄴtypes (인터페이스 타입정의)
+
+    ㄴactivity.ts (저감 활동)
 
     ㄴanalysis.ts (탄소 배출량 조회)
 
