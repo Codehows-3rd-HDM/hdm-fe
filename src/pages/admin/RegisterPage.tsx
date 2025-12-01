@@ -121,7 +121,7 @@ const RegisterPage: React.FC = () => {
     console.log('📌 [API 요청] 계정 생성:', payload);
 
     try {
-      //계정 생성 API 호출 예시 (이전에 정의한 API 명세 참고: POST /users)
+      //계정 생성 API 호출 예시 (이전에 정의한 API 명세 참고)
       /*
       const response = await fetch('/api/users', {
         method: 'POST',

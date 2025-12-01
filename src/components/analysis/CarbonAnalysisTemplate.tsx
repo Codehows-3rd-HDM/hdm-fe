@@ -39,7 +39,7 @@ const CarbonAnalysisTemplate: React.FC<CarbonAnalysisTemplateProps> = ({
   const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>(null);
   
   // 차트 선택 상태 (체크박스)
-  // 초기값: 데이터 상위 5개 선택
+  // 초기값: 데이터 상위 3개 선택
   const [checkedItems, setCheckedItems] = useState<Set<string>>(() => {
     const top3 = initialData.sort((a, b) => b.totalEmission - a.totalEmission).slice(0, 3).map(d => d.name);
     return new Set(top3);

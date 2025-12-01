@@ -19,6 +19,9 @@ import ProductEmissionPage from './pages/Emissions inquiry/ProductEmissionPage';
 import FuelEmissionPage from './pages/Emissions inquiry/FuelEmissionPage';
 import './App.css'
 import TargetComparisonPage from './pages/Emissions inquiry/TargetComparisonPage';
+import PeriodEmissionPage from './pages/Emissions inquiry/PeriodEmissionPage';
+import ActivityInquiryPage from './pages/activities/ActivityInquiryPage';
+import ActivityManagementPage from './pages/admin/ActivityManagementPage';
 
 // [임시] 페이지가 없을 때 보여줄 플레이스홀더 컴포넌트
 const PagePlaceholder = ({ title }: { title: string }) => {
@@ -79,7 +82,7 @@ const App: React.FC = () => {
 
           {/* 2. 배출량 조회 그룹 */}
           <Route path="emissions">
-            <Route path="period" element={<PagePlaceholder title="기간별 탄소 총 배출량 (HDM-002)" />} />
+            <Route path="period" element={<PeriodEmissionPage/>} />
             <Route path="company" element={<CompanyEmissionPage />} />
             <Route path="purpose" element={<OperationPurposeEmissionPage />} />
             <Route path="process" element={<ProcessEmissionPage />} />
@@ -89,7 +92,7 @@ const App: React.FC = () => {
           </Route>
 
           {/* 3. 저감 활동 */}
-          <Route path="activities" element={<PagePlaceholder title="저감활동 기록 조회 (HDM-012)" />} />
+          <Route path="activities" element={<ActivityInquiryPage />} />
 
           {/* 4. 관리자 설정 그룹 */}
           <Route path="admin">
@@ -113,7 +116,7 @@ const App: React.FC = () => {
             
             {/* 4-4. 기타 관리 */}
             <Route path="dashboard-setting" element={<PagePlaceholder title="대시보드 관리" />} />
-            <Route path="activity-manage" element={<PagePlaceholder title="저감활동 기록 관리" />} />
+            <Route path="activity-manage" element={<ActivityManagementPage />} />
             <Route path="data-upload" element={<DataUploadPage/>} />
           </Route>
 
