@@ -1,0 +1,3 @@
+npm install lucide-react
+npm install recharts react-grid-layout lodash
+npm install --save-dev @types/react-grid-layout @types/lodash
