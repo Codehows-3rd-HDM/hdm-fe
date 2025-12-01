@@ -1,42 +1,72 @@
-#root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
-}
-
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
-}
-
-@keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
+/* =========================================
+   프린트 전용 스타일 (Print Layout Reset)
+   ========================================= */
+@media print {
+  /* 1. 사이드바 및 불필요한 요소 숨기기 */
+  .sidebar, 
+  button, 
+  .no-print { 
+    display: none !important; 
   }
-  to {
-    transform: rotate(360deg);
+
+  /* 2. 레이아웃 컨테이너 높이/스크롤 초기화 (가장 중요) */
+  html, body, #root, .app-container, .main-content {
+    width: 100% !important;
+    height: auto !important; /* 높이 고정 해제 */
+    min-height: auto !important;
+    overflow: visible !important; /* 스크롤바 제거 및 내용 흐름 허용 */
+    margin: 0 !important;
+    padding: 0 !important;
+    background-color: white !important; /* 배경색 흰색으로 */
   }
-}
 
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
+  /* 3. 메인 콘텐츠 영역 재설정 */
+  .app-container {
+    display: block !important; /* Flex 해제하고 블록 요소로 변경 */
   }
-}
 
-.card {
-  padding: 2em;
-}
+  .main-content {
+    position: static !important; /* 포지션 고정 해제 */
+    display: block !important;
+    width: 100% !important;
+  }
 
-.read-the-docs {
-  color: #888;
+  /* 4. 차트 및 카드 요소가 페이지 중간에 잘리지 않도록 설정 */
+  .recharts-responsive-container, 
+  div[class*="recharts-wrapper"],
+  div[style*="box-shadow"] { /* 그림자가 있는 카드 형태의 div들 */
+    break-inside: avoid !important;      /* 페이지 분절 방지 */
+    page-break-inside: avoid !important;
+    margin-bottom: 20px !important;
+    display: block !important; /* Flex로 인한 겹침 방지 */
+  }
+
+  /* 5. 배경색 및 그래픽 강제 출력 (차트 색상 유지) */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  
+  /* 6. 폰트 및 그림자 정리 */
+  body {
+    font-size: 12pt;
+    color: #000;
+  }
+  
+  div {
+    box-shadow: none !important; /* 잉크 절약을 위해 그림자 제거 (선택사항) */
+    border: none !important;     /* 불필요한 테두리 제거 (선택사항) */
+  }
+  
+  /* 7. 스크롤바가 있던 영역 강제 확장 */
+  ::-webkit-scrollbar {
+    display: none;
+  }
+  
+/* 페이지 인쇄 방향 설정 (가로 모드) */
+@page {
+    size: A4 landscape !important; /* A4 용지, 가로 방향 */
+    margin: 10mm 10mm 10mm 10mm !important; /* 여백 설정 */
+}
+  
 }
