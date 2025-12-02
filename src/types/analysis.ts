@@ -12,6 +12,7 @@ export interface AnalysisData {
   name: string; // 항목명 (예: 출퇴근, 휘발유, 업체A 등) -> 차트의 Key로 사용
   totalEmission: number; // 탄소배출량
   ratio: number; // 비율 (%)
+  [key: string]: any; // <-- 어떤 문자열 키든 허용합니다.
   
   // 추가 필드 (페이지별로 있을 수도 없을 수도 있음)
   distance?: number; // 운행거리

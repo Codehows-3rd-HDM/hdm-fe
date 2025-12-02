@@ -69,7 +69,7 @@ const CarbonAnalysisTemplate: React.FC<CarbonAnalysisTemplateProps> = ({
         data = data.filter(item => {
             if (searchColumn === 'all') {
                 // 숫자 제외하고 검색 (name, address 등 문자열 필드만)
-                return Object.entries(item).some(([key, val]) => {
+                return Object.entries(item).some(([val]) => {
                     if (typeof val === 'string') return val.toLowerCase().includes(searchQuery.toLowerCase());
                     return false;
                 });

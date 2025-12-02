@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Upload, Calendar } from 'lucide-react';
+import { X, Upload } from 'lucide-react';
 import { type ReductionActivity } from '../../types/activity';
 
 interface ActivityFormModalProps {
