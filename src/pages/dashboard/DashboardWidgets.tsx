@@ -125,7 +125,20 @@ export const SummarySection = () => {
             
             <Bar dataKey="value" radius={[5, 5, 0, 0]}>
                 {/* 값 텍스트 표시 (막대 위) */}
-                <LabelList dataKey="value" position="top" fill="#333" fontSize={12} formatter={(val: number) => val.toLocaleString()} />
+                <LabelList 
+                    dataKey="value" 
+                    position="top" 
+                    fill="#333" 
+                    fontSize={12} 
+                    formatter={(val: any) => { // 타입을 any로 변경
+                        // val이 유효한 숫자인지 확인 후 포맷팅
+                        if (typeof val === 'number') {
+                            return val.toLocaleString();
+                        }
+                        return ''; // 숫자가 아니면 빈 문자열 반환
+                    }} 
+                />
+
                 {
                   simpleBarData.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={entry.fill} />
@@ -284,7 +297,7 @@ export const PurposePieSection = () => {
               paddingAngle={3} // 조각 사이 간격
               dataKey="value"
             >
-              {pieData.map((entry, index) => (
+              {pieData.map((_entry, index) => (
                 <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
               ))}
             </Pie>
@@ -294,13 +307,13 @@ export const PurposePieSection = () => {
                 verticalAlign="bottom"
                 align="center"
                 wrapperStyle={{ fontSize: '15px', width: '100%' }}
-                payload={pieData.map((item, index) => ({
-                    id: item.name,
-                    type: "square",
-                    value: item.name,
-                    color: COLORS[index % COLORS.length],
-                    payload: item
-                }))}
+                // payload={pieData.map((item, index) => ({
+                //     id: item.name,
+                //     type: "square",
+                //     value: item.name,
+                //     color: COLORS[index % COLORS.length],
+                //     payload: item
+                // }))}
                 formatter={(value, entry: any) => (
                     <span style={{ color: '#333', marginLeft: '5px' }}>
                         {value} : <b>{entry.payload.value}%</b>

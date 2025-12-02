@@ -210,9 +210,22 @@ const TargetComparisonPage: React.FC = () => {
                 
                 <Bar dataKey="value">
                     {/* 막대 위 텍스트 값 표시 (진한 색상) */}
-                    <LabelList dataKey="value" position="top" fill="#333" fontSize={14} fontWeight="bold" formatter={(val: number) => val.toLocaleString()} />
+                    <LabelList 
+                        dataKey="value" 
+                        position="top" 
+                        fill="#333" 
+                        fontSize={14} 
+                        fontWeight="bold" 
+                        formatter={(val: any) => { // 타입을 any로 변경
+                            // val이 유효한 숫자인지 확인 후 포맷팅
+                            if (typeof val === 'number') {
+                                return val.toLocaleString();
+                            }
+                            return ''; // 숫자가 아니면 빈 문자열 반환
+                        }} 
+                    />
                     {
-                        annualChartData.map((entry, index) => (
+                        annualChartData.map((_entry, index) => (
                             <Cell key={`cell-${index}`} fill={index === 0 ? statusColor : COLORS.blue} />
                         ))
                     }

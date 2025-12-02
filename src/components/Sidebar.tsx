@@ -174,7 +174,7 @@ const Sidebar: React.FC = () => {
       {/* --- Level 2 --- */}
       <div
         //위에서 만든 스타일 함수에 isHighlight2 전달
-        style={styles.depth2Item(isHighlight2)} 
+        style={styles.depth2Item(isHighlight2 || false)} 
         onClick={() => handleToggleDepth2(depth2Key, hasSub2, depth2.path)}
       >
         <span style={{ 

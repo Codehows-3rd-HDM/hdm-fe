@@ -1,5 +1,5 @@
 // src/components/management/StandardDataManagementTable.tsx
-import React, { useState, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { type ColumnDefinition } from '../../types/data';
 import { ArrowUp, ArrowDown, ArrowUpDown, Search, Save, Trash2, X, Edit2, CheckSquare } from 'lucide-react'; 
 import ExcelUploadModal from '../common/ExcelUploadModal';
@@ -453,10 +453,12 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
             </div>
 {/* 3. Excel 업로드 모달 연결 */}
       <ExcelUploadModal 
-        isOpen={isUploadModalOpen} 
-        onClose={() => setIsUploadModalOpen(false)} 
-        target={title} // 모달에 어떤 페이지인지 표시
-      />
+        isOpen={isUploadModalOpen}
+        onClose={() => setIsUploadModalOpen(false)}
+        title={title} // 모달에 어떤 페이지인지 표시
+        columns={[]} onUpload={function (_data: any[]): void {
+          throw new Error('Function not implemented.');
+        } }      />
     </div>
   );
 };

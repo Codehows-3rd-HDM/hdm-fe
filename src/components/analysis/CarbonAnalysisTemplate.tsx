@@ -311,7 +311,7 @@ const CarbonAnalysisTemplate: React.FC<CarbonAnalysisTemplateProps> = ({
                             innerRadius={80} outerRadius={120}
                             paddingAngle={2}
                         >
-                            {pieChartData.map((entry, index) => (
+                            {pieChartData.map((_, index) => (
                                 <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                             ))}
                         </Pie>
@@ -338,7 +338,7 @@ const CarbonAnalysisTemplate: React.FC<CarbonAnalysisTemplateProps> = ({
                             <YAxis />
                             <RechartsTooltip formatter={(value: number) => value.toLocaleString()} />
                             <Legend />
-                            {Array.from(checkedItems).map((key, idx) => (
+                            {Array.from(checkedItems).map((key, _idx) => (
                                 <Line 
                                     key={key} type="monotone" dataKey={key} 
                                     stroke={COLORS[initialData.findIndex(d => d.name === key) % COLORS.length]} 

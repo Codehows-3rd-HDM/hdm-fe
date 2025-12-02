@@ -29,7 +29,7 @@ const DashboardPage: React.FC = () => {
     ]
   };
 
-  const [layouts, setLayouts] = useState(initialLayouts);
+  const [layouts, _setLayouts] = useState(initialLayouts);
 
   return (
     <div style={{ padding: '20px', backgroundColor: '#f4f7f9', minHeight: '100%' ,boxSizing: 'border-box' as const}}>

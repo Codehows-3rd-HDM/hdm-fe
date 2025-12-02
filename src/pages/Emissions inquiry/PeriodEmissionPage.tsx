@@ -129,7 +129,19 @@ const PeriodEmissionPage: React.FC = () => {
               </Bar>
               <Bar dataKey="scope3" name="Scope 3" stackId="a" fill={COLORS.scope3}>
                 <LabelList dataKey="scope3" position="center" fill="white" fontSize={12} />
-                <LabelList dataKey="total" position="top" formatter={(val: number) => val.toLocaleString()} fill="#333" fontWeight="bold" />
+                <LabelList 
+                    dataKey="total" 
+                    position="top" 
+                    fill="#333" 
+                    fontWeight="bold" 
+                    formatter={(val: any) => { // 타입을 any로 변경
+                        // val이 유효한 숫자인지 확인 후 포맷팅
+                        if (typeof val === 'number') {
+                            return val.toLocaleString();
+                        }
+                        return ''; // 숫자가 아니면 빈 문자열 반환
+                    }} 
+                />
               </Bar>
             </BarChart>
           </ResponsiveContainer>
