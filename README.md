@@ -4,6 +4,8 @@
 
 ---
 
+파일 뒤에 o 테일윈드 전환 완료
+
 src
 
 ㄴcomponents (공통 구성 요소)
@@ -26,7 +28,7 @@ src
 
         ㄴStandardDataManagementTable.tsx (기준정보 관리 페이지 템플릿)
 
-      ㄴSidebar.tsx (사이드바)
+      ㄴSidebar.tsx (사이드바) o
 
 ㄴdata
 
@@ -82,7 +84,7 @@ src
 
       ㄴTargetComparisonPage.tsx (목표 대비 탄소 배출)
 
-    ㄴLoginPage.tsx (로그인)
+    ㄴLoginPage.tsx (로그인) o
 
 ㄴstyles (스타일)
 
@@ -99,3 +101,11 @@ src
 ㄴutils
 
     ㄴdateUtils.ts (1~12월로 데이터를 바꾸는게 아닌 2~내년1월로 데이터를 바꾸게 끔하는 로직)
+
+ㄴApp.css o
+
+ㄴApp.tsx o
+
+ㄴindex.css o
+
+ㄴmain.tsx o

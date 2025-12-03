@@ -3,3 +3,4 @@ npm install recharts react-grid-layout lodash
 npm install --save-dev @types/react-grid-layout @types/lodash
 npm install -D tailwindcss postcss autoprefixer
 npm install -D @tailwindcss/postcss
+npm install tailwindcss @tailwindcss/vite

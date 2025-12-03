@@ -1,4 +1,4 @@
-/** @type {import('tailwindcss').Config} */
+/* @type {import('tailwindcss').Config} */
 export default {
   content: [
     "./index.html",
@@ -14,6 +14,8 @@ export default {
           green: '#28a745',     // 엑셀/성공 녹색
           red: '#dc3545',       // 삭제/경고 빨강
           gray: '#f4f7f9',      // 배경 회색
+          navy: '#1f253b',
+          white: '#FFFFFF',   //흰색
         }
       }
     },
