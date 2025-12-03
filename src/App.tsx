@@ -50,7 +50,7 @@ const MainLayout = () => {
       </div>
       
       {/* 메인 영역: flex-1, h-full, overflow-y-auto, bg-hd-gray(설정파일색), relative */}
-      <main className="flex-1 h-full overflow-y-auto bg-hd-gray relative main-content">
+      <main className="ml-[300px] p-6 flex-1 h-full overflow-y-auto bg-hd-gray relative main-content">
         <Outlet />
       </main>
     </div>
