@@ -42,24 +42,15 @@ const PagePlaceholder = ({ title }: { title: string }) => {
 // 메인 레이아웃 (사이드바 + 컨텐츠 영역)
 const MainLayout = () => {
   return (
-    // className="app-container" 추가
-    <div className="app-container" style={{ display: 'flex', minHeight: '100vh', overflow: 'hidden' }}>
+    <div className="flex min-h-screen overflow-hidden">
       
       {/* 사이드바: 프린트 시 숨길 대상 */}
-      <div className="sidebar">
+      <div className="sidebar print:hidden">
         <Sidebar />
       </div>
       
-      {/* 메인 영역 */}
-      <main 
-        className="main-content"
-        style={{ 
-            flex: 1, 
-            height: '100%', 
-            overflowY: 'auto', 
-            backgroundColor: '#f4f7f9',
-            position: 'relative' 
-        }}>
+      {/* 메인 영역: flex-1, h-full, overflow-y-auto, bg-hd-gray(설정파일색), relative */}
+      <main className="flex-1 h-full overflow-y-auto bg-hd-gray relative main-content">
         <Outlet />
       </main>
     </div>
