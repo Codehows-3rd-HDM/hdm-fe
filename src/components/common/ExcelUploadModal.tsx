@@ -18,14 +18,12 @@ const ExcelUploadModal: React.FC<ExcelUploadModalProps> = ({
   const [isDragOver, setIsDragOver] = useState(false);
   const [previewData, setPreviewData] = useState<any[]>([]);
   const [headers, setHeaders] = useState<string[]>([]);
-  const [fileName, setFileName] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!isOpen) {
       setPreviewData([]);
       setHeaders([]);
-      setFileName("");
     }
   }, [isOpen]);
 
@@ -37,7 +35,6 @@ const ExcelUploadModal: React.FC<ExcelUploadModalProps> = ({
       alert("엑셀 파일만 업로드 가능합니다.");
       return;
     }
-    setFileName(file.name);
 
     const reader = new FileReader();
     reader.onload = (e) => {
@@ -47,10 +44,10 @@ const ExcelUploadModal: React.FC<ExcelUploadModalProps> = ({
       const worksheet = workbook.Sheets[sheetName];
 
       // 첫 행을 헤더로 인식해서 JSON 변환
-      const jsonData = XLSX.utils.sheet_to_json(worksheet, { defval: "" });
+      const jsonData = XLSX.utils.sheet_to_json(worksheet, { defval: "" }) as any[];
 
       // 헤더 추출 (첫 행 키값들)
-      if (jsonData.length > 0) {
+      if (jsonData.length > 0 && typeof jsonData[0] === "object") {
         setHeaders(Object.keys(jsonData[0]));
       }
 

@@ -1,9 +1,7 @@
-import React, { useState } from 'react';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
   LineChart, Line, ComposedChart, PieChart, Pie, Cell, LabelList
 } from 'recharts';
-import { Responsive, WidthProvider } from 'react-grid-layout';
 import { getBusinessYear } from '../../utils/dateUtils';
 import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';

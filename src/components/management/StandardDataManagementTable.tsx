@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import type { ColumnDefinition } from '../../types/data';
 import { 
   ArrowUp, ArrowDown, ArrowUpDown, Search, Save, Trash2, X, CheckSquare, Edit2, Upload, Download, Loader2 
@@ -506,7 +506,6 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
         isOpen={isUploadModalOpen}
         onClose={() => setIsUploadModalOpen(false)}
         title={title}
-        columns={columns}
         onUpload={(data) => {
             console.log("Uploaded Data:", data);
             alert("업로드 로직 구현 필요");

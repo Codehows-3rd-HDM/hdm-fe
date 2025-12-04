@@ -1,6 +1,6 @@
 import React from 'react';
 import CarbonAnalysisTemplate from '../../components/analysis/CarbonAnalysisTemplate';
-import type { AnalysisColumn, AnalysisData } from '../../types/analysis';
+import type { AnalysisColumn } from '../../types/analysis';
 
 const COLUMNS: AnalysisColumn[] = [
   { id: 'name', header: '운행 목적', align: 'left' },

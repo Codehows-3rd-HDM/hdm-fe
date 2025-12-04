@@ -4,7 +4,7 @@ import {
   Cell, ComposedChart, Line, LabelList, 
   Legend
 } from 'recharts';
-import { Printer, Download, ChevronDown, TrendingUp, TrendingDown } from 'lucide-react';
+import { Printer, ChevronDown, TrendingUp, TrendingDown } from 'lucide-react';
 
 // --- 타입 정의 ---
 type ScopeType = 'total' | 'scope1' | 'scope3';
@@ -118,17 +118,17 @@ const TargetComparisonPage: React.FC = () => {
   // --- 이벤트 핸들러 ---
   const handlePrint = () => window.print();
   
-  const handleDownloadExcel = () => {
-    const headers = "Month,Actual Emission,Target Emission\n";
-    const rows = data.monthlyData.map(d => `${d.month},${d.actual},${d.target}`).join("\n");
-    const csvContent = `\ufeffYear: ${selectedYear}, Scope: ${selectedScope}\n${headers}${rows}`;
+//   const handleDownloadExcel = () => {
+//     const headers = "Month,Actual Emission,Target Emission\n";
+//     const rows = data.monthlyData.map(d => `${d.month},${d.actual},${d.target}`).join("\n");
+//     const csvContent = `\ufeffYear: ${selectedYear}, Scope: ${selectedScope}\n${headers}${rows}`;
     
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = `Target_vs_Emission_${selectedYear}.csv`;
-    link.click();
-  };
+//     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+//     const link = document.createElement('a');
+//     link.href = URL.createObjectURL(blob);
+//     link.download = `Target_vs_Emission_${selectedYear}.csv`;
+//     link.click();
+//   };
 
   return (
     <div className="p-8 bg-gray-50 min-h-screen font-sans">
