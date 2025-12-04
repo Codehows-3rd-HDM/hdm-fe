@@ -12,9 +12,9 @@ src
 
       ㄴactivity
 
-        ㄴActivityFormModal.tsx(저감 활동 기록 등록/상세 조회/삭제 모달)
+        ㄴActivityFormModal.tsx(저감 활동 기록 등록/상세 조회/삭제 모달) o
 
-        ㄴActivityListTemplate.tsx(저감 활동 기록 조회 템플릿)
+        ㄴActivityListTemplate.tsx(저감 활동 기록 조회 템플릿) o
 
       ㄴanalysis
 
