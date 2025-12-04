@@ -15,7 +15,7 @@ const downloadExcel = (data: any[], filename: string) => {
     const blob = new Blob(["\ufeff", csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
-    link.download = `${filename}.csv`;
+    link.download = `${filename}.xlsx`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);

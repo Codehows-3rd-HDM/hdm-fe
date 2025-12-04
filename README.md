@@ -22,7 +22,7 @@ src
 
       ㄴcommon
 
-        ㄴExcelUploadModal.tsx (액셀 업로드 모달)
+        ㄴExcelUploadModal.tsx (액셀 업로드 모달) o
 
       ㄴmanagement
 
@@ -48,7 +48,7 @@ src
 
       ㄴCompanyManagementPage.tsx (업체명 및 주소지 기준정보 관리)
 
-      ㄴDataUploadPage.tsx (나이스파크, 에스원 데이터 업로드)
+      ㄴDataUploadPage.tsx (나이스파크, 에스원 데이터 업로드) o
 
       ㄴProcessManagementPage.tsx (생산 공정 기준정보 관)
 
@@ -56,11 +56,11 @@ src
 
       ㄴPurposeManagementPage.tsx (운행 목적 기준정보 관)
 
-      ㄴRegisterPage.tsx (계정 생성)
+      ㄴRegisterPage.tsx (계정 생성) o
 
       ㄴVehicleManagementPage.tsx (출입 차량 기준정보 관리)
 
-      ㄴVehicleRegisterPage.tsx (등록 페이지 6)
+      ㄴVehicleRegisterPage.tsx (등록 페이지 6) o
 
     ㄴdashboard (대시보드) o
 
