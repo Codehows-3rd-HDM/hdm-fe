@@ -37,7 +37,7 @@ const Sidebar: React.FC = () => {
   };
 
   return (
-    <div className="fixed left-0 top-0 w-[260px] h-screen bg-white border-r border-[#e0e0e0] 
+    <div className="fixed left-0 top-0 w-[300px] h-screen bg-white border-r border-[#e0e0e0] 
                     font-[Malgun_Gothic,'Apple_SD_Gothic_Neo',sans-serif] flex flex-col overflow-y-auto pb-10">
       {/* 로고 영역 */}
       <div className="px-5 pt-[25px] pb-[15px] border-b border-[#f0f0f0] mb-[10px]">
