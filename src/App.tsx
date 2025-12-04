@@ -10,7 +10,7 @@ import VehicleManagementPage from './pages/admin/VehicleManagementPage';
 import CompanyManagementPage from './pages/admin/CompanyManagementPage';
 import CarModelManagementPage from './pages/admin/CarModelManagementPage';
 import ProcessManagementPage from './pages/admin/ProcessManagementPage';
-import PurposeManagementPage from './pages/admin/PurposeManagementPage';
+import PurposeManagementPage from './pages/admin/OperationPurposeManagementPage';
 import ProductManagementPage from './pages/admin/ProductManagementPage';
 import CompanyEmissionPage from './pages/Emissions inquiry/CompanyEmissionPage';
 import OperationPurposeEmissionPage from './pages/Emissions inquiry/OperationPurposeEmissionPage';

@@ -18,7 +18,7 @@ src
 
       ㄴanalysis
 
-        ㄴCarbonAnalysisTemplate.tsx (탄소 배출량 조회 템플릿)
+        ㄴCarbonAnalysisTemplate.tsx (탄소 배출량 조회 템플릿) o api
 
       ㄴcommon
 
@@ -26,7 +26,7 @@ src
 
       ㄴmanagement
 
-        ㄴStandardDataManagementTable.tsx (기준정보 관리 페이지 템플릿) o
+        ㄴStandardDataManagementTable.tsx (기준정보 관리 페이지 템플릿) o api
 
       ㄴSidebar.tsx (사이드바) o
 

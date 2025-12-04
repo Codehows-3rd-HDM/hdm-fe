@@ -11,20 +11,13 @@ const COLUMNS: AnalysisColumn[] = [
   { id: 'avgEmission', header: '평균 탄소배출량 (tCO2eq)', format: 'number', sortable: true },
 ];
 
-const MOCK_DATA: AnalysisData[] = [
-  { id: 1, name: '출퇴근', totalEmission: 20000, ratio: 50, distance: 15000, count: 125, avgEmission: 160, monthlyTrend: [1500, 1600, 1550, 1700, 1800, 1750, 1600, 1500, 1650, 1700, 1800, 1850] },
-  { id: 2, name: '납품', totalEmission: 10000, ratio: 25, distance: 20000, count: 150, avgEmission: 66, monthlyTrend: [800, 850, 900, 800, 750, 800, 850, 900, 950, 900, 850, 800] },
-  { id: 3, name: '기타', totalEmission: 10000, ratio: 25, distance: 5000, count: 50, avgEmission: 200, monthlyTrend: [500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500] },
-  { id: 4, name: '자재운송', totalEmission: 5000, ratio: 12.5, distance: 3000, count: 30, avgEmission: 166, monthlyTrend: [400, 420, 410, 430, 400, 420, 410, 430, 400, 420, 410, 430] },
-];
-
 const OperationPurposeEmissionPage: React.FC = () => {
   return (
     <CarbonAnalysisTemplate
       title="운행 목적별 탄소 배출량"
       hasScopeTabs={true}
       columns={COLUMNS}
-      initialData={MOCK_DATA}
+      dataType='operationpurpose'
     />
   );
 };

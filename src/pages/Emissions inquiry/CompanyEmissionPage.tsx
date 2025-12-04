@@ -11,24 +11,13 @@ const COLUMNS: AnalysisColumn[] = [
   { id: 'address', header: '주소', align: 'left' },
 ];
 
-const MOCK_DATA: AnalysisData[] = Array.from({ length: 10 }, (_, i) => ({
-    id: i + 1,
-    name: `협력업체 ${String.fromCharCode(65 + i)}`,
-    totalEmission: Math.floor(Math.random() * 10000) + 1000,
-    ratio: 10,
-    distance: Math.floor(Math.random() * 5000) + 500,
-    carCount: Math.floor(Math.random() * 20) + 1,
-    address: `경기도 성남시 분당구 판교로 ${i + 1}번길`,
-    monthlyTrend: Array.from({ length: 12 }, () => Math.floor(Math.random() * 1000))
-}));
-
 const CompanyEmissionPage: React.FC = () => {
   return (
     <CarbonAnalysisTemplate
       title="납품 업체별 탄소 배출량"
       hasScopeTabs={false}
       columns={COLUMNS}
-      initialData={MOCK_DATA}
+      dataType='company'
     />
   );
 };
