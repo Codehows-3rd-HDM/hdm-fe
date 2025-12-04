@@ -26,7 +26,7 @@ src
 
       ㄴmanagement
 
-        ㄴStandardDataManagementTable.tsx (기준정보 관리 페이지 템플릿)
+        ㄴStandardDataManagementTable.tsx (기준정보 관리 페이지 템플릿) o
 
       ㄴSidebar.tsx (사이드바) o
 
@@ -82,7 +82,7 @@ src
 
       ㄴProductEmissionPage.tsx (생산품목 구분별 탄소 배출)
 
-      ㄴTargetComparisonPage.tsx (목표 대비 탄소 배출)
+      ㄴTargetComparisonPage.tsx (목표 대비 탄소 배출) o
 
     ㄴLoginPage.tsx (로그인) o
 

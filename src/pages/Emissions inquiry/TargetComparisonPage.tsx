@@ -15,71 +15,99 @@ interface MonthlyTargetData {
   target: number; // 목표
 }
 
-// --- 스타일 상수 ---
-const COLORS = {
-  red: '#dc3545',   // 목표 초과 (위험)
-  green: '#28a745', // 목표 달성 (안전)
-  blue: '#4a90e2',  // 일반 (목표 그래프용)
+// useMemo에서 반환할 데이터 구조 확장
+interface ChartData {
+  totalActual: number;
+  totalTarget: number;
+  monthlyData: MonthlyTargetData[];
+  lastReportingMonth: number; // 데이터가 존재하는 마지막 월 (1~12)
+}
+
+// --- 상수 정의 ---
+const RECHARTS_COLORS = {
+  red: '#ef4444',   // 목표 초과 (Tailwind red-500)
+  green: '#22c55e', // 목표 달성 (Tailwind green-500)
+  blue: '#3b82f6',  // 일반 (Tailwind blue-500)
+  targetLine: '#f97316', // 목표 선 (Tailwind orange-500)
 };
+
+const DB_START_YEAR = 1979;
 
 const TargetComparisonPage: React.FC = () => {
   // --- 상태 관리 ---
   const [selectedScope, setSelectedScope] = useState<ScopeType>('total');
   
   // 연도 선택: 1979년 ~ 현재 연도까지 동적 생성
-  const currentYear = new Date().getFullYear();
+  const today = useMemo(() => new Date(), []);
+  const currentYear = today.getFullYear();
+  
   const years = useMemo(() => {
       const yearList = [];
-      for (let y = currentYear; y >= 1979; y--) {
-          yearList.push(y.toString());
+      for (let y = currentYear; y >= DB_START_YEAR; y--) {
+        yearList.push(y.toString());
       }
       return yearList;
   }, [currentYear]);
 
   const [selectedYear, setSelectedYear] = useState<string>(currentYear.toString());
 
-  // --- Mock Data 생성 ---
-  const data = useMemo(() => {
+  // --- Mock Data 생성 및 동적 월 기준 설정 ---
+  const data: ChartData = useMemo(() => {
+    const reportingYear = parseInt(selectedYear);
+    const currentMonth = today.getMonth() + 1; // 1월: 1, 12월: 12
+    
+    // [개선] 데이터가 존재하는 마지막 월을 동적으로 설정
+    // 현재 연도: 현재 월까지. 과거 연도: 12월까지.
+    const lastReportingMonth = reportingYear < currentYear ? 12 : currentMonth; 
+    
     // 1. 연간 총 데이터 계산 (Mock)
-    // 짝수 해는 초과, 홀수 해는 달성으로 시뮬레이션
     const yearNum = parseInt(selectedYear);
     const isBadYear = yearNum % 2 === 0; 
     
     const baseTarget = selectedScope === 'total' ? 10000 : (selectedScope === 'scope1' ? 4000 : 6000);
     const totalTarget = baseTarget;
     
-    const totalActual = isBadYear 
+    // 실적은 보고된 월 수에 비례하여 조정될 수 있도록 Mockup
+    const totalActualBase = isBadYear 
         ? baseTarget + Math.floor(Math.random() * 2000) + 500 
         : baseTarget - Math.floor(Math.random() * 1000);
+    
+    // 보고 월수에 따른 총 실적 조정 (단순화를 위해, 실제는 월별 합산)
+    const totalActual = Math.floor(totalActualBase * (lastReportingMonth / 12)); 
 
-    // 2. 월별 데이터 생성
-    const monthlyData: MonthlyTargetData[] = Array.from({ length: 12 }, (_, i) => {
-        const baseMonthTarget = Math.floor(totalTarget / 12);
-        
-        // 월별 목표치에도 변동(Variance) 부여
-        // 목표치도 계절성이나 상황에 따라 조금씩 다를 수 있음을 표현
-        const targetVariance = Math.floor(Math.random() * 150) - 75; 
-        const actualVariance = Math.floor(Math.random() * 400) - 200; 
-        
-        return {
-            month: `${i + 1}월`,
-            target: baseMonthTarget + targetVariance, // 목표값도 흔들리게 설정
-            actual: Math.floor(totalActual / 12) + actualVariance
-        };
+    // 2. 월별 데이터 생성 (lastReportingMonth까지만 생성)
+    const monthlyData: MonthlyTargetData[] = Array.from({ length: lastReportingMonth }, (_, i) => {
+      const baseMonthTarget = Math.floor(totalTarget / lastReportingMonth); // 보고 월수로 나눔
+      
+      const targetVariance = Math.floor(Math.random() * 100) - 50; 
+      const actualVariance = Math.floor(Math.random() * 200) - 100; 
+      
+      return {
+          month: `${i + 1}월`,
+          target: baseMonthTarget + targetVariance, 
+          actual: Math.floor(totalActual / lastReportingMonth) + actualVariance // 총 실적을 보고 월수로 나눔
+      };
     });
 
     return {
         totalActual,
         totalTarget,
-        monthlyData
+        monthlyData,
+        lastReportingMonth, // 동적으로 계산된 마지막 월 반환
     };
-  }, [selectedYear, selectedScope]);
+  }, [selectedYear, selectedScope, currentYear, today]); // 의존성 추가
 
   // --- 계산 로직 ---
   const diff = data.totalActual - data.totalTarget;
-  const percent = ((Math.abs(diff) / data.totalTarget) * 100).toFixed(1);
+  // 목표는 연간 목표이므로, 퍼센트 계산 시에도 연간 목표를 사용
+  const percent = ((Math.abs(diff) / data.totalTarget) * 100).toFixed(1); 
   const isExceeded = diff > 0; // 목표 초과 여부
-  const statusColor = isExceeded ? COLORS.red : COLORS.green;
+  
+  const statusColorClass = isExceeded ? 'text-red-500' : 'text-green-500';
+  const statusRechartsColor = isExceeded ? RECHARTS_COLORS.red : RECHARTS_COLORS.green;
+  
+  // 기준 월 텍스트
+  const monthCriterionText = `${data.lastReportingMonth}월까지 기준`;
 
   // 차트용 데이터
   const annualChartData = [
@@ -103,38 +131,45 @@ const TargetComparisonPage: React.FC = () => {
   };
 
   return (
-    <div style={{ padding: '30px', fontFamily: 'Malgun Gothic, sans-serif', minHeight: '100%' }}>
+    <div className="p-8 bg-gray-50 min-h-screen font-sans">
       
       {/* 헤더 */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-        <h2 style={{ fontSize: '24px', fontWeight: 'bold', color: '#333' }}>목표 대비 탄소 배출량</h2>
-        <div style={{ display: 'flex', gap: '10px' }}>
-          <button onClick={handlePrint} style={btnStyle('white', '#333', true)}>
-            <Printer size={16} style={{ marginRight: '5px' }} /> Print
+      <header className="flex justify-between items-center mb-6 print:hidden">
+        <h2 className="text-2xl font-bold text-gray-800">목표 대비 탄소 배출량</h2>
+        <div className="flex gap-3">
+          {/* Print 버튼 */}
+          <button 
+            onClick={handlePrint} 
+            className="flex items-center px-4 py-2 text-sm font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg shadow-sm hover:bg-gray-100 transition duration-150"
+          >
+            <Printer size={16} className="mr-2" />
+            인쇄
           </button>
-          <button onClick={handleDownloadExcel} style={btnStyle('white', '#28a745', true)}>
-            <Download size={16} style={{ marginRight: '5px' }} /> Excel
-          </button>
+          {/* Excel 다운로드 버튼 */}
+          {/* <button 
+            onClick={handleDownloadExcel} 
+            className="flex items-center px-4 py-2 text-sm font-semibold text-white bg-green-500 border border-green-500 rounded-lg shadow-md hover:bg-green-600 transition duration-150"
+          >
+            <Download size={16} className="mr-2" /> 
+            Excel 다운로드
+          </button> */}
         </div>
-      </div>
+      </header>
 
-      {/* 1. 탭 */}
-      <div style={{ display: 'flex', gap: '10px', marginBottom: '20px', borderBottom: '1px solid #ddd', paddingBottom: '10px' }}>
+      {/* 1. 탭 (Scope 선택) */}
+      <div className="flex gap-2 mb-6 border-b border-gray-200 pb-3">
         {['total', 'scope1', 'scope3'].map((scope) => (
             <button
                 key={scope}
                 onClick={() => setSelectedScope(scope as ScopeType)}
-                style={{
-                    padding: '10px 20px',
-                    borderRadius: '20px',
-                    border: selectedScope === scope ? `1px solid #333` : '1px solid #eee',
-                    backgroundColor: selectedScope === scope ? '#333' : '#fff',
-                    color: selectedScope === scope ? '#fff' : '#666',
-                    cursor: 'pointer',
-                    fontWeight: 'bold',
-                    display: 'flex',
-                    alignItems: 'center'
-                }}
+                className={`
+                    px-5 py-2 text-sm font-semibold rounded-full transition-all duration-200 
+                    ${selectedScope === scope 
+                        ? 'bg-gray-800 text-white border-gray-800 shadow-md' 
+                        : 'bg-white text-gray-600 border border-gray-300 hover:bg-gray-100'
+                    }
+                    flex items-center
+                `}
             >
                 {scope === 'total' ? '✓ 총 배출량' : scope === 'scope1' ? 'Scope 1' : 'Scope 3'}
             </button>
@@ -142,91 +177,102 @@ const TargetComparisonPage: React.FC = () => {
       </div>
 
       {/* 2. KPI 카드 (연도 선택 포함) */}
-      <div style={{ display: 'flex', gap: '20px', marginBottom: '20px' }}>
-        <div style={{ flex: 1, display: 'flex', gap: '20px', backgroundColor: '#fff', padding: '25px', borderRadius: '10px', border: '1px solid #ffc107', position: 'relative' }}>
-            {/* 총 배출량 */}
-            <div style={{ flex: 1, paddingRight: '20px', borderRight: '1px solid #eee' }}>
-                <div style={{ fontSize: '13px', color: '#666', marginBottom: '5px' }}>{selectedYear}년도 총 배출량</div>
-                <div style={{ fontSize: '32px', fontWeight: 'bold', color: statusColor, marginBottom: '5px' }}>
-                    {data.totalActual.toLocaleString()} <span style={{ fontSize: '16px', color: '#333' }}>tCO2eq</span>
+      <div className="flex flex-col md:flex-row gap-6 mb-8">
+        <div className="flex flex-1 gap-5 bg-white p-6 rounded-xl shadow-lg border-l-4 border-amber-500 relative">
+            
+            {/* 총 배출량 (실적) */}
+            <div className="flex-1 pr-5 border-r border-gray-200">
+                <div className="text-sm text-gray-600 mb-1">{selectedYear}년도 총 배출량</div>
+                <div className={`text-4xl font-extrabold mb-1 ${statusColorClass}`}>
+                    {data.totalActual.toLocaleString()} <span className="text-xl text-gray-700">tCO2eq</span>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', color: statusColor, fontWeight: 'bold', fontSize: '14px' }}>
-                    {isExceeded ? <TrendingUp size={16} style={{ marginRight: '5px' }} /> : <TrendingDown size={16} style={{ marginRight: '5px' }} />}
+                {/* 차이 및 증감률 */}
+                <div className={`flex items-center font-bold text-sm ${statusColorClass}`}>
+                    {isExceeded ? 
+                      <TrendingUp size={16} className="mr-1" /> : 
+                      <TrendingDown size={16} className="mr-1" />
+                    }
                     {diff > 0 ? '+' : ''}{diff.toLocaleString()} tCO2eq ({percent}%)
                 </div>
-                <div style={{ fontSize: '11px', color: '#999', marginTop: '5px', textAlign: 'right' }}>*12월까지 기준</div>
+                {/* 동적 월 기준 적용 */}
+                <div className="text-xs text-gray-500 mt-2 text-right">*{monthCriterionText}</div>
             </div>
 
             {/* 목표 배출량 */}
-            <div style={{ flex: 1, paddingLeft: '20px' }}>
-                <div style={{ fontSize: '13px', color: '#666', marginBottom: '5px' }}>{selectedYear}년 목표 배출량</div>
-                <div style={{ fontSize: '32px', fontWeight: 'bold', color: '#333', marginBottom: '5px' }}>
-                    {data.totalTarget.toLocaleString()} <span style={{ fontSize: '16px', color: '#333' }}>tCO2eq</span>
+            <div className="flex-1 pl-5">
+                <div className="text-sm text-gray-600 mb-1">{selectedYear}년 목표 배출량</div>
+                <div className="text-4xl font-extrabold text-gray-800 mb-1">
+                    {data.totalTarget.toLocaleString()} <span className="text-xl text-gray-700">tCO2eq</span>
                 </div>
-                <div style={{ fontSize: '11px', color: '#999', marginTop: '30px', textAlign: 'right' }}>*12월까지 기준</div>
+                {/* 동적 월 기준 적용 */}
+                <div className="text-xs text-gray-500 mt-9 text-right">*{monthCriterionText}</div>
             </div>
 
-            {/* 연도 선택 드롭다운 (동적 생성된 years 사용) */}
-            <div style={{ position: 'absolute', top: '20px', right: '20px' }}>
-                <div style={{ position: 'relative' }}>
+            {/* 연도 선택 드롭다운 */}
+            <div className="absolute top-5 right-5">
+                <div className="relative">
                     <select 
                         value={selectedYear}
                         onChange={(e) => setSelectedYear(e.target.value)}
-                        style={{ 
-                            padding: '8px 30px 8px 15px', 
-                            borderRadius: '20px', 
-                            border: '1px solid #333', 
-                            appearance: 'none', 
-                            fontWeight: 'bold',
-                            cursor: 'pointer',
-                            backgroundColor: '#fff'
-                        }}
+                        className="pl-4 pr-8 py-2 text-sm rounded-full border border-gray-400 font-semibold cursor-pointer appearance-none bg-white focus:ring-2 focus:ring-sky-500"
                     >
                         {years.map(y => (
                             <option key={y} value={y}>{y}년</option>
                         ))}
                     </select>
-                    <ChevronDown size={16} style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
+                    <ChevronDown size={16} className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none text-gray-600" />
                 </div>
             </div>
         </div>
       </div>
 
-      {/* 연간 비교 차트 */}
-      <div style={{ backgroundColor: '#fff', padding: '20px', borderRadius: '10px', border: '1px solid #ffc107', marginBottom: '30px', height: '350px' }}>
-        <h3 style={{ textAlign: 'center', fontSize: '18px', fontWeight: 'bold', color: '#333', marginBottom: '5px' }}>
-            {selectedYear}년 탄소 배출량 비교
+      {/* 3. 연간 비교 차트 */}
+      <div className="bg-white p-6 rounded-xl shadow-lg border-l-4 border-sky-500 mb-8 h-[400px]">
+        <h3 className="text-center text-xl font-bold text-gray-800 mb-2">
+            {selectedYear}년 탄소 배출량 비교 (실적 vs 목표)
         </h3>
-        <ResponsiveContainer width="100%" height="100%">
+        <ResponsiveContainer width="100%" height="90%">
             <BarChart
                 data={annualChartData}
-                margin={{ top: 30, right: 30, left: 30, bottom: 20 }} // 라벨 공간 확보를 위한 마진 설정
-                barSize={80}
+                margin={{ top: 30, right: 30, left: 30, bottom: 20 }}
+                barSize={100}
             >
-                <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                <CartesianGrid strokeDasharray="3 3" vertical={false} className="stroke-gray-200" />
                 <XAxis dataKey="name" tick={{ fontSize: 14, fontWeight: 'bold' }} />
-                <YAxis />
-                <Tooltip formatter={(val: number) => val.toLocaleString()} cursor={{ fill: 'transparent' }} />
+                <YAxis label={{ value: 'tCO2eq', angle: -90, position: 'insideLeft', fill: '#6b7280' }} />
+                <Tooltip 
+                  formatter={(val: number) => `${val.toLocaleString()} tCO2eq`} 
+                  labelFormatter={(name) => name}
+                  contentStyle={{ 
+                    backgroundColor: '#fff', 
+                    borderRadius: '8px', 
+                    border: '1px solid #ccc', 
+                    padding: '10px', 
+                    fontSize: '14px' 
+                  }}
+                  cursor={{ fill: 'rgba(0,0,0,0.05)' }} 
+                />
                 
                 <Bar dataKey="value">
-                    {/* 막대 위 텍스트 값 표시 (진한 색상) */}
                     <LabelList 
                         dataKey="value" 
                         position="top" 
-                        fill="#333" 
+                        fill="#374151" 
                         fontSize={14} 
                         fontWeight="bold" 
-                        formatter={(val: any) => { // 타입을 any로 변경
-                            // val이 유효한 숫자인지 확인 후 포맷팅
+                        formatter={(val: any) => { 
                             if (typeof val === 'number') {
                                 return val.toLocaleString();
                             }
-                            return ''; // 숫자가 아니면 빈 문자열 반환
+                            return ''; 
                         }} 
                     />
                     {
                         annualChartData.map((_entry, index) => (
-                            <Cell key={`cell-${index}`} fill={index === 0 ? statusColor : COLORS.blue} />
+                            <Cell 
+                              key={`cell-${index}`} 
+                              fill={index === 0 ? statusRechartsColor : RECHARTS_COLORS.blue} 
+                            />
                         ))
                     }
                 </Bar>
@@ -235,21 +281,34 @@ const TargetComparisonPage: React.FC = () => {
       </div>
 
       {/* 4. 월별 추이 차트 */}
-      <div style={{ backgroundColor: '#fff', padding: '20px', borderRadius: '10px', border: '1px solid #ffc107', height: '450px' }}>
-        <h3 style={{ textAlign: 'center', fontSize: '18px', fontWeight: 'bold', color: '#333', marginBottom: '5px' }}>
+      <div className="bg-white p-6 rounded-xl shadow-lg border-l-4 border-sky-500 h-[500px]">
+        <h3 className="text-center text-xl font-bold text-gray-800 mb-2">
             {selectedYear}년 월별 탄소 배출량 추이
         </h3>
-        <div style={{ textAlign: 'right', fontSize: '11px', color: '#999', marginBottom: '10px' }}>*12월까지 기준</div>
+        {/* [개선] 동적 월 기준 적용 */}
+        <div className="text-xs text-gray-500 text-right mb-4">*{monthCriterionText}</div>
         
-        <ResponsiveContainer width="100%" height="90%">
+        <ResponsiveContainer width="100%" height="85%">
             <ComposedChart data={data.monthlyData} margin={{ top: 20, right: 20, bottom: 20, left: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                <CartesianGrid strokeDasharray="3 3" vertical={false} className="stroke-gray-200" />
                 <XAxis dataKey="month" tick={{ fontSize: 12 }} />
-                <YAxis />
-                <Tooltip formatter={(val: number) => val.toLocaleString()} />
-                <Legend />
-                <Bar dataKey="actual" name={`${selectedYear}년 실적`} fill="#4a90e2" barSize={30} radius={[4, 4, 0, 0]} />
-                <Line type="monotone" dataKey="target" name="목표 배출량" stroke="#ff7300" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} />
+                <YAxis label={{ value: 'tCO2eq', angle: -90, position: 'insideLeft', fill: '#6b7280' }} />
+                <Tooltip formatter={(val: number) => `${val.toLocaleString()} tCO2eq`} />
+                <Legend iconType="circle" wrapperStyle={{ paddingTop: '10px' }} />
+                
+                {/* 실적 (막대) */}
+                <Bar dataKey="actual" name={`${selectedYear}년 실적`} fill={RECHARTS_COLORS.blue} barSize={40} radius={[4, 4, 0, 0]} />
+                
+                {/* 목표 (선) */}
+                <Line 
+                  type="monotone" 
+                  dataKey="target" 
+                  name="목표 배출량" 
+                  stroke={RECHARTS_COLORS.targetLine} 
+                  strokeWidth={3} 
+                  dot={{ r: 4 }} 
+                  activeDot={{ r: 6 }} 
+                />
             </ComposedChart>
         </ResponsiveContainer>
       </div>
@@ -257,18 +316,5 @@ const TargetComparisonPage: React.FC = () => {
     </div>
   );
 };
-
-const btnStyle = (bg: string, color: string, border: boolean) => ({
-    padding: '8px 15px',
-    backgroundColor: bg,
-    color: color,
-    border: border ? `1px solid ${color === '#333' ? '#ccc' : color}` : 'none',
-    borderRadius: '4px',
-    fontWeight: 'bold' as const,
-    cursor: 'pointer',
-    display: 'flex',
-    alignItems: 'center',
-    fontSize: '13px'
-});
 
 export default TargetComparisonPage;

@@ -58,7 +58,7 @@ const LoginPage: React.FC = () => {
             className="ml-2 text-gray-400 text-[11px] font-bold cursor-pointer"
             onClick={() => setShowPassword(!showPassword)}
           >
-            SHOW
+            {showPassword ? "HIDE" : "SHOW"}
           </button>
         </div>
 
