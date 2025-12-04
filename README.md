@@ -62,7 +62,7 @@ src
 
       ㄴVehicleRegisterPage.tsx (등록 페이지 6)
 
-    ㄴdashboard (대시보드)
+    ㄴdashboard (대시보드) o
 
       ㄴDashboardPage.tsx (위젯을 부르는 대시보드)
 
@@ -76,7 +76,7 @@ src
 
       ㄴOperationPurposeEmissionPage.tsx (운행 목적별 탄소 배출)
 
-      ㄴPeriodEmissionPage.tsx(기간별 탄소 배출)
+      ㄴPeriodEmissionPage.tsx(기간별 탄소 배출) o
 
       ㄴProcessEmissionPage.tsx (생산 공정별 탄소 배출)
 
