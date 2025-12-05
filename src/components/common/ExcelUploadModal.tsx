@@ -1,192 +1,67 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { Upload, X, Save, FileSpreadsheet, AlertCircle } from 'lucide-react';
-
-// --- 타입 정의 ---
-export interface ColumnDef {
-  header: string; // 테이블 헤더에 보일 이름 (예: '차량 번호')
-  key: string;    // 데이터 객체의 키 (예: 'carNumber')
-}
+import React, { useState, useRef, useEffect } from "react";
+import { Upload, X, Save, FileSpreadsheet, AlertCircle } from "lucide-react";
+import * as XLSX from "xlsx";
 
 interface ExcelUploadModalProps {
   isOpen: boolean;
   onClose: () => void;
   title: string;
-  columns: ColumnDef[]; // 페이지마다 다른 컬럼 정의를 받음
-  onUpload: (data: any[]) => void; // 최종 데이터 부모에게 전달
+  onUpload: (data: any[]) => void;
 }
 
-// --- 스타일 정의 ---
-const styles = {
-  overlay: {
-    position: 'fixed' as const,
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)', // 반투명 검은 배경
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    zIndex: 1000,
-  },
-  modal: {
-    backgroundColor: '#fff',
-    borderRadius: '8px',
-    width: '800px', // 넉넉한 너비
-    maxWidth: '95%',
-    maxHeight: '90vh', // 화면 꽉 차지 않게
-    display: 'flex',
-    flexDirection: 'column' as const,
-    boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-    overflow: 'hidden',
-  },
-  header: {
-    padding: '20px',
-    borderBottom: '1px solid #eee',
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  title: {
-    fontSize: '18px',
-    fontWeight: 'bold',
-    color: '#333',
-    display: 'flex',
-    alignItems: 'center',
-    gap: '10px',
-  },
-  body: {
-    padding: '20px',
-    overflowY: 'auto' as const,
-    flex: 1,
-  },
-  // 드래그 앤 드롭 영역 (이전 페이지 스타일 재사용)
-  dropZone: {
-    border: '2px dashed #ddd',
-    borderRadius: '8px',
-    height: '100px',
-    display: 'flex',
-    flexDirection: 'column' as const,
-    alignItems: 'center',
-    justifyContent: 'center',
-    cursor: 'pointer',
-    backgroundColor: '#fafafa',
-    transition: 'all 0.2s',
-    marginBottom: '20px',
-    color: '#666',
-  },
-  dropZoneActive: {
-    borderColor: '#007bff',
-    backgroundColor: '#eef6ff',
-    color: '#007bff',
-  },
-  // 테이블 스타일
-  tableContainer: {
-    border: '1px solid #eee',
-    borderRadius: '4px',
-    overflow: 'hidden',
-    marginTop: '10px',
-  },
-  table: {
-    width: '100%',
-    borderCollapse: 'collapse' as const,
-    fontSize: '13px',
-  },
-  th: {
-    backgroundColor: '#f4f4f4',
-    padding: '12px',
-    textAlign: 'left' as const,
-    borderBottom: '1px solid #ddd',
-    color: '#555',
-    fontWeight: 'bold',
-    whiteSpace: 'nowrap' as const,
-  },
-  td: {
-    padding: '12px',
-    borderBottom: '1px solid #eee',
-    color: '#333',
-  },
-  footer: {
-    padding: '20px',
-    borderTop: '1px solid #eee',
-    display: 'flex',
-    justifyContent: 'flex-end',
-    gap: '10px',
-    backgroundColor: '#fff',
-  },
-  cancelBtn: {
-    padding: '10px 20px',
-    border: '1px solid #ddd',
-    backgroundColor: '#fff',
-    borderRadius: '4px',
-    cursor: 'pointer',
-    fontWeight: 'bold',
-    color: '#666',
-  },
-  saveBtn: {
-    padding: '10px 20px',
-    border: 'none',
-    backgroundColor: '#007bff',
-    color: '#fff',
-    borderRadius: '4px',
-    cursor: 'pointer',
-    fontWeight: 'bold',
-    display: 'flex',
-    alignItems: 'center',
-    gap: '8px',
-  },
-};
-
-const ExcelUploadModal: React.FC<ExcelUploadModalProps> = ({ 
-  isOpen, 
-  onClose, 
-  title, 
-  columns, 
-  onUpload 
+const ExcelUploadModal: React.FC<ExcelUploadModalProps> = ({
+  isOpen,
+  onClose,
+  title,
+  onUpload,
 }) => {
   const [isDragOver, setIsDragOver] = useState(false);
   const [previewData, setPreviewData] = useState<any[]>([]);
-  const [fileName, setFileName] = useState('');
+  const [headers, setHeaders] = useState<string[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // 모달이 닫힐 때 데이터 초기화
   useEffect(() => {
     if (!isOpen) {
       setPreviewData([]);
-      setFileName('');
+      setHeaders([]);
     }
   }, [isOpen]);
 
   if (!isOpen) return null;
 
-  // 파일 처리 및 Mock Data 생성
+  // 엑셀 파일 파싱 (컬럼 이름 그대로 사용)
   const handleFile = (file: File) => {
-    if (!file.name.endsWith('.xlsx') && !file.name.endsWith('.xls')) {
-      alert('엑셀 파일만 업로드 가능합니다.');
+    if (!file.name.endsWith(".xlsx") && !file.name.endsWith(".xls")) {
+      alert("엑셀 파일만 업로드 가능합니다.");
       return;
     }
-    setFileName(file.name);
 
-    // [로직] 여기서 실제 파일 파싱을 해야함, UI 구현을 위해
-    // columns Props를 기반으로 더미 데이터를 생성합니다.
-    const mockRows = Array.from({ length: 5 }).map((_, i) => {
-      const row: any = {};
-      // columns.forEach((col) => {
-      //   // 예: header가 '차량번호'면 값은 '차량번호_Data_1' 식
-      //   if (col.key.includes('date')) row[col.key] = `2025-07-0${i + 1}`;
-      //   else row[col.key] = `${col.header}_데이터_${i + 1}`;
-      // });
-      return row;
-    });
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const data = new Uint8Array(e.target?.result as ArrayBuffer);
+      const workbook = XLSX.read(data, { type: "array" });
+      const sheetName = workbook.SheetNames[0];
+      const worksheet = workbook.Sheets[sheetName];
 
-    setPreviewData(mockRows);
+      // 첫 행을 헤더로 인식해서 JSON 변환
+      const jsonData = XLSX.utils.sheet_to_json(worksheet, { defval: "" }) as any[];
+
+      // 헤더 추출 (첫 행 키값들)
+      if (jsonData.length > 0 && typeof jsonData[0] === "object") {
+        setHeaders(Object.keys(jsonData[0]));
+      }
+
+      // 미리보기는 10건만 표시
+      setPreviewData((jsonData as any[]).slice(0, 10));
+    };
+    reader.readAsArrayBuffer(file);
   };
 
   const onDragOver = (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragOver(true);
   };
-  
+
   const onDrop = (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragOver(false);
@@ -195,46 +70,71 @@ const ExcelUploadModal: React.FC<ExcelUploadModalProps> = ({
     }
   };
 
-  const handleSave = () => {
+  // 저장 버튼 → 서버 전송
+  const handleSave = async () => {
     if (previewData.length === 0) {
-      alert('업로드된 데이터가 없습니다.');
+      alert("업로드된 데이터가 없습니다.");
       return;
     }
-    onUpload(previewData);
-    onClose();
+
+    try {
+      const res = await fetch("/api/excel-upload", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(previewData),
+      });
+
+      if (res.ok) {
+        alert("데이터가 성공적으로 업로드되었습니다!");
+        onUpload(previewData);
+        onClose();
+      } else {
+        alert("업로드 실패");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("서버 오류 발생");
+    }
   };
 
   return (
-    <div style={styles.overlay}>
-      <div style={styles.modal}>
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[1000]">
+      <div className="bg-white rounded-lg w-[800px] max-w-[95%] max-h-[90vh] flex flex-col shadow-lg overflow-hidden">
         {/* Header */}
-        <div style={styles.header}>
-          <div style={styles.title}>
-            <FileSpreadsheet size={24} color="#28a745" />
+        <div className="p-5 border-b border-gray-200 flex justify-between items-center">
+          <div className="text-lg font-bold text-gray-800 flex items-center gap-2">
+            <FileSpreadsheet size={24} className="text-green-600" />
             {title}
           </div>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
-            <X size={24} color="#999" />
+          <button onClick={onClose} className="hover:opacity-70">
+            <X size={24} className="text-gray-500" />
           </button>
         </div>
 
         {/* Body */}
-        <div style={styles.body}>
+        <div className="p-5 overflow-y-auto flex-1">
           {/* Dropzone */}
           <div
-            style={{ ...styles.dropZone, ...(isDragOver ? styles.dropZoneActive : {}) }}
+            className={`border-2 border-dashed rounded-lg h-24 flex flex-col items-center justify-center cursor-pointer transition-all mb-5 ${
+              isDragOver
+                ? "border-blue-500 bg-blue-50 text-blue-500"
+                : "border-gray-300 bg-gray-50 text-gray-600"
+            }`}
             onDragOver={onDragOver}
             onDragLeave={() => setIsDragOver(false)}
             onDrop={onDrop}
             onClick={() => fileInputRef.current?.click()}
           >
-            <Upload size={30} style={{ marginBottom: '10px', color: isDragOver ? '#007bff' : '#ccc' }} />
-            <span style={{ fontWeight: 'bold' }}>클릭하여 엑셀 파일 업로드</span>
-            <span style={{ fontSize: '12px', marginTop: '5px' }}>또는 파일을 여기로 드래그하세요</span>
+            <Upload
+              size={30}
+              className={`mb-2 ${isDragOver ? "text-blue-500" : "text-gray-400"}`}
+            />
+            <span className="font-bold">클릭하여 엑셀 파일 업로드</span>
+            <span className="text-xs mt-1">또는 파일을 여기로 드래그하세요</span>
             <input
               type="file"
               ref={fileInputRef}
-              style={{ display: 'none' }}
+              className="hidden"
               accept=".xlsx, .xls"
               onChange={(e) => e.target.files && handleFile(e.target.files[0])}
             />
@@ -242,51 +142,74 @@ const ExcelUploadModal: React.FC<ExcelUploadModalProps> = ({
 
           {/* Preview Area */}
           {previewData.length > 0 ? (
-            <div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
-                <span style={{ fontSize: '13px', fontWeight: 'bold', color: '#007bff' }}>
-                  📄 {fileName} (미리보기 5건)
-                </span>
-                <span style={{ fontSize: '12px', color: '#666' }}>총 {previewData.length}개 데이터 감지됨</span>
-              </div>
-              <div style={styles.tableContainer}>
-                <table style={styles.table}>
+            <>
+              <div className="border border-gray-200 rounded overflow-hidden mt-2">
+                <table className="w-full border-collapse text-sm">
                   <thead>
                     <tr>
-                      {columns.map((col) => (
-                        <th key={col.key} style={styles.th}>{col.header}</th>
+                      {headers.map((header) => (
+                        <th
+                          key={header}
+                          className="bg-gray-100 px-3 py-2 text-left border-b border-gray-300 text-gray-700 font-bold whitespace-nowrap"
+                        >
+                          {header}
+                        </th>
                       ))}
                     </tr>
                   </thead>
                   <tbody>
                     {previewData.map((row, idx) => (
                       <tr key={idx}>
-                        {columns.map((col) => (
-                          <td key={col.key} style={styles.td}>{row[col.key]}</td>
+                        {headers.map((header) => (
+                          <td
+                            key={header}
+                            className="px-3 py-2 border-b border-gray-200 text-gray-800"
+                          >
+                            {row[header]}
+                          </td>
                         ))}
                       </tr>
                     ))}
                   </tbody>
                 </table>
               </div>
-            </div>
+
+              {/* JSON Raw Preview */}
+              <div className="mt-4">
+                <h3 className="text-sm font-semibold text-gray-700 mb-1">
+                  📦 파싱된 JSON 데이터
+                </h3>
+                <pre className="bg-gray-50 border border-gray-200 rounded p-3 text-xs text-gray-800 overflow-x-auto max-h-64">
+                  {JSON.stringify(previewData, null, 2)}
+                </pre>
+              </div>
+            </>
           ) : (
-            <div style={{ textAlign: 'center', padding: '40px', color: '#999' }}>
-               <AlertCircle size={40} style={{ marginBottom: '10px', opacity: 0.3 }} />
-               <p>엑셀 파일을 업로드하면<br/>데이터 미리보기가 여기에 표시됩니다.</p>
+            <div className="text-center p-10 text-gray-400">
+              <AlertCircle size={40} className="mx-auto mb-2 opacity-30" />
+              <p>
+                엑셀 파일을 업로드하면
+                <br />
+                데이터 미리보기가 여기에 표시됩니다.
+              </p>
             </div>
           )}
         </div>
 
         {/* Footer */}
-        <div style={styles.footer}>
-          <button style={styles.cancelBtn} onClick={onClose}>취소</button>
-          <button 
-            style={{ 
-              ...styles.saveBtn, 
-              opacity: previewData.length === 0 ? 0.5 : 1, 
-              cursor: previewData.length === 0 ? 'not-allowed' : 'pointer' 
-            }}
+        <div className="p-5 border-t border-gray-200 flex justify-end gap-2 bg-white">
+          <button
+            className="px-4 py-2 border border-gray-300 bg-white rounded font-bold text-gray-600 hover:bg-gray-100"
+            onClick={onClose}
+          >
+            취소
+          </button>
+          <button
+            className={`px-4 py-2 rounded font-bold flex items-center gap-2 ${
+              previewData.length === 0
+                ? "bg-blue-500 text-white opacity-50 cursor-not-allowed"
+                : "bg-blue-500 text-white hover:bg-blue-600"
+            }`}
             onClick={handleSave}
             disabled={previewData.length === 0}
           >

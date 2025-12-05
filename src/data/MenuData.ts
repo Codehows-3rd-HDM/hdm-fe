@@ -36,7 +36,7 @@ export const menuItems: MenuItem[] = [
     icon: Settings,
     items: [
       {
-        title: '출입 차량의 기본 데이터 관리',
+        title: '출입 차량 데이터 관리',
         items: [
           { title: '출입차량의 기본정보 등록', path: '/admin/vehicle/register' },
           { title: '출입차량 정보 관리', path: '/admin/vehicle/manage' },

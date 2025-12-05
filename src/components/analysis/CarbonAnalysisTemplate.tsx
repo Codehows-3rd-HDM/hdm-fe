@@ -1,14 +1,15 @@
-import React, { useState, useMemo, useRef } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { 
   PieChart, Pie, Cell, Tooltip as RechartsTooltip, Legend, ResponsiveContainer,
   LineChart, Line, XAxis, YAxis, CartesianGrid 
 } from 'recharts';
-import { Search, Printer, Download, CheckSquare, Square } from 'lucide-react';
+import { Search, Printer, Download, CheckSquare, Square, Loader2, ChevronDown } from 'lucide-react';
 import type { AnalysisColumn, AnalysisData, ScopeType } from '../../types/analysis';
-// import { useReactToPrint } from 'react-to-print'; // (선택사항) 일단 window.print() 사용
+import { fetchAnalysisData, type AnalysisDataType } from '../../apis/emissions';
 
-// --- 스타일 및 상수 ---
+// --- 상수 ---
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d', '#ffc658'];
+const DB_START_YEAR = 2018; // [설정] DB 데이터 시작 연도
 
 const SCOPE_TABS: { id: ScopeType; label: string }[] = [
   { id: 'total', label: '총 배출량' },
@@ -19,58 +20,71 @@ const SCOPE_TABS: { id: ScopeType; label: string }[] = [
 
 interface CarbonAnalysisTemplateProps {
   title: string;
-  hasScopeTabs?: boolean; // 1번 탭 기능 유무 (운행목적, 연료별: true / 나머지: false)
+  hasScopeTabs?: boolean;
   columns: AnalysisColumn[];
-  initialData: AnalysisData[]; // 초기 데이터 (Mock)
+  dataType: AnalysisDataType; // [변경] initialData 대신 데이터 종류를 받음
 }
 
 const CarbonAnalysisTemplate: React.FC<CarbonAnalysisTemplateProps> = ({
   title,
   hasScopeTabs = false,
   columns,
-  initialData
+  dataType
 }) => {
   // --- 상태 관리 ---
+  const [data, setData] = useState<AnalysisData[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  // 현재 연도를 기본값으로 설정
+  const currentYear = new Date().getFullYear();
+  const [selectedYear, setSelectedYear] = useState<string>(currentYear.toString());
+  
   const [selectedScope, setSelectedScope] = useState<ScopeType>('total');
-  const [selectedYear, setSelectedYear] = useState<string>('2025');
   const [selectedMonth, setSelectedMonth] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [searchColumn, setSearchColumn] = useState<string>('all');
   const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>(null);
   
   // 차트 선택 상태 (체크박스)
-  // 초기값: 데이터 상위 3개 선택
-  const [checkedItems, setCheckedItems] = useState<Set<string>>(() => {
-    const top3 = initialData.sort((a, b) => b.totalEmission - a.totalEmission).slice(0, 3).map(d => d.name);
-    return new Set(top3);
-  });
-  const [chartSearchQuery, setChartSearchQuery] = useState(''); // 5번 영역 검색
+  const [checkedItems, setCheckedItems] = useState<Set<string>>(new Set());
+  const [chartSearchQuery, setChartSearchQuery] = useState('');
 
-  const componentRef = useRef<HTMLDivElement>(null); // 프린트 영역 참조
+  const componentRef = useRef<HTMLDivElement>(null);
 
-  // --- 데이터 필터링 로직 (Mock) ---
-  // 실제로는 API 호출 시 scope, year, month를 파라미터로 넘겨야 함
-  // 여기서는 UI 동작 확인을 위해 데이터를 그대로 쓰거나 약간 변형하는 흉내만 냄
-  
+  // --- [API] 데이터 로딩 ---
+  useEffect(() => {
+    const loadData = async () => {
+      setLoading(true);
+      try {
+        // API 호출 (타입, 연도, 월, 스코프 전달)
+        const result = await fetchAnalysisData(dataType, selectedYear, selectedMonth, selectedScope);
+        setData(result);
+        
+        // 데이터 로드 후 차트 체크박스 초기화 (상위 3개 자동 선택)
+        const top3 = [...result].sort((a, b) => b.totalEmission - a.totalEmission).slice(0, 3).map(d => d.name);
+        setCheckedItems(new Set(top3));
+      } catch (error) {
+        console.error("Failed to load analysis data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadData();
+  }, [dataType, selectedYear, selectedMonth, selectedScope]); // 필터 변경 시 재호출
+
+  // --- 데이터 필터링 (클라이언트 측 검색/정렬) ---
   const processedData = useMemo(() => {
-    let data = [...initialData];
+    let processed = [...data];
 
-    // 1. 탭 필터 (Mock: 탭에 따라 데이터 수치를 임의로 조정하여 변화를 줌)
-    if (hasScopeTabs && selectedScope !== 'total') {
-        data = data.map(item => ({
-            ...item,
-            totalEmission: Math.floor(item.totalEmission * (selectedScope === 'scope1' ? 0.4 : 0.6)),
-            monthlyTrend: item.monthlyTrend?.map(v => Math.floor(v * (selectedScope === 'scope1' ? 0.4 : 0.6)))
-        }));
-    }
-
-    // 6. 메인 검색 필터
+    // 검색
     if (searchQuery) {
-        data = data.filter(item => {
+        processed = processed.filter(item => {
             if (searchColumn === 'all') {
-                // 숫자 제외하고 검색 (name, address 등 문자열 필드만)
                 return Object.entries(item).some(([key, val]) => {
-                    if (typeof val === 'string') return val.toLowerCase().includes(searchQuery.toLowerCase());
+                    if (key === 'monthlyTrend') return false; // 배열 제외
+                    if (typeof val === 'string' || typeof val === 'number') {
+                        return String(val).toLowerCase().includes(searchQuery.toLowerCase());
+                    }
                     return false;
                 });
             } else {
@@ -79,36 +93,38 @@ const CarbonAnalysisTemplate: React.FC<CarbonAnalysisTemplateProps> = ({
         });
     }
 
-    // 7. 정렬
+    // 정렬
     if (sortConfig) {
-        data.sort((a, b) => {
+        processed.sort((a, b) => {
             const aVal = (a as any)[sortConfig.key];
             const bVal = (b as any)[sortConfig.key];
-            if (aVal < bVal) return sortConfig.direction === 'asc' ? -1 : 1;
-            if (aVal > bVal) return sortConfig.direction === 'asc' ? 1 : -1;
-            return 0;
+            
+            // 숫자/문자 구분 정렬
+            if (typeof aVal === 'number' && typeof bVal === 'number') {
+                return sortConfig.direction === 'asc' ? aVal - bVal : bVal - aVal;
+            }
+            const strA = String(aVal);
+            const strB = String(bVal);
+            return sortConfig.direction === 'asc' 
+                ? strA.localeCompare(strB) 
+                : strB.localeCompare(strA);
         });
     }
 
-    return data;
-  }, [initialData, selectedScope, searchQuery, searchColumn, sortConfig, hasScopeTabs]);
+    return processed;
+  }, [data, searchQuery, searchColumn, sortConfig]);
 
-
-  // --- 차트 데이터 준비 ---
-  // 파이 차트용 (비율 높은 순 정렬)
+  // --- 차트 데이터 가공 ---
   const pieChartData = useMemo(() => {
     return [...processedData].sort((a, b) => b.totalEmission - a.totalEmission);
   }, [processedData]);
 
-  // 라인 차트용 (월별 데이터 변환)
-  // Recharts LineChart는 [{ name: '1월', '출퇴근': 100, '납품': 200 }, ...] 형태가 필요
   const lineChartData = useMemo(() => {
-    if (selectedMonth !== 'all') return []; // 월별 선택 시 라인 차트 숨김
+    if (selectedMonth !== 'all') return [];
 
     const months = Array.from({ length: 12 }, (_, i) => `${i + 1}월`);
     return months.map((month, idx) => {
         const row: any = { name: month };
-        // 체크된 아이템들의 해당 월 데이터 매핑
         processedData.forEach(item => {
             if (checkedItems.has(item.name)) {
                 row[item.name] = item.monthlyTrend ? item.monthlyTrend[idx] : 0;
@@ -118,7 +134,16 @@ const CarbonAnalysisTemplate: React.FC<CarbonAnalysisTemplateProps> = ({
     });
   }, [processedData, selectedMonth, checkedItems]);
 
-  // --- 이벤트 핸들러 ---
+  // --- 연도 옵션 생성 (DB 시작년도 ~ 현재년도) ---
+  const yearOptions = useMemo(() => {
+      const options = [];
+      for (let y = currentYear; y >= DB_START_YEAR; y--) {
+          options.push(y.toString());
+      }
+      return options;
+  }, [currentYear]);
+
+  // --- 핸들러 ---
   const handleSort = (key: string) => {
     setSortConfig(prev => ({
         key,
@@ -126,11 +151,10 @@ const CarbonAnalysisTemplate: React.FC<CarbonAnalysisTemplateProps> = ({
     }));
   };
 
-  const handlePrint = () => {
-    window.print(); // 간단한 브라우저 프린트 사용 (CSS @media print로 제어)
-  };
+  const handlePrint = () => window.print();
 
   const handleDownloadExcel = () => {
+    if (processedData.length === 0) return;
     const headers = columns.map(c => c.header).join(',');
     const rows = processedData.map(d => columns.map(c => (d as any)[c.id]).join(',')).join('\n');
     const csvContent = `\ufeff${headers}\n${rows}`;
@@ -153,90 +177,63 @@ const CarbonAnalysisTemplate: React.FC<CarbonAnalysisTemplateProps> = ({
       else setCheckedItems(new Set());
   };
 
-  //Recharts v2 이상에서는 <Legend payload>가 타입에서 막혀 있어서 바로 못 씀. 커스템 Legend
   const CustomLegend = ({ payload }: any) => {
     if (!payload) return null;
-
-    // payload: [{ value: name, color, payload: { name, totalEmission, ratio, ... } }]
     const sorted = [...payload]
-        .sort((a, b) => b.payload.totalEmission - a.payload.totalEmission) // 정렬
-        .slice(0, 5); // 상위 4개
+        .sort((a, b) => b.payload.totalEmission - a.payload.totalEmission)
+        .slice(0, 5);
 
     return (
-        <ul style={{ 
-            listStyle: 'none', 
-            padding: 0, 
-            margin: 0, 
-            width: '100%', 
-            fontSize: '15px' 
-        }}>
+        <ul className="list-none p-0 m-0 w-full text-sm">
             {sorted.map((entry: any, index: number) => (
-                <li 
-                    key={`legend-item-${index}`} 
-                    style={{ 
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '6px',
-                        marginBottom: '6px'
-                    }}
-                >
-                    {/* square icon */}
-                    <span 
-                        style={{
-                            width: 12,
-                            height: 12,
-                            backgroundColor: entry.color,
-                            borderRadius: '3px' // square
-                        }}
-                    />
-
-                    {/* label formatting */}
-                    <span style={{ color: '#333' }}>
+                <li key={`legend-item-${index}`} className="flex items-center gap-2 mb-1.5">
+                    <span style={{ backgroundColor: entry.color }} className="w-3 h-3 rounded-sm block" />
+                    <span className="text-gray-700">
                         {entry.value} : <b>{entry.payload.ratio}%</b>
                     </span>
                 </li>
             ))}
         </ul>
     );
-};
-
-
-
+  };
 
   // --- 렌더링 ---
   return (
-    <div ref={componentRef} style={{ padding: '30px', minHeight: '100%', fontFamily: 'Malgun Gothic, sans-serif' }}>
+    <div ref={componentRef} className="p-8 min-h-full font-sans bg-gray-50">
       
-      {/* 헤더 (타이틀 & 버튼) */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-        <h2 style={{ fontSize: '24px', fontWeight: 'bold', color: '#333' }}>{title}</h2>
-        <div style={{ display: 'flex', gap: '10px' }}>
-          <button onClick={handlePrint} style={btnStyle('white', '#333', true)}>
-            <Printer size={16} style={{ marginRight: '5px' }} /> Print
+      {/* 헤더 */}
+      <div className="flex justify-between items-center mb-6 print:hidden">
+        <h2 className="text-2xl font-bold text-gray-800">{title}</h2>
+        <div className="flex gap-3">
+          <button 
+            onClick={handlePrint} 
+            className="flex items-center px-4 py-2 bg-white text-gray-700 border border-gray-300 rounded-md font-bold hover:bg-gray-100 transition-colors shadow-sm"
+          >
+            <Printer size={16} className="mr-2" /> Print
           </button>
-          <button onClick={handleDownloadExcel} style={btnStyle('white', '#28a745', true)}>
-            <Download size={16} style={{ marginRight: '5px' }} /> Excel
+          <button 
+            onClick={handleDownloadExcel} 
+            className="flex items-center px-4 py-2 bg-green-600 text-white rounded-md font-bold hover:bg-green-700 transition-colors shadow-sm"
+          >
+            <Download size={16} className="mr-2" /> Excel
           </button>
         </div>
       </div>
 
-      {/* Scope 탭 (조건부 렌더링) */}
+      {/* Scope 탭 */}
       {hasScopeTabs && (
-        <div style={{ display: 'flex', borderBottom: '1px solid #ddd', marginBottom: '20px' }}>
+        <div className="flex border-b border-gray-200 mb-6 print:hidden">
           {SCOPE_TABS.map(tab => (
             <button
               key={tab.id}
               onClick={() => setSelectedScope(tab.id)}
-              style={{
-                padding: '12px 24px',
-                border: 'none',
-                backgroundColor: 'transparent',
-                borderBottom: selectedScope === tab.id ? '3px solid #007bff' : '3px solid transparent',
-                fontWeight: selectedScope === tab.id ? 'bold' : 'normal',
-                color: selectedScope === tab.id ? '#007bff' : '#666',
-                cursor: 'pointer',
-                fontSize: '15px'
-              }}
+              className={`
+                px-6 py-3 border-b-2 text-[15px] font-medium transition-colors
+                ${selectedScope === tab.id 
+                  ? 'border-blue-600 text-blue-600 font-bold' 
+                  : 'border-transparent text-gray-500 hover:text-gray-700'
+                }
+              `}
             >
               {tab.label}
             </button>
@@ -244,63 +241,76 @@ const CarbonAnalysisTemplate: React.FC<CarbonAnalysisTemplateProps> = ({
         </div>
       )}
 
-      {/* 연도/월 선택 필터 */}
-      <div style={{ display: 'flex', gap: '20px', marginBottom: '20px', backgroundColor: '#fff', padding: '15px', borderRadius: '8px', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}>
-        <div style={{ display: 'flex', flexDirection: 'column' }}>
-            <label style={{ fontSize: '12px', fontWeight: 'bold', marginBottom: '5px' }}>▼ 연도 선택</label>
-            <select 
-                value={selectedYear} 
-                onChange={(e) => {
-                    setSelectedYear(e.target.value);
-                    if(e.target.value === 'all') setSelectedMonth('all'); // 연도 전체면 월도 전체로 강제
-                }}
-                style={selectStyle}
-            >
-                <option value="all">전체</option>
-                {Array.from({ length: 2025 - 1979 + 1 }, (_, i) => 2025 - i).map(y => (
-                    <option key={y} value={y}>{y}년</option>
-                ))}
-            </select>
-        </div>
-        
-        {/* 연도가 '전체'가 아닐 때만 월 선택 활성화 */}
-        {selectedYear !== 'all' && (
-            <div style={{ display: 'flex', flexDirection: 'column' }}>
-                <label style={{ fontSize: '12px', fontWeight: 'bold', marginBottom: '5px' }}>▼ 월 선택</label>
+      {/* 필터 영역 */}
+      <div className="flex gap-6 mb-6 bg-white p-5 rounded-xl shadow-sm border border-gray-100 print:hidden">
+        {/* 연도 선택 */}
+        <div className="flex flex-col gap-1.5">
+            <label className="text-xs font-bold text-gray-500">▼ 연도 선택</label>
+            <div className="relative">
                 <select 
-                    value={selectedMonth} 
-                    onChange={(e) => setSelectedMonth(e.target.value)}
-                    style={selectStyle}
+                    value={selectedYear} 
+                    onChange={(e) => {
+                        setSelectedYear(e.target.value);
+                        if(e.target.value === 'all') setSelectedMonth('all');
+                    }}
+                    className="w-32 p-2 pr-8 border border-gray-300 rounded-md text-sm bg-white outline-none focus:ring-2 focus:ring-blue-500 appearance-none cursor-pointer"
                 >
                     <option value="all">전체</option>
-                    {Array.from({ length: 12 }, (_, i) => i + 1).map(m => (
-                        <option key={m} value={m}>{m}월</option>
+                    {yearOptions.map(y => (
+                        <option key={y} value={y}>{y}년</option>
                     ))}
                 </select>
+                <ChevronDown size={16} className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+            </div>
+        </div>
+        
+        {/* 월 선택 */}
+        {selectedYear !== 'all' && (
+            <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-bold text-gray-500">▼ 월 선택</label>
+                <div className="relative">
+                    <select 
+                        value={selectedMonth} 
+                        onChange={(e) => setSelectedMonth(e.target.value)}
+                        className="w-32 p-2 pr-8 border border-gray-300 rounded-md text-sm bg-white outline-none focus:ring-2 focus:ring-blue-500 appearance-none cursor-pointer"
+                    >
+                        <option value="all">전체</option>
+                        {Array.from({ length: 12 }, (_, i) => i + 1).map(m => (
+                            <option key={m} value={m}>{m}월</option>
+                        ))}
+                    </select>
+                    <ChevronDown size={16} className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+                </div>
             </div>
         )}
       </div>
 
+      {/* 로딩 표시 */}
+      {loading && (
+          <div className="flex justify-center py-20">
+              <Loader2 size={40} className="animate-spin text-blue-500" />
+          </div>
+      )}
+
       {/* 차트 영역 */}
-      {/* 데이터가 있을 때만 표시 */}
-      {processedData.length > 0 && (
-        <div style={{ display: 'flex', gap: '20px', marginBottom: '30px', height: '500px' }}>
+      {!loading && processedData.length > 0 && (
+        <div className="flex flex-col lg:flex-row gap-6 mb-8 h-[500px]">
             
-            {/* 파이 차트 (항상 표시, 중앙 정렬) */}
-            <div style={{ 
-                flex: selectedMonth === 'all' ? 1 : '0 0 100%', // 월 선택 시 전체 너비 사용
-                backgroundColor: '#fff', borderRadius: '8px', padding: '20px', 
-                boxShadow: '0 2px 4px rgba(0,0,0,0.05)', display: 'flex', flexDirection: 'column',
-                alignItems: 'center', justifyContent: 'center', position: 'relative'
-            }}>
-                <h4 style={{ position: 'absolute', top: '20px', left: '20px', margin: 0 }}>
+            {/* 파이 차트 */}
+            <div className={`
+                ${selectedMonth === 'all' ? 'lg:flex-1' : 'w-full'} 
+                bg-white rounded-xl p-6 shadow-sm border border-gray-100 flex flex-col items-center justify-center relative
+            `}>
+                <h4 className="absolute top-5 left-5 text-lg font-bold text-gray-800">
                     {selectedYear === 'all' ? '전체' : selectedYear}년 {selectedMonth === 'all' ? '연간' : `${selectedMonth}월`} {title}
                 </h4>
-                {/* 파이 차트 중앙 텍스트 */}
-                <div style={{ position: 'absolute', top: '40%', left: '50%', transform: 'translate(-50%, -50%)', textAlign: 'center', pointerEvents: 'none' }}>
-                    <div style={{ fontSize: '20px', fontWeight: 'bold' }}>100%</div>
-                    <div style={{ fontSize: '12px', color: '#666' }}>Total</div>
+                
+                {/* 중앙 텍스트 */}
+                <div className="absolute top-[40%] left-1/2 -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none">
+                    <div className="text-2xl font-bold text-gray-800">100%</div>
+                    <div className="text-xs text-gray-500">Total</div>
                 </div>
+
                 <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
                         <Pie
@@ -311,38 +321,41 @@ const CarbonAnalysisTemplate: React.FC<CarbonAnalysisTemplateProps> = ({
                             innerRadius={80} outerRadius={120}
                             paddingAngle={2}
                         >
-                            {pieChartData.map((entry, index) => (
+                            {pieChartData.map((_, index) => (
                                 <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                             ))}
                         </Pie>
-                        <Legend
-                            layout="horizontal"
-                            verticalAlign="bottom"
-                            align="center"
+                        <Legend 
+                            layout="horizontal" verticalAlign="bottom" align="center" 
                             content={<CustomLegend />}
                         />
-
-                        <RechartsTooltip formatter={(value: number) => value.toLocaleString()} />
+                        <RechartsTooltip 
+                            formatter={(value: number) => `${value.toLocaleString()} tCO2eq`} 
+                            contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
+                        />
                     </PieChart>
                 </ResponsiveContainer>
             </div>
 
-            {/* 라인 차트 (월이 '전체'일 때만 표시) */}
+            {/* 라인 차트 */}
             {selectedMonth === 'all' && (
-                <div style={{ flex: 2, backgroundColor: '#fff', borderRadius: '8px', padding: '20px', boxShadow: '0 2px 4px rgba(0,0,0,0.05)', display: 'flex', flexDirection: 'column' }}>
-                    <h4 style={{ margin: '0 0 20px 0' }}>{selectedYear}년 월별 추이</h4>
+                <div className="lg:flex-[2] bg-white rounded-xl p-6 shadow-sm border border-gray-100 flex flex-col">
+                    <h4 className="text-lg font-bold text-gray-800 mb-6">{selectedYear}년 월별 추이</h4>
                     <ResponsiveContainer width="100%" height="100%">
                         <LineChart data={lineChartData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
-                            <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                            <XAxis dataKey="name" />
-                            <YAxis />
-                            <RechartsTooltip formatter={(value: number) => value.toLocaleString()} />
+                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
+                            <XAxis dataKey="name" tick={{ fontSize: 12, fill: '#666' }} axisLine={false} tickLine={false} />
+                            <YAxis tick={{ fontSize: 12, fill: '#666' }} axisLine={false} tickLine={false} />
+                            <RechartsTooltip 
+                                formatter={(value: number) => value.toLocaleString()} 
+                                contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
+                            />
                             <Legend />
-                            {Array.from(checkedItems).map((key, idx) => (
+                            {Array.from(checkedItems).map((key, _idx) => (
                                 <Line 
                                     key={key} type="monotone" dataKey={key} 
-                                    stroke={COLORS[initialData.findIndex(d => d.name === key) % COLORS.length]} 
-                                    activeDot={{ r: 8 }} strokeWidth={2}
+                                    stroke={COLORS[data.findIndex(d => d.name === key) % COLORS.length]} 
+                                    activeDot={{ r: 6 }} strokeWidth={3} dot={{ r: 4 }}
                                 />
                             ))}
                         </LineChart>
@@ -350,24 +363,30 @@ const CarbonAnalysisTemplate: React.FC<CarbonAnalysisTemplateProps> = ({
                 </div>
             )}
 
-            {/* 차트 데이터 선택 사이드바 (월이 '전체'일 때만 표시) */}
+            {/* 차트 컨트롤 사이드바 */}
             {selectedMonth === 'all' && (
-                <div style={{ width: '250px', backgroundColor: '#fff', borderRadius: '8px', padding: '15px', boxShadow: '0 2px 4px rgba(0,0,0,0.05)', display: 'flex', flexDirection: 'column' }}>
-                    <div style={{ marginBottom: '10px', position: 'relative' }}>
+                <div className="w-full lg:w-64 bg-white rounded-xl p-4 shadow-sm border border-gray-100 flex flex-col h-full">
+                    <div className="relative mb-3">
                         <input 
                             type="text" 
                             placeholder="항목 검색" 
                             value={chartSearchQuery}
                             onChange={(e) => setChartSearchQuery(e.target.value)}
-                            style={{ width: '100%', padding: '8px 30px 8px 10px', border: '1px solid #ddd', borderRadius: '4px', boxSizing: 'border-box' }} 
+                            className="w-full pl-3 pr-8 py-2 border border-gray-300 rounded-md text-sm outline-none focus:ring-2 focus:ring-blue-500" 
                         />
-                        <Search size={16} style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', color: '#999' }} />
+                        <Search size={16} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400" />
                     </div>
                     
-                    <div style={{ flex: 1, overflowY: 'auto', border: '1px solid #eee', borderRadius: '4px' }}>
-                        <div style={{ padding: '8px', borderBottom: '1px solid #eee', display: 'flex', alignItems: 'center', cursor: 'pointer', backgroundColor: '#f9f9f9' }} onClick={() => toggleAllChartItems(checkedItems.size !== processedData.length)}>
-                            {checkedItems.size === processedData.length ? <CheckSquare size={16} color="#007bff" /> : <Square size={16} color="#ccc" />}
-                            <span style={{ marginLeft: '8px', fontWeight: 'bold', fontSize: '13px' }}>전체 선택</span>
+                    <div className="flex-1 overflow-y-auto border border-gray-100 rounded-md custom-scrollbar">
+                        <div 
+                            className="p-2 border-b border-gray-100 flex items-center cursor-pointer bg-gray-50 hover:bg-gray-100" 
+                            onClick={() => toggleAllChartItems(checkedItems.size !== processedData.length)}
+                        >
+                            {checkedItems.size === processedData.length 
+                                ? <CheckSquare size={18} className="text-blue-600" /> 
+                                : <Square size={18} className="text-gray-400" />
+                            }
+                            <span className="ml-2 font-bold text-sm text-gray-700">전체 선택</span>
                         </div>
                         {processedData
                             .filter(d => d.name.toLowerCase().includes(chartSearchQuery.toLowerCase()))
@@ -375,10 +394,13 @@ const CarbonAnalysisTemplate: React.FC<CarbonAnalysisTemplateProps> = ({
                                 <div 
                                     key={item.name} 
                                     onClick={() => toggleChartItem(item.name)}
-                                    style={{ padding: '8px', borderBottom: '1px solid #eee', display: 'flex', alignItems: 'center', cursor: 'pointer' }}
+                                    className="p-2 border-b border-gray-50 flex items-center cursor-pointer hover:bg-gray-50 transition-colors"
                                 >
-                                    {checkedItems.has(item.name) ? <CheckSquare size={16} color={COLORS[initialData.indexOf(item) % COLORS.length]} /> : <Square size={16} color="#ccc" />}
-                                    <span style={{ marginLeft: '8px', fontSize: '13px' }}>{item.name}</span>
+                                    {checkedItems.has(item.name) 
+                                        ? <CheckSquare size={18} style={{ color: COLORS[data.indexOf(item) % COLORS.length] }} /> 
+                                        : <Square size={18} className="text-gray-300" />
+                                    }
+                                    <span className="ml-2 text-sm text-gray-600">{item.name}</span>
                                 </div>
                             ))
                         }
@@ -389,108 +411,91 @@ const CarbonAnalysisTemplate: React.FC<CarbonAnalysisTemplateProps> = ({
       )}
 
       {/* 메인 검색바 */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '15px', backgroundColor: '#f0f4f8', padding: '15px', borderRadius: '8px' }}>
-        <span style={{ fontWeight: 'bold', color: '#007bff' }}>{title.split(' ')[0]} {title.split(' ')[1]}</span>
-        <select 
-            value={searchColumn} 
-            onChange={(e) => setSearchColumn(e.target.value)}
-            style={{ padding: '8px', border: '1px solid #ddd', borderRadius: '4px' }}
-        >
-            <option value="all">전체 검색</option>
-            {columns.filter(c => c.format !== 'number' && c.format !== 'percent').map(c => (
-                <option key={c.id} value={c.id}>{c.header}</option>
-            ))}
-        </select>
-        <div style={{ position: 'relative', flex: 1, maxWidth: '400px' }}>
+      <div className="flex items-center gap-3 mb-6 bg-blue-50 p-4 rounded-xl border border-blue-100">
+        <span className="font-bold text-blue-700 whitespace-nowrap">{title.split(' ')[0]} {title.split(' ')[1]}</span>
+        
+        <div className="relative">
+            <select 
+                value={searchColumn} 
+                onChange={(e) => setSearchColumn(e.target.value)}
+                className="p-2 pr-8 border border-blue-200 rounded-md text-sm outline-none focus:ring-2 focus:ring-blue-500 appearance-none bg-white cursor-pointer"
+            >
+                <option value="all">전체 검색</option>
+                {columns.filter(c => c.format !== 'number' && c.format !== 'percent').map(c => (
+                    <option key={c.id} value={c.id}>{c.header}</option>
+                ))}
+            </select>
+            <ChevronDown size={16} className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none" />
+        </div>
+
+        <div className="relative flex-1 max-w-md">
             <input 
                 type="text" 
                 placeholder="검색어 입력" 
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                style={{ width: '100%', padding: '8px 35px 8px 10px', border: '1px solid #ddd', borderRadius: '4px', boxSizing: 'border-box' }}
+                className="w-full pl-3 pr-9 py-2 border border-blue-200 rounded-md text-sm outline-none focus:ring-2 focus:ring-blue-500"
             />
-            <Search size={18} style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', color: '#999' }} />
+            <Search size={18} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" />
         </div>
       </div>
 
-      {/* 7, 8. 데이터 테이블 */}
-      <div style={{ backgroundColor: '#fff', borderRadius: '8px', boxShadow: '0 2px 4px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '14px' }}>
-            <thead>
-                <tr style={{ backgroundColor: '#f8f9fa', borderBottom: '2px solid #e9ecef' }}>
-                    <th style={{ padding: '12px', textAlign: 'center', width: '60px' }}>No.</th>
-                    {columns.map(col => (
-                        <th 
-                            key={col.id} 
-                            onClick={() => col.sortable && handleSort(col.id)}
-                            style={{ 
-                                padding: '12px', 
-                                textAlign: col.align || 'center', 
-                                cursor: col.sortable ? 'pointer' : 'default',
-                                width: col.width
-                            }}
-                        >
-                            {col.header}
-                            {col.sortable && sortConfig?.key === col.id && (
-                                <span style={{ marginLeft: '5px' }}>{sortConfig.direction === 'asc' ? '▲' : '▼'}</span>
-                            )}
-                        </th>
-                    ))}
-                </tr>
-            </thead>
-            <tbody>
-                {processedData.length > 0 ? (
-                    processedData.map((row, idx) => (
-                        <tr key={row.id} style={{ borderBottom: '1px solid #eee' }}>
-                            <td style={{ padding: '12px', textAlign: 'center' }}>{idx + 1}</td>
-                            {columns.map(col => {
-                                const val = (row as any)[col.id];
-                                let displayVal = val;
-                                if (col.format === 'number') displayVal = val?.toLocaleString();
-                                if (col.format === 'percent') displayVal = `${val}%`;
-                                
-                                return (
-                                    <td key={col.id} style={{ padding: '12px', textAlign: col.align || 'center' }}>
-                                        {displayVal}
-                                    </td>
-                                );
-                            })}
-                        </tr>
-                    ))
-                ) : (
+      {/* 데이터 테이블 */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+        <div className="overflow-x-auto">
+            <table className="w-full text-sm text-gray-600">
+                <thead className="bg-gray-50 text-gray-700 font-bold uppercase text-xs border-b border-gray-200">
                     <tr>
-                        <td colSpan={columns.length + 1} style={{ padding: '30px', textAlign: 'center', color: '#999' }}>
-                            데이터가 없습니다.
-                        </td>
+                        <th className="px-4 py-3 text-center w-16">No.</th>
+                        {columns.map(col => (
+                            <th 
+                                key={col.id} 
+                                onClick={() => col.sortable && handleSort(col.id)}
+                                className={`px-4 py-3 ${col.align === 'left' ? 'text-left' : 'text-center'} ${col.sortable ? 'cursor-pointer hover:bg-gray-100' : ''}`}
+                                style={{ width: col.width }}
+                            >
+                                <div className={`flex items-center gap-1 ${col.align === 'left' ? 'justify-start' : 'justify-center'}`}>
+                                    {col.header}
+                                    {col.sortable && sortConfig?.key === col.id && (
+                                        <span>{sortConfig.direction === 'asc' ? '▲' : '▼'}</span>
+                                    )}
+                                </div>
+                            </th>
+                        ))}
                     </tr>
-                )}
-            </tbody>
-        </table>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                    {processedData.length > 0 ? (
+                        processedData.map((row, idx) => (
+                            <tr key={row.id} className="hover:bg-gray-50 transition-colors">
+                                <td className="px-4 py-3 text-center text-gray-500">{idx + 1}</td>
+                                {columns.map(col => {
+                                    const val = (row as any)[col.id];
+                                    let displayVal = val;
+                                    if (col.format === 'number') displayVal = val?.toLocaleString();
+                                    if (col.format === 'percent') displayVal = `${val}%`;
+                                    
+                                    return (
+                                        <td key={col.id} className={`px-4 py-3 ${col.align === 'left' ? 'text-left' : 'text-center'} text-gray-800`}>
+                                            {displayVal}
+                                        </td>
+                                    );
+                                })}
+                            </tr>
+                        ))
+                    ) : (
+                        <tr>
+                            <td colSpan={columns.length + 1} className="px-6 py-10 text-center text-gray-500">
+                                데이터가 없습니다.
+                            </td>
+                        </tr>
+                    )}
+                </tbody>
+            </table>
+        </div>
       </div>
     </div>
   );
-};
-
-// --- 스타일 헬퍼 ---
-const btnStyle = (bg: string, color: string, border: boolean) => ({
-    padding: '8px 15px',
-    backgroundColor: bg,
-    color: color,
-    border: border ? `1px solid ${color === '#333' ? '#ccc' : color}` : 'none',
-    borderRadius: '4px',
-    fontWeight: 'bold' as const,
-    cursor: 'pointer',
-    display: 'flex',
-    alignItems: 'center',
-    fontSize: '13px'
-});
-
-const selectStyle = {
-    padding: '8px',
-    width: '120px',
-    borderRadius: '4px',
-    border: '1px solid #ddd',
-    cursor: 'pointer'
 };
 
 export default CarbonAnalysisTemplate;

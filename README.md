@@ -4,29 +4,37 @@
 
 ---
 
+파일 뒤에 o 테일윈드 전환 api - api 분리 완료
+
 src
+
+ㄴapis
+
+    ㄴemissions.ts (조회 페이지 api)
+
+    ㄴvehicle_manage.ts (차량 기본 정보 관리 페이지 api)
 
 ㄴcomponents (공통 구성 요소)
 
       ㄴactivity
 
-        ㄴActivityFormModal.tsx(저감 활동 기록 등록/상세 조회/삭제 모달)
+        ㄴActivityFormModal.tsx(저감 활동 기록 등록/상세 조회/삭제 모달) o
 
-        ㄴActivityListTemplate.tsx(저감 활동 기록 조회 템플릿)
+        ㄴActivityListTemplate.tsx(저감 활동 기록 조회 템플릿) o
 
       ㄴanalysis
 
-        ㄴCarbonAnalysisTemplate.tsx (탄소 배출량 조회 템플릿)
+        ㄴCarbonAnalysisTemplate.tsx (탄소 배출량 조회 템플릿) o api
 
       ㄴcommon
 
-        ㄴExcelUploadModal.tsx (액셀 업로드 모달)
+        ㄴExcelUploadModal.tsx (액셀 업로드 모달) o
 
       ㄴmanagement
 
-        ㄴStandardDataManagementTable.tsx (기준정보 관리 페이지 템플릿)
+        ㄴStandardDataManagementTable.tsx (기준정보 관리 페이지 템플릿) o api
 
-      ㄴSidebar.tsx (사이드바)
+      ㄴSidebar.tsx (사이드바) o
 
 ㄴdata
 
@@ -46,21 +54,21 @@ src
 
       ㄴCompanyManagementPage.tsx (업체명 및 주소지 기준정보 관리)
 
-      ㄴDataUploadPage.tsx (나이스파크, 에스원 데이터 업로드)
+      ㄴDataUploadPage.tsx (나이스파크, 에스원 데이터 업로드) o
 
-      ㄴProcessManagementPage.tsx (생산 공정 기준정보 관)
+      ㄴProcessManagementPage.tsx (생산 공정 기준정보 관리)
 
-      ㄴProductManagementPage.tsx (생산 품목 구분 기준정보 관)
+      ㄴProductManagementPage.tsx (생산 품목 구분 기준정보 관리)
 
-      ㄴPurposeManagementPage.tsx (운행 목적 기준정보 관)
+      ㄴPurposeManagementPage.tsx (운행 목적 기준정보 관리)
 
-      ㄴRegisterPage.tsx (계정 생성)
+      ㄴRegisterPage.tsx (계정 생성) o
 
       ㄴVehicleManagementPage.tsx (출입 차량 기준정보 관리)
 
-      ㄴVehicleRegisterPage.tsx (등록 페이지 6)
+      ㄴVehicleRegisterPage.tsx (등록 페이지 6) o
 
-    ㄴdashboard (대시보드)
+    ㄴdashboard (대시보드) o
 
       ㄴDashboardPage.tsx (위젯을 부르는 대시보드)
 
@@ -74,15 +82,15 @@ src
 
       ㄴOperationPurposeEmissionPage.tsx (운행 목적별 탄소 배출)
 
-      ㄴPeriodEmissionPage.tsx(기간별 탄소 배출)
+      ㄴPeriodEmissionPage.tsx(기간별 탄소 배출) o
 
       ㄴProcessEmissionPage.tsx (생산 공정별 탄소 배출)
 
       ㄴProductEmissionPage.tsx (생산품목 구분별 탄소 배출)
 
-      ㄴTargetComparisonPage.tsx (목표 대비 탄소 배출)
+      ㄴTargetComparisonPage.tsx (목표 대비 탄소 배출) o
 
-    ㄴLoginPage.tsx (로그인)
+    ㄴLoginPage.tsx (로그인) o
 
 ㄴstyles (스타일)
 
@@ -99,3 +107,11 @@ src
 ㄴutils
 
     ㄴdateUtils.ts (1~12월로 데이터를 바꾸는게 아닌 2~내년1월로 데이터를 바꾸게 끔하는 로직)
+
+ㄴApp.css o
+
+ㄴApp.tsx o
+
+ㄴindex.css o
+
+ㄴmain.tsx o

@@ -1,61 +1,86 @@
-// src/components/management/StandardDataManagementTable.tsx
-import React, { useState, useMemo } from 'react';
-import { type ColumnDefinition } from '../../types/data';
-import { ArrowUp, ArrowDown, ArrowUpDown, Search, Save, Trash2, X, Edit2, CheckSquare } from 'lucide-react'; 
+import { useState, useMemo, useEffect } from 'react';
+import type { ColumnDefinition } from '../../types/data';
+import { 
+  ArrowUp, ArrowDown, ArrowUpDown, Search, Save, Trash2, X, CheckSquare, Edit2, Upload, Download, Loader2 
+} from 'lucide-react'; 
 import ExcelUploadModal from '../common/ExcelUploadModal';
+//API 모듈 임포트
+import { fetchManagementData, deleteManagementItem, updateManagementItem, deleteBatchManagementItems } from '../../apis/vehicle_manage';
 
+// --- 엑셀 다운로드 함수 (프론트 구현만) ---
 const downloadExcel = (data: any[], filename: string) => {
-    if (data.length === 0) return;
-    const headers = Object.keys(data[0]).filter(key => key !== 'isEditing');
-    const csvContent = [
-        headers.join(','), // 헤더 행
-        ...data.map(row => headers.map(header => row[header]).join(',')) // 데이터 행
-    ].join('\n');
-    
-    const blob = new Blob(["\ufeff", csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = `${filename}.csv`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+  if (data.length === 0) {
+    alert('다운로드할 데이터가 없습니다.');
+    return;
+  }
+  const headers = Object.keys(data[0]).filter(key => key !== 'isEditing' && key !== 'id');
+  const csvContent = [
+    headers.join(','),
+    ...data.map(row => headers.map(header => row[header]).join(','))
+  ].join('\n');
+  
+  const blob = new Blob(["\ufeff", csvContent], { type: 'text/csv;charset=utf-8;' });
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = `${filename}_${new Date().toISOString().slice(0,10)}.csv`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
 };
 
+// --- Props 정의 ---
 interface StandardDataManagementTableProps<T> {
   title: string;
   columns: ColumnDefinition<T>[];
-  initialData: T[];
-  apiEndpoint: string;
+  apiEndpoint: string; // [변경] initialData 대신 endpoint만 받음
 }
 
 const StandardDataManagementTable = <T extends { id: number, [key: string]: any }>({ 
   title, 
   columns, 
-  initialData, 
   apiEndpoint 
 }: StandardDataManagementTableProps<T>) => {
   
   // --- 상태 관리 ---
-  const [data, setData] = useState<T[]>(initialData);
+  const [data, setData] = useState<T[]>([]); // 초기값은 빈 배열
+  const [loading, setLoading] = useState(false); // 로딩 상태 추가
+  
   const [currentSort, setCurrentSort] = useState<{ key: keyof T; direction: 'asc' | 'desc' } | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchColumn, setSearchColumn] = useState<'all' | keyof T>('all');
+  
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [isBatchEditing, setIsBatchEditing] = useState(false);
   const [selectedRows, setSelectedRows] = useState<number[]>([]);
   
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 15;
-  
-  // --- 정렬 및 필터링 로직 개선 ---
+
+  // --- [API] 데이터 로딩 (Mount 시점) ---
+  useEffect(() => {
+    const loadData = async () => {
+      setLoading(true);
+      try {
+        const result = await fetchManagementData(apiEndpoint);
+        setData(result as T[]);
+      } catch (error) {
+        console.error("Failed to fetch data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadData();
+  }, [apiEndpoint]); // endpoint가 바뀌면 다시 로딩
+
+  // --- 필터링 & 정렬 로직 (메모이제이션) ---
   const searchableColumns = useMemo(() => 
     columns.filter(col => col.searchable && col.id !== 'actions').map(col => col.id as keyof T)
   , [columns]);
 
   const filteredData = useMemo(() => {
-    let result = [...data]; // 원본 불변성 유지
+    let result = [...data];
 
-    // 검색
+    // 1. 검색
     if (searchQuery) {
         result = result.filter(row => {
             if (searchColumn === 'all') {
@@ -68,32 +93,25 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
         });
     }
 
-    // 정렬 (숫자와 문자 구분하여 자연스러운 정렬)
+    // 2. 정렬
     if (currentSort) {
         const { key, direction } = currentSort;
         result.sort((a, b) => {
             const valA = a[key];
             const valB = b[key];
-
-            // null/undefined 처리
             if (valA == null) return 1;
             if (valB == null) return -1;
-
-            // 숫자 비교 vs 문자열 비교
+            
             const strA = String(valA);
             const strB = String(valB);
-
-            // localeCompare를 사용하여 숫자 섞인 문자열도 자연스럽게 정렬 (numeric: true)
             const comparison = strA.localeCompare(strB, undefined, { numeric: true });
-
             return direction === 'asc' ? comparison : -comparison;
         });
     }
-
     return result;
   }, [data, searchQuery, searchColumn, searchableColumns, currentSort]);
   
-  // 페이지네이션
+  // --- 페이지네이션 ---
   const totalPages = Math.ceil(filteredData.length / itemsPerPage);
   const paginatedData = useMemo(() => {
     const start = (currentPage - 1) * itemsPerPage;
@@ -101,39 +119,52 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
     return filteredData.slice(start, end);
   }, [filteredData, currentPage, itemsPerPage]);
 
-  // --- 이벤트 핸들러 ---
+  // --- 핸들러 ---
   
   const handleSort = (key: keyof T) => {
     setCurrentSort(prev => {
       if (prev?.key === key) {
-        // asc -> desc -> 정렬 해제(null) 순서로 갈 수도 있고, 그냥 토글만 할 수도 있음. 여기선 토글.
         return { key, direction: prev.direction === 'asc' ? 'desc' : 'asc' };
       }
       return { key, direction: 'asc' };
     });
   };
 
+  // [수정 모드]
   const toggleEditMode = (rowId: number) => {
     setData(prev => prev.map(row => 
       row.id === rowId ? { ...row, isEditing: !row.isEditing } : row
     ));
   };
   
-  const handleSingleSave = (rowId: number) => {
-      console.log(`[API Call] Saving Row ${rowId} to ${apiEndpoint}`);
-      toggleEditMode(rowId); 
-  };
+  // [API] 개별 저장
+  const handleSingleSave = async (rowId: number) => {
+      const rowData = data.find(row => row.id === rowId);
+      if (!rowData) return;
 
-  const handleSingleDelete = (rowId: number) => {
-      if (window.confirm(`ID ${rowId} 행을 정말 삭제하시겠습니까?`)) {
-          setData(prev => prev.filter(row => row.id !== rowId));
+      // API 호출
+      const success = await updateManagementItem(apiEndpoint, rowId, rowData);
+      if (success) {
+          alert("저장되었습니다.");
+          toggleEditMode(rowId); 
       }
   };
 
-  // --- [수정 2] 취소 시 체크박스 상태 리셋 ---
+  // [API] 개별 삭제
+  const handleSingleDelete = async (rowId: number) => {
+      if (window.confirm(`ID ${rowId} 행을 정말 삭제하시겠습니까?`)) {
+          const success = await deleteManagementItem(apiEndpoint, rowId);
+          if (success) {
+              setData(prev => prev.filter(row => row.id !== rowId));
+          }
+      }
+  };
+
+  // [일괄 수정]
   const handleCancelBatchEdit = () => {
       setIsBatchEditing(false);
-      setSelectedRows([]); // 선택된 행 초기화 -> 배경색 리셋됨
+      setSelectedRows([]);
+      // 취소 시 데이터를 원복하려면 별도의 백업 state가 필요할 수 있음
   };
 
   const toggleBatchEdit = () => {
@@ -147,21 +178,26 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
     );
   };
   
-  const handleBatchDelete = () => {
+  // [API] 일괄 삭제
+  const handleBatchDelete = async () => {
     if (selectedRows.length === 0) {
         alert("삭제할 행을 선택해주세요.");
         return;
     }
     if (window.confirm(`${selectedRows.length}개의 행을 정말 삭제하시겠습니까?`)) {
-        setData(prev => prev.filter(row => !selectedRows.includes(row.id)));
-        setSelectedRows([]);
+        const success = await deleteBatchManagementItems(apiEndpoint, selectedRows);
+        if (success) {
+            setData(prev => prev.filter(row => !selectedRows.includes(row.id)));
+            setSelectedRows([]);
+        }
     }
   };
 
   const handleBatchSave = () => {
-    console.log(`[API Call] Batch Save`);
+    // 실제로는 변경된 row만 추려서 API를 보내야 함. 여기선 전체 저장 시늉만.
+    alert("일괄 저장되었습니다. (API 연동 필요)");
     setIsBatchEditing(false);
-    setSelectedRows([]); // 저장 후에도 선택 해제
+    setSelectedRows([]);
   };
   
   const handleDataChange = (rowId: number, key: keyof T, value: any) => {
@@ -170,29 +206,27 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
     ));
   };
 
-  // --- 입력 필드 렌더링 헬퍼 함수 (타입별 분기) ---
+  // --- 입력 필드 렌더링 ---
   const renderInput = (row: T, col: ColumnDefinition<T>) => {
       const value = row[col.id as keyof T];
       const rowId = row.id;
       const fieldKey = col.id as keyof T;
+      
+      const inputClass = "w-full p-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all";
 
-      // 드롭다운 (Select)
       if (col.inputType === 'select' && col.selectOptions) {
           return (
               <select
                   value={String(value)}
                   onChange={(e) => handleDataChange(rowId, fieldKey, e.target.value)}
-                  style={{ padding: '5px', border: '1px solid #ccc', borderRadius: '3px', width: '100%' }}
+                  className={inputClass}
               >
                   <option value="">선택</option>
-                  {col.selectOptions.map(opt => (
-                      <option key={opt} value={opt}>{opt}</option>
-                  ))}
+                  {col.selectOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
               </select>
           );
       }
 
-      // 2. 검색형 입력 (Search Select / Datalist)
       if (col.inputType === 'search-select' && col.selectOptions) {
           const listId = `list-${String(col.id)}-${rowId}`;
           return (
@@ -202,260 +236,281 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
                       type="text"
                       value={String(value)}
                       onChange={(e) => handleDataChange(rowId, fieldKey, e.target.value)}
-                      style={{ padding: '5px', border: '1px solid #ccc', borderRadius: '3px', width: '100%' }}
-                      placeholder="검색/입력"
+                      className={inputClass}
+                      placeholder="입력/선택"
                   />
                   <datalist id={listId}>
-                      {col.selectOptions.map(opt => (
-                          <option key={opt} value={opt} />
-                      ))}
+                      {col.selectOptions.map(opt => <option key={opt} value={opt} />)}
                   </datalist>
               </>
           );
       }
 
-      // 3. 숫자 입력
-      if (col.inputType === 'number') {
-          return (
-              <input
-                  type="number"
-                  value={String(value)}
-                  onChange={(e) => handleDataChange(rowId, fieldKey, e.target.value)}
-                  style={{ padding: '5px', border: '1px solid #ccc', borderRadius: '3px', width: '100%' }}
-              />
-          );
-      }
-
-      // 4. 기본 텍스트 입력
       return (
           <input
-              type="text"
+              type={col.inputType === 'number' ? 'number' : 'text'}
               value={String(value)}
               onChange={(e) => handleDataChange(rowId, fieldKey, e.target.value)}
-              style={{ padding: '5px', border: '1px solid #ccc', borderRadius: '3px', width: '100%' }}
+              className={inputClass}
           />
       );
   };
 
   // ----------------------------------------------------------------------
+  // [렌더링]
+  // ----------------------------------------------------------------------
 
   return (
-    <div style={{ padding: '20px', backgroundColor: '#f4f7f9', minHeight: '100vh' }}>
-      <h2 style={{ fontSize: '24px', color: '#333', marginBottom: '20px' }}>{title}</h2>
+    <div className="p-8 bg-gray-50 min-h-screen font-sans">
+      
+      {/* 1. 타이틀 */}
+      <h2 className="text-2xl font-bold text-gray-800 mb-6">{title}</h2>
 
-      {/* 헤더 (검색, 엑셀) */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '15px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+      {/* 2. 헤더 (검색 & 엑셀 버튼) */}
+      <div className="flex flex-col md:flex-row justify-between items-center mb-4 gap-4">
+        
+        {/* 검색 영역 */}
+        <div className="flex items-center gap-2 w-full md:w-auto">
           <select 
             value={String(searchColumn)} 
             onChange={(e) => setSearchColumn(e.target.value as 'all' | keyof T)}
-            style={{ padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
+            className="p-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 outline-none"
           >
-            <option value="all">All</option>
+            <option value="all">전체 검색</option>
             {searchableColumns.map(key => (
               <option key={String(key)} value={String(key)}>{columns.find(c => c.id === key)?.header}</option>
             ))}
           </select>
-          <div style={{ position: 'relative' }}>
+          
+          <div className="relative w-full md:w-80">
             <input
               type="text"
               placeholder="검색어를 입력하세요"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              style={{ padding: '8px 10px 8px 30px', borderRadius: '4px', border: '1px solid #ccc', minWidth: '300px' }}
+              className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 outline-none"
             />
-            <Search size={16} style={{ position: 'absolute', left: '8px', top: '50%', transform: 'translateY(-50%)', color: '#666' }} />
+            <Search size={16} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
           </div>
         </div>
-         {/* 3, 4. 엑셀 버튼 */}
-        <div style={{ display: 'flex', gap: '10px' }}>
+
+        {/* 엑셀 버튼 영역 */}
+        <div className="flex gap-2">
           <button 
             onClick={() => setIsUploadModalOpen(true)} 
-            style={{ padding: '10px 15px', backgroundColor: '#28a745', color: 'white', border: 'none', borderRadius: '4px', fontWeight: 'bold', display: 'flex', alignItems: 'center' }}
+            className="flex items-center px-4 py-2 bg-green-600 text-white rounded-md text-sm font-bold hover:bg-green-700 transition-colors shadow-sm"
           >
-            <CheckSquare size={16} style={{ marginRight: '5px' }} /> Excel 업로드
+            <Upload size={16} className="mr-2" /> Excel 업로드
           </button>
           <button 
-            onClick={() => downloadExcel(data, title)} 
-            style={{ padding: '10px 15px', backgroundColor: '#007bff', color: 'white', border: 'none', borderRadius: '4px', fontWeight: 'bold', display: 'flex', alignItems: 'center' }}
+            onClick={() => downloadExcel(filteredData, title)} 
+            className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-md text-sm font-bold hover:bg-blue-700 transition-colors shadow-sm"
           >
-            <ArrowUpDown size={16} style={{ marginRight: '5px' }} /> Excel 다운로드
+            <Download size={16} className="mr-2" /> Excel 다운로드
           </button>
         </div>
       </div>
       
-      {/* 테이블 본체 */}
-      <div style={{ overflowX: 'auto', backgroundColor: 'white', borderRadius: '8px', boxShadow: '0 4px 12px rgba(0,0,0,0.08)' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-          <thead>
-  <tr>
-    {isBatchEditing && (
-      <th style={{ padding: '15px', borderBottom: '2px solid #ddd', textAlign: 'center', width: '40px' }}>
-          <input 
-            type="checkbox" 
-            checked={selectedRows.length === paginatedData.length && paginatedData.length > 0}
-            onChange={() => {
-                if (selectedRows.length === paginatedData.length) {
-                    setSelectedRows(prev => prev.filter(id => !paginatedData.some(row => row.id === id)));
-                } else {
-                    setSelectedRows(prev => {
-                        const newIds = paginatedData.map(row => row.id).filter(id => !prev.includes(id));
-                        return [...prev, ...newIds];
-                    });
-                }
-            }}
-          />
-      </th>
-    )}
+      {/* 3. 테이블 영역 */}
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+        {loading ? (
+            <div className="flex flex-col items-center justify-center py-20 text-gray-500">
+                <Loader2 size={40} className="animate-spin mb-4 text-blue-500" />
+                <span>데이터를 불러오는 중입니다...</span>
+            </div>
+        ) : (
+            <div className="overflow-x-auto">
+                <table className="w-full text-sm text-left text-gray-600">
+                <thead className="text-xs text-gray-700 uppercase bg-gray-100 border-b border-gray-200">
+                    <tr>
+                    {/* 체크박스 (일괄 수정 시) */}
+                    {isBatchEditing && (
+                        <th className="p-4 w-10 text-center">
+                            <input 
+                                type="checkbox" 
+                                className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
+                                checked={selectedRows.length === paginatedData.length && paginatedData.length > 0}
+                                onChange={() => {
+                                    if (selectedRows.length === paginatedData.length) {
+                                        setSelectedRows(prev => prev.filter(id => !paginatedData.some(row => row.id === id)));
+                                    } else {
+                                        setSelectedRows(prev => {
+                                            const newIds = paginatedData.map(row => row.id).filter(id => !prev.includes(id));
+                                            return [...prev, ...newIds];
+                                        });
+                                    }
+                                }}
+                            />
+                        </th>
+                    )}
 
-    {/* 👉 추가된 번호 헤더 */}
-    <th style={{ padding: '15px', borderBottom: '2px solid #ddd', textAlign: 'center', width: '60px' }}>
-        #
-    </th>
+                    {/* 번호 헤더 */}
+                    <th className="px-6 py-3 text-center w-16">#</th>
 
-    {columns.map(col => (
-      <th 
-        key={String(col.id)} 
-        onClick={() => col.sortable && handleSort(col.id as keyof T)}
-        style={{ 
-          padding: '15px', 
-          borderBottom: '2px solid #ddd', 
-          textAlign: 'left', 
-          cursor: col.sortable ? 'pointer' : 'default',
-          width: col.width,
-          userSelect: 'none'
-        }}
-      >
-        <div style={{ display: 'flex', alignItems: 'center' }}>
-            {col.header}
-            {col.sortable && (
-                <span style={{ marginLeft: '5px', display: 'flex', flexDirection: 'column', height: '14px', justifyContent: 'center' }}>
-                   {currentSort?.key === col.id ? (
-                       currentSort.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />
-                   ) : (
-                       <ArrowUpDown size={14} color="#ccc" />
-                   )}
-                </span>
-            )}
-        </div>
-      </th>
-    ))}
-  </tr>
-</thead>
+                    {/* 데이터 컬럼 헤더 */}
+                    {columns.map(col => (
+                        <th 
+                        key={String(col.id)} 
+                        className={`px-6 py-3 font-bold ${col.sortable ? 'cursor-pointer hover:bg-gray-200' : ''}`}
+                        style={{ width: col.width }}
+                        onClick={() => col.sortable && handleSort(col.id as keyof T)}
+                        >
+                        <div className="flex items-center gap-1">
+                            {col.header}
+                            {col.sortable && (
+                                <span className="text-gray-400">
+                                    {currentSort?.key === col.id ? (
+                                        currentSort.direction === 'asc' ? <ArrowUp size={14} className="text-blue-600" /> : <ArrowDown size={14} className="text-blue-600" />
+                                    ) : (
+                                        <ArrowUpDown size={14} />
+                                    )}
+                                </span>
+                            )}
+                        </div>
+                        </th>
+                    ))}
+                    </tr>
+                </thead>
+                <tbody>
+                    {paginatedData.length > 0 ? paginatedData.map((row, index) => {
+                    const rowId = row.id;
+                    const isSelected = selectedRows.includes(rowId);
+                    const isRowEditing = row.isEditing;
+                    const rowNumber = (currentPage - 1) * itemsPerPage + (index + 1);
 
-<tbody>
-  {paginatedData.map((row, index) => {
-    const rowId = row.id;
-    const isSelected = selectedRows.includes(rowId);
-    const isRowEditing = row.isEditing;
+                    return (
+                        <tr 
+                        key={rowId} 
+                        className={`border-b border-gray-100 hover:bg-gray-50 transition-colors ${isSelected ? 'bg-blue-50' : isRowEditing ? 'bg-yellow-50' : ''}`}
+                        >
+                        {/* 체크박스 */}
+                        {isBatchEditing && (
+                            <td className="p-4 text-center">
+                                <input 
+                                    type="checkbox" 
+                                    checked={isSelected} 
+                                    onChange={() => toggleRowSelection(rowId)}
+                                    className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
+                                />
+                            </td>
+                        )}
 
-    // 👉 번호 계산 (페이지네이션 적용)
-    const rowNumber = (currentPage - 1) * itemsPerPage + (index + 1);
+                        {/* 번호 */}
+                        <td className="px-6 py-4 text-center font-medium text-gray-900">
+                            {rowNumber}
+                        </td>
 
-    return (
-      <tr 
-        key={rowId} 
-        style={{ 
-          borderBottom: '1px solid #eee', 
-          backgroundColor: isSelected ? '#e0f7fa' : (isRowEditing ? '#fffacd' : 'white') 
-        }}
-      >
-        {isBatchEditing && (
-            <td style={{ padding: '15px', textAlign: 'center' }}>
-                <input 
-                    type="checkbox" 
-                    checked={isSelected} 
-                    onChange={() => toggleRowSelection(rowId)}
-                />
-            </td>
+                        {/* 데이터 셀 */}
+                        {columns.map(col => (
+                            <td key={String(col.id)} className="px-6 py-4">
+                            {col.id === 'actions' ? (
+                                <div className="flex gap-2">
+                                    {isRowEditing ? (
+                                        <button 
+                                            onClick={() => handleSingleSave(rowId)} 
+                                            className="p-1.5 bg-green-100 text-green-700 rounded hover:bg-green-200" title="저장"
+                                        >
+                                            <Save size={16} />
+                                        </button>
+                                    ) : (
+                                        <button 
+                                            onClick={() => toggleEditMode(rowId)} 
+                                            className="p-1.5 bg-yellow-100 text-yellow-700 rounded hover:bg-yellow-200" title="수정"
+                                        >
+                                            <Edit2 size={16} />
+                                        </button>
+                                    )}
+                                    {!isRowEditing && (
+                                        <button 
+                                            onClick={() => handleSingleDelete(rowId)} 
+                                            className="p-1.5 bg-red-100 text-red-700 rounded hover:bg-red-200" title="삭제"
+                                        >
+                                            <Trash2 size={16} />
+                                        </button>
+                                    )}
+                                </div>
+                            ) : (
+                                (isRowEditing || isBatchEditing) && col.editable ? renderInput(row, col) : row[col.id as keyof T]
+                            )}
+                            </td>
+                        ))}
+                        </tr>
+                    );
+                    }) : (
+                        <tr>
+                            <td colSpan={columns.length + (isBatchEditing ? 2 : 1)} className="px-6 py-10 text-center text-gray-500">
+                                데이터가 없습니다.
+                            </td>
+                        </tr>
+                    )}
+                </tbody>
+                </table>
+            </div>
         )}
-
-        {/* 👉 번호 표시 칸 */}
-        <td style={{ padding: '15px', textAlign: 'center', fontWeight: 'bold' }}>
-            {rowNumber}
-        </td>
-
-        {columns.map(col => (
-          <td key={String(col.id)} style={{ padding: '15px', verticalAlign: 'middle' }}>
-            {col.id === 'actions' ? (
-                <div style={{ display: 'flex', gap: '5px' }}>
-                  {isRowEditing ? (
-                      <button onClick={() => handleSingleSave(rowId)} style={{ padding: '5px 10px', backgroundColor: '#28a745', color: 'white', border: 'none', borderRadius: '4px' }}><Save size={16} /></button>
-                  ) : (
-                      <button onClick={() => toggleEditMode(rowId)} style={{ padding: '5px 10px', backgroundColor: '#ffc107', color: 'black', border: 'none', borderRadius: '4px' }}><Edit2 size={16} /></button>
-                  )}
-                  <button onClick={() => handleSingleDelete(rowId)} style={{ padding: '5px 10px', backgroundColor: '#dc3545', color: 'white', border: 'none', borderRadius: '4px' }}><Trash2 size={16} /></button>
-                </div>
-            ) : (
-                isRowEditing ? renderInput(row, col) : row[col.id as keyof T]
-            )}
-          </td>
-        ))}
-      </tr>
-    );
-  })}
-</tbody>
-        </table>
       </div>
 
-      {/* 9, 10. 하단 영역 (페이지네이션, 전체 수정 버튼) */}
-            {/* justifyContent: 'space-between' -> 'flex-end'로 변경하고, 
-                       페이지네이션은 중앙 정렬을 위해 별도의 <div>를 사용하여 감쌉니다. 
-                       전체 버튼을 오른쪽으로 배치하기 위해 기존의 `space-between` 대신 세 영역을 명확히 구분합니다. 
-            */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '20px' }}>
-                
-                {/* 왼쪽 공간 비우기 */}
-                <div style={{ visibility: 'hidden', width: '20%' }}>Placeholder</div> 
-                
-                {/* 10. 페이지네이션 (중앙) */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                    <button onClick={() => setCurrentPage(1)} disabled={currentPage === 1} style={{ padding: '5px 10px', border: '1px solid #ccc', borderRadius: '4px', backgroundColor: 'white' }}>«</button>
-                    <button onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))} disabled={currentPage === 1} style={{ padding: '5px 10px', border: '1px solid #ccc', borderRadius: '4px', backgroundColor: 'white' }}>‹</button>
-                    
-                    {/* 현재 페이지 그룹 표시 (예: 1, 2, 3...) */}
-                    {Array.from({ length: totalPages }, (_, i) => i + 1).slice(
-                        Math.max(0, currentPage - 3), Math.min(totalPages, currentPage + 2)
-                    ).map(page => (
-                        <button
-                            key={page}
-                            onClick={() => setCurrentPage(page)}
-                            style={{ padding: '5px 10px', border: '1px solid #ccc', borderRadius: '4px', backgroundColor: page === currentPage ? '#007bff' : 'white', color: page === currentPage ? 'white' : 'black' }}
-                        >
-                            {page}
-                        </button>
-                    ))}
-                    
-                    <button onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))} disabled={currentPage === totalPages} style={{ padding: '5px 10px', border: '1px solid #ccc', borderRadius: '4px', backgroundColor: 'white' }}>›</button>
-                    <button onClick={() => setCurrentPage(totalPages)} disabled={currentPage === totalPages} style={{ padding: '5px 10px', border: '1px solid #ccc', borderRadius: '4px', backgroundColor: 'white' }}>»</button>
-                </div>
+      {/* 4. 하단 액션바 (페이지네이션 & 일괄 작업) */}
+      <div className="flex flex-col-reverse md:flex-row justify-between items-center mt-6 gap-4">
+        
+        {/* Placeholder for layout balance */}
+        <div className="hidden md:block w-1/4"></div> 
+        
+        {/* 페이지네이션 (중앙) */}
+        <div className="flex items-center gap-1">
+            <button onClick={() => setCurrentPage(1)} disabled={currentPage === 1} className="px-3 py-1 border rounded hover:bg-gray-100 disabled:opacity-50">«</button>
+            <button onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))} disabled={currentPage === 1} className="px-3 py-1 border rounded hover:bg-gray-100 disabled:opacity-50">‹</button>
+            
+            {Array.from({ length: totalPages }, (_, i) => i + 1).slice(
+                Math.max(0, currentPage - 3), Math.min(totalPages, currentPage + 2)
+            ).map(page => (
+                <button
+                    key={page}
+                    onClick={() => setCurrentPage(page)}
+                    className={`px-3 py-1 border rounded ${page === currentPage ? 'bg-blue-600 text-white border-blue-600' : 'bg-white hover:bg-gray-100'}`}
+                >
+                    {page}
+                </button>
+            ))}
+            
+            <button onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))} disabled={currentPage === totalPages} className="px-3 py-1 border rounded hover:bg-gray-100 disabled:opacity-50">›</button>
+            <button onClick={() => setCurrentPage(totalPages)} disabled={currentPage === totalPages} className="px-3 py-1 border rounded hover:bg-gray-100 disabled:opacity-50">»</button>
+        </div>
 
-                {/* 9. 전체 수정/저장/선택 삭제 버튼 (오른쪽) */}
-                <div style={{ width: '20%', display: 'flex', justifyContent: 'flex-end' }}>
-                    {isBatchEditing ? (
-                        <div style={{ display: 'flex', gap: '10px' }}>
-                            <button onClick={handleBatchSave} style={{ padding: '10px 15px', backgroundColor: '#28a745', color: 'white', border: 'none', borderRadius: '4px', fontWeight: 'bold' }}>
-                                <Save size={16} style={{ marginRight: '5px' }} /> 전체 저장
-                            </button>
-                            <button onClick={handleBatchDelete} style={{ padding: '10px 15px', backgroundColor: '#dc3545', color: 'white', border: 'none', borderRadius: '4px', fontWeight: 'bold' }}>
-                                <Trash2 size={16} style={{ marginRight: '5px' }} /> 선택 삭제 ({selectedRows.length})
-                            </button>
-                            <button onClick={handleCancelBatchEdit} style={{ padding: '10px 15px', backgroundColor: '#6c757d', color: 'white', border: 'none', borderRadius: '4px', fontWeight: 'bold' }}>
-                                <X size={16} style={{ marginRight: '5px' }} /> 취소
-                            </button>
-                        </div>
-                    ) : (
-                        <button onClick={toggleBatchEdit} style={{ padding: '10px 15px', backgroundColor: '#007bff', color: 'white', border: 'none', borderRadius: '4px', fontWeight: 'bold' }}>
-                            전체 수정
-                        </button>
-                    )}
+        {/* 일괄 작업 버튼 (우측) */}
+        <div className="flex justify-end w-full md:w-1/4">
+            {isBatchEditing ? (
+                <div className="flex gap-2 animate-fade-in">
+                    <button onClick={handleBatchSave} className="flex items-center px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 shadow-sm font-bold text-sm">
+                        <Save size={16} className="mr-2" /> 전체 저장
+                    </button>
+                    <button onClick={handleBatchDelete} className="flex items-center px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 shadow-sm font-bold text-sm">
+                        <Trash2 size={16} className="mr-2" /> 선택 삭제 ({selectedRows.length})
+                    </button>
+                    <button onClick={handleCancelBatchEdit} className="flex items-center px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 shadow-sm font-bold text-sm">
+                        <X size={16} className="mr-2" /> 취소
+                    </button>
                 </div>
-            </div>
-{/* 3. Excel 업로드 모달 연결 */}
+            ) : (
+                <button 
+                    onClick={toggleBatchEdit} 
+                    className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 shadow-sm font-bold text-sm"
+                >
+                    <CheckSquare size={16} className="mr-2" /> 전체 수정
+                </button>
+            )}
+        </div>
+      </div>
+
+      {/* 엑셀 업로드 모달 연결 */}
       <ExcelUploadModal 
-        isOpen={isUploadModalOpen} 
-        onClose={() => setIsUploadModalOpen(false)} 
-        target={title} // 모달에 어떤 페이지인지 표시
+        isOpen={isUploadModalOpen}
+        onClose={() => setIsUploadModalOpen(false)}
+        title={title}
+        onUpload={(data) => {
+            console.log("Uploaded Data:", data);
+            alert("업로드 로직 구현 필요");
+            setIsUploadModalOpen(false);
+        }}
       />
     </div>
   );
