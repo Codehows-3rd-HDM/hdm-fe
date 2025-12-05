@@ -4,9 +4,15 @@
 
 ---
 
-파일 뒤에 o 테일윈드 전환 완료
+파일 뒤에 o 테일윈드 전환 api - api 분리 완료
 
 src
+
+ㄴapis
+
+    ㄴemissions.ts (조회 페이지 api)
+
+    ㄴvehicle_manage.ts (차량 기본 정보 관리 페이지 api)
 
 ㄴcomponents (공통 구성 요소)
 
@@ -50,11 +56,11 @@ src
 
       ㄴDataUploadPage.tsx (나이스파크, 에스원 데이터 업로드) o
 
-      ㄴProcessManagementPage.tsx (생산 공정 기준정보 관)
+      ㄴProcessManagementPage.tsx (생산 공정 기준정보 관리)
 
-      ㄴProductManagementPage.tsx (생산 품목 구분 기준정보 관)
+      ㄴProductManagementPage.tsx (생산 품목 구분 기준정보 관리)
 
-      ㄴPurposeManagementPage.tsx (운행 목적 기준정보 관)
+      ㄴPurposeManagementPage.tsx (운행 목적 기준정보 관리)
 
       ㄴRegisterPage.tsx (계정 생성) o
 

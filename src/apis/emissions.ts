@@ -55,7 +55,7 @@ const getProductData = (): AnalysisData[] => [
 export type AnalysisDataType = 'operationpurpose' | 'fuel' | 'company' | 'process' | 'product';
 
 /**
- * 분석 데이터를 가져오는 Mock API
+ * 분석 데이터를 가져오는 API
  * @param type 데이터 종류 (운행목적, 연료, 업체 등)
  * @param year 조회 연도
  * @param month 조회 월 ('all' 또는 '1'~'12')
@@ -69,7 +69,7 @@ export const fetchAnalysisData = async (
 ): Promise<AnalysisData[]> => {
   return new Promise((resolve) => {
     setTimeout(() => {
-      console.log(`[API] Fetch Analysis: Type=${type}, Year=${year}, Month=${month}, Scope=${scope}`);
+      console.log(`[API 예시] Fetch Analysis: Type=${type}, Year=${year}, Month=${month}, Scope=${scope}`);
       
       let data: AnalysisData[] = [];
       
@@ -95,7 +95,7 @@ export const fetchAnalysisData = async (
       }
 
       resolve(data);
-    }, 500); // 0.5초 딜레이
+    }, 100); // 0.1초 딜레이
   });
 };
 
