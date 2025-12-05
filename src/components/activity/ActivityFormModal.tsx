@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Upload, Calendar } from 'lucide-react';
+import { X, Upload } from 'lucide-react';
 import { type ReductionActivity } from '../../types/activity';
 
 interface ActivityFormModalProps {
@@ -10,28 +10,37 @@ interface ActivityFormModalProps {
   onSave: (data: ReductionActivity) => void;
 }
 
-const ActivityFormModal: React.FC<ActivityFormModalProps> = ({ 
-  isOpen, onClose, mode, initialData, onSave 
+const ActivityFormModal: React.FC<ActivityFormModalProps> = ({
+  isOpen, onClose, mode, initialData, onSave
 }) => {
-  // 폼 상태
   const [formData, setFormData] = useState<ReductionActivity>({
     id: 0, startDate: '', endDate: '', title: '', content: '', cost: 0, effect: '', imageUrl: ''
   });
+  const [errors, setErrors] = useState<{ [key: string]: string }>({});
+  const [preview, setPreview] = useState<string | null>(null);
 
-  // 모달 열릴 때 초기 데이터 세팅
   useEffect(() => {
     if (isOpen) {
       if (initialData && (mode === 'edit' || mode === 'view')) {
         setFormData(initialData);
+        setPreview(initialData.imageUrl || null);
       } else {
-        // 등록 모드면 초기화
-        setFormData({ id: Date.now(), startDate: '', endDate: '', title: '', content: '', cost: 0, effect: '', imageUrl: '' });
+        setFormData({
+          id: Date.now(),
+          startDate: '',
+          endDate: '',
+          title: '',
+          content: '',
+          cost: 0,
+          effect: '',
+          imageUrl: ''
+        });
+        setPreview(null);
       }
     }
   }, [isOpen, mode, initialData]);
 
   if (!isOpen) return null;
-
   const isReadOnly = mode === 'view';
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -40,137 +49,183 @@ const ActivityFormModal: React.FC<ActivityFormModalProps> = ({
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPreview(reader.result as string);
+        setFormData(prev => ({ ...prev, imageUrl: reader.result as string }));
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const validate = () => {
+    const newErrors: { [key: string]: string } = {};
+    if (!formData.startDate) newErrors.startDate = '시작일을 입력하세요';
+    if (!formData.endDate) newErrors.endDate = '종료일을 입력하세요';
+
+    // 날짜 유효성 검사
+    if (formData.startDate && formData.endDate) {
+      const start = new Date(formData.startDate);
+      const end = new Date(formData.endDate);
+      if (start > end) {
+        newErrors.dateRange = '시작일은 종료일보다 늦을 수 없습니다';
+      }
+    }
+
+    if (!formData.title.trim()) newErrors.title = '활동명을 입력하세요';
+    if (!formData.content.trim()) newErrors.content = '활동 내역을 입력하세요';
+    if (formData.cost <= 0) newErrors.cost = '소요금액은 0보다 커야 합니다';
+    // if (!formData.effect.trim()) newErrors.effect = '기대효과를 입력하세요';
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handleSubmit = () => {
+    if (!validate()) return;
     onSave(formData);
     onClose();
   };
 
-  // --- 스타일 ---
-  const labelStyle = { display: 'block', fontSize: '14px', fontWeight: 'bold', marginBottom: '8px', color: '#333' };
-  const inputStyle = {
-    width: '100%', padding: '12px', borderRadius: '4px', border: '1px solid #ddd', 
-    backgroundColor: isReadOnly ? '#f5f5f5' : '#fff', fontSize: '14px', boxSizing: 'border-box' as const
-  };
-
   return (
-    <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000 }}>
-      <div style={{ backgroundColor: '#fff', borderRadius: '8px', width: '600px', maxHeight: '90vh', overflowY: 'auto', padding: '30px', position: 'relative' }}>
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-[1000]">
+      <div className="bg-white rounded-lg w-[600px] max-h-[90vh] overflow-y-auto p-8 relative">
         
         {/* 헤더 */}
-        <div style={{ marginBottom: '20px', borderBottom: '1px solid #eee', paddingBottom: '15px' }}>
-          <h2 style={{ fontSize: '20px', fontWeight: 'bold', margin: 0 }}>
+        <div className="mb-5 border-b border-gray-200 pb-4 relative">
+          <h2 className="text-xl font-bold">
             {mode === 'create' ? '활동 등록' : mode === 'edit' ? '활동 수정' : '활동 상세 정보'}
           </h2>
-          <p style={{ fontSize: '13px', color: '#666', marginTop: '5px' }}>
+          <p className="text-sm text-gray-600 mt-1">
             {mode === 'create' ? '새로운 저감활동을 등록하세요' : '등록된 활동 내역을 확인합니다'}
           </p>
-          <button onClick={onClose} style={{ position: 'absolute', top: '20px', right: '20px', background: 'none', border: 'none', cursor: 'pointer' }}>
-            <X size={24} color="#666" />
+          <button onClick={onClose} className="absolute top-4 right-4">
+            <X size={24} className="text-gray-600" />
           </button>
         </div>
 
         {/* 폼 영역 */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-          
-          {/* 1. 활동 기간 */}
+        <div className="flex flex-col gap-5">
+          {/* 활동 기간 */}
           <div>
-            <label style={labelStyle}>활동기간</label>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <div style={{ position: 'relative', flex: 1 }}>
-                <input 
-                  type="date" name="startDate" value={formData.startDate} onChange={handleChange} disabled={isReadOnly}
-                  style={inputStyle} 
-                />
-              </div>
+            <label className="block text-sm font-bold mb-2 text-gray-800">활동기간</label>
+            <div className="flex items-center gap-2">
+              <input
+                type="date" name="startDate" value={formData.startDate}
+                onChange={handleChange} disabled={isReadOnly}
+                className={`flex-1 px-3 py-2 rounded border text-sm ${isReadOnly ? 'bg-gray-100' : 'bg-white'}`}
+              />
               <span>~</span>
-              <div style={{ position: 'relative', flex: 1 }}>
-                <input 
-                  type="date" name="endDate" value={formData.endDate} onChange={handleChange} disabled={isReadOnly}
-                  style={inputStyle} 
-                />
-              </div>
+              <input
+                type="date" name="endDate" value={formData.endDate}
+                onChange={handleChange} disabled={isReadOnly}
+                className={`flex-1 px-3 py-2 rounded border text-sm ${isReadOnly ? 'bg-gray-100' : 'bg-white'}`}
+              />
             </div>
+            {errors.startDate && <p className="text-red-500 text-xs mt-1">{errors.startDate}</p>}
+            {errors.endDate && <p className="text-red-500 text-xs mt-1">{errors.endDate}</p>}
+            {errors.dateRange && <p className="text-red-500 text-xs mt-1">{errors.dateRange}</p>}
           </div>
 
-          {/* 2. 활동명 */}
+          {/* 활동명 */}
           <div>
-            <label style={labelStyle}>활동명</label>
-            <input 
-              type="text" name="title" value={formData.title} onChange={handleChange} disabled={isReadOnly}
-              placeholder="활동명을 입력하세요" style={inputStyle} 
+            <label className="block text-sm font-bold mb-2 text-gray-800">활동명</label>
+            <input
+              type="text" name="title" value={formData.title}
+              onChange={handleChange} disabled={isReadOnly}
+              placeholder="활동명을 입력하세요"
+              className={`w-full px-3 py-2 rounded border text-sm ${isReadOnly ? 'bg-gray-100' : 'bg-white'}`}
             />
+            {errors.title && <p className="text-red-500 text-xs mt-1">{errors.title}</p>}
           </div>
 
           {/* 활동내역 */}
           <div>
-            <label style={labelStyle}>활동내역</label>
-            <textarea 
-              name="content" value={formData.content} onChange={handleChange} disabled={isReadOnly}
-              placeholder="활동 내역을 상세히 입력하세요" 
-              style={{ ...inputStyle, height: '100px', resize: 'none' }} 
+            <label className="block text-sm font-bold mb-2 text-gray-800">활동내역</label>
+            <textarea
+              name="content" value={formData.content}
+              onChange={handleChange} disabled={isReadOnly}
+              placeholder="활동 내역을 상세히 입력하세요"
+              className={`w-full px-3 py-2 rounded border text-sm h-24 resize-none ${isReadOnly ? 'bg-gray-100' : 'bg-white'}`}
             />
+            {errors.content && <p className="text-red-500 text-xs mt-1">{errors.content}</p>}
           </div>
 
           {/* 소요금액 */}
           <div>
-            <label style={labelStyle}>소요금액 (원)</label>
-            <input 
-              type="number" name="cost" value={formData.cost} onChange={handleChange} disabled={isReadOnly}
-              placeholder="소요된 금액을 입력하세요" style={inputStyle} 
+            <label className="block text-sm font-bold mb-2 text-gray-800">소요금액 (원)</label>
+            <input
+              type="number" name="cost" value={formData.cost}
+              onChange={handleChange} disabled={isReadOnly}
+              placeholder="소요된 금액을 입력하세요"
+              className={`w-full px-3 py-2 rounded border text-sm ${isReadOnly ? 'bg-gray-100' : 'bg-white'}`}
             />
+            {errors.cost && <p className="text-red-500 text-xs mt-1">{errors.cost}</p>}
           </div>
 
           {/* 기대효과 */}
           <div>
-            <label style={labelStyle}>기대효과</label>
-            <input 
-              type="text" name="effect" value={formData.effect} onChange={handleChange} disabled={isReadOnly}
-              placeholder="기대되는 효과를 입력하세요" style={inputStyle} 
+            <label className="block text-sm font-bold mb-2 text-gray-800">기대효과</label>
+            <input
+              type="text" name="effect" value={formData.effect}
+              onChange={handleChange} disabled={isReadOnly}
+              placeholder="기대되는 효과를 입력하세요"
+              className={`w-full px-3 py-2 rounded border text-sm ${isReadOnly ? 'bg-gray-100' : 'bg-white'}`}
             />
+            {errors.effect && <p className="text-red-500 text-xs mt-1">{errors.effect}</p>}
           </div>
 
-          {/* 3. 사진 업로드 */}
+          {/* 사진 업로드 */}
           <div>
-            <label style={labelStyle}>사진 업로드</label>
-            <div style={{ display: 'flex', gap: '10px' }}>
-              <input 
-                type="text" disabled value={formData.imageUrl || '선택된 파일 없음'} 
-                style={{ ...inputStyle, flex: 1, backgroundColor: '#f9f9f9', color: '#999' }} 
-              />
+            <label className="block text-sm font-bold mb-2 text-gray-800">사진 업로드</label>
+            <div className="flex gap-2 items-center">
               {!isReadOnly && (
-                <button style={{ padding: '0 20px', border: '1px solid #ccc', borderRadius: '4px', backgroundColor: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px', fontWeight: 'bold' }}>
-                  <Upload size={16} /> 선택
-                </button>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileChange}
+                  className="hidden"
+                  id="fileInput"
+                />
               )}
+              {!isReadOnly && (
+                <label
+                  htmlFor="fileInput"
+                  className="px-4 py-2 border rounded bg-white cursor-pointer flex items-center gap-2 font-bold text-sm hover:bg-gray-50"
+                >
+                  <Upload size={16} /> 선택
+                </label>
+              )}
+              <span className="text-sm text-gray-500">{preview ? '파일 선택됨' : '선택된 파일 없음'}</span>
             </div>
-            {/* 이미지 미리보기 (조회/수정 시) */}
-            {formData.imageUrl && (
-                <div style={{ marginTop: '10px' }}>
-                    <img src={formData.imageUrl} alt="preview" style={{ maxHeight: '150px', borderRadius: '8px' }} />
-                </div>
+            {preview && (
+              <div className="mt-2">
+                <img src={preview} alt="preview" className="max-h-40 rounded-md" />
+              </div>
             )}
           </div>
-
         </div>
 
-        {/* 4. 하단 버튼 */}
-        <div style={{ display: 'flex', gap: '10px', marginTop: '30px' }}>
+        {/* 하단 버튼 */}
+        <div className="flex gap-2 mt-8">
           {!isReadOnly && (
-            <button 
-              onClick={handleSubmit} 
-              style={{ flex: 1, padding: '15px', backgroundColor: '#28a745', color: '#fff', border: 'none', borderRadius: '4px', fontSize: '16px', fontWeight: 'bold', cursor: 'pointer' }}
+            <button
+              onClick={handleSubmit}
+              className="flex-1 py-3 bg-green-600 text-white rounded font-bold text-lg hover:bg-green-700"
             >
               {mode === 'create' ? '등록하기' : '수정완료'}
             </button>
           )}
-          <button 
-            onClick={onClose} 
-            style={{ flex: 1, padding: '15px', backgroundColor: '#fff', color: '#333', border: '1px solid #ccc', borderRadius: '4px', fontSize: '16px', fontWeight: 'bold', cursor: 'pointer' }}
+          <button
+            onClick={onClose}
+            className="flex-1 py-3 bg-white text-gray-800 border rounded font-bold text-lg hover:bg-gray-50"
           >
             {isReadOnly ? '닫기' : '취소'}
           </button>
         </div>
-
       </div>
     </div>
   );
