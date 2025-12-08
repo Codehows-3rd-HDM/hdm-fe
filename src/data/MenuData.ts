@@ -5,6 +5,7 @@ export interface MenuItem {
   path?: string;
   icon?: React.ElementType;
   items?: MenuItem[];
+  requiredRoles?: string[];
 }
 
 export const menuItems: MenuItem[] = [
@@ -12,24 +13,27 @@ export const menuItems: MenuItem[] = [
     title: '대시보드',
     path: '/dashboard', 
     icon: Home,
+    requiredRoles: ['SUPERADMIN', 'ADMIN', 'VIEWER']
   },
   {
     title: '배출량 조회',
     icon: BarChart2,
     items: [
       { title: '기간별 탄소 총 배출량', path: '/emissions/period' }, // API: /emission/daily
-      { title: '납품 업체별', path: '/emissions/company' },           // API: /company/emission
+      { title: '협력사별', path: '/emissions/company' },           // API: /company/emission
       { title: '운행 목적별', path: '/emissions/purpose' },           // API: /purpose/emission
-      { title: '생산 공정별', path: '/emissions/process' },           // API: /process/emission
+      { title: '공급 고객별', path: '/emissions/process' },           // API: /process/emission
       { title: '생산품목 구분별', path: '/emissions/product-class' }, // API: /product-class/emission
       { title: '연료별', path: '/emissions/fuel' },                   // API: /fuel/emission
       { title: '목표 대비 탄소 배출량', path: '/emissions/target' },   // API: /target/compare
     ],
+    requiredRoles: ['SUPERADMIN', 'ADMIN', 'VIEWER']
   },
   {
     title: '저감활동 기록 조회',
     path: '/activities', 
     icon: Clock,
+    requiredRoles: ['SUPERADMIN', 'ADMIN', 'VIEWER']
   },
   {
     title: '관리자 설정',
@@ -54,10 +58,12 @@ export const menuItems: MenuItem[] = [
       { title: '저감활동 기록 관리', path: '/admin/activity-manage' },
       { title: '출입 데이터 업로드', path: '/admin/data-upload' },     // API: /upload/nicepark, /upload/s1
     ],
+    requiredRoles: ['SUPERADMIN', 'ADMIN']
   },
   {
     title: '계정 등록',
-    path: '/register', // API: /users
+    path: '/register',
     icon: User,
+    requiredRoles: ['SUPERADMIN']
   },
 ];

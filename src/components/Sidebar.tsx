@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { ChevronDown, Hexagon } from 'lucide-react';
 import { menuItems } from '../data/MenuData';
+import { useAuth } from '../hooks/useAuth';
 
 const Sidebar: React.FC = () => {
   const navigate = useNavigate();
@@ -9,6 +10,9 @@ const Sidebar: React.FC = () => {
 
   const [closedDepth1, setClosedDepth1] = useState<Set<string>>(() => new Set(['관리자 설정']));
   const [closedDepth2, setClosedDepth2] = useState<Set<string>>(new Set(['출입 차량의 기본 데이터 관리']));
+
+  //권한
+  const { role, hasRole } = useAuth();
 
   const handleToggleDepth1 = (title: string, hasSubItems: boolean, path?: string) => {
     if (!hasSubItems && path) {
@@ -36,6 +40,15 @@ const Sidebar: React.FC = () => {
     });
   };
 
+  // 로그아웃 사용하게 되면 사용
+  // const handleLogout = () => {
+  //   // sessionStorage에서 토큰 및 역할 제거
+  //   sessionStorage.removeItem('token');
+  //   sessionStorage.removeItem('role');
+  //   // 로그인 페이지로 리디렉션
+  //   window.location.href = '/login'; 
+  // };
+
   return (
     <div className="fixed left-0 top-0 w-[300px] h-screen bg-white border-r border-[#e0e0e0] 
                     font-[Malgun_Gothic,'Apple_SD_Gothic_Neo',sans-serif] flex flex-col overflow-y-auto pb-10">
@@ -45,6 +58,11 @@ const Sidebar: React.FC = () => {
       </div>
 
       {menuItems.map((depth1) => {
+
+        if (depth1.requiredRoles && !hasRole(depth1.requiredRoles)) {
+          return null; 
+        }
+        
         const isClosed1 = closedDepth1.has(depth1.title);
         const hasSub1 = !!(depth1.items && depth1.items.length > 0);
         const isActive1 = depth1.path === location.pathname;
@@ -79,6 +97,11 @@ const Sidebar: React.FC = () => {
                 style={{ maxHeight: isClosed1 ? '0' : '800px' }}
               >
                 {depth1.items!.map((depth2) => {
+
+                  if (depth2.requiredRoles && !hasRole(depth2.requiredRoles)) {
+                    return null;
+                  }
+
                   const depth2Key = `${depth1.title}-${depth2.title}`;
                   const isClosed2 = closedDepth2.has(depth2Key);
                   const hasSub2 = !!(depth2.items && depth2.items.length > 0);
@@ -116,6 +139,11 @@ const Sidebar: React.FC = () => {
                           style={{ maxHeight: isClosed2 ? '0' : '500px' }}
                         >
                           {depth2.items!.map((depth3) => {
+
+                            if (depth3.requiredRoles && !hasRole(depth3.requiredRoles)) {
+                              return null;
+                            }
+
                             const isActive3 = depth3.path === location.pathname;
                             return (
                               <div
@@ -144,6 +172,17 @@ const Sidebar: React.FC = () => {
           </div>
         );
       })}
+      
+      {/* 로그 아웃 사용하게 된다면
+       <div className="mt-auto pt-4 border-t border-gray-700">
+        <button
+          onClick={handleLogout}
+          className="flex items-center w-full p-3 my-2 rounded-lg text-red-400 hover:bg-gray-700 transition-colors"
+        >
+          <LogOut size={20} className="mr-3" />
+          로그아웃
+        </button>
+      </div> */}
     </div>
   );
 };
