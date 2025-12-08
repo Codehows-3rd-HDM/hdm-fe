@@ -1,8 +1,8 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Outlet, useLocation, Navigate } from 'react-router-dom';
 import Sidebar from './components/Sidebar';
-import RegisterPage from './pages/admin/RegisterPage';
 import LoginPage from './pages/LoginPage';
+import RegisterPage from './pages/admin/RegisterPage'; 
 import DataUploadPage from './pages/admin/DataUploadPage';
 import VehicleRegisterPage from './pages/admin/VehicleRegisterPage';
 import DashboardPage from './pages/dashboard/DashboardPage';
@@ -17,11 +17,12 @@ import OperationPurposeEmissionPage from './pages/Emissions inquiry/OperationPur
 import ProcessEmissionPage from './pages/Emissions inquiry/ProcessEmissionPage';
 import ProductEmissionPage from './pages/Emissions inquiry/ProductEmissionPage';
 import FuelEmissionPage from './pages/Emissions inquiry/FuelEmissionPage';
-import './App.css'
 import TargetComparisonPage from './pages/Emissions inquiry/TargetComparisonPage';
 import PeriodEmissionPage from './pages/Emissions inquiry/PeriodEmissionPage';
 import ActivityInquiryPage from './pages/activities/ActivityInquiryPage';
 import ActivityManagementPage from './pages/admin/ActivityManagementPage';
+import ProtectedRoute from './components/ProtectedRoute'; // ProtectedRoute 임포트
+import './App.css';
 
 // [임시] 페이지가 없을 때 보여줄 플레이스홀더 컴포넌트
 const PagePlaceholder = ({ title }: { title: string }) => {
@@ -50,7 +51,8 @@ const MainLayout = () => {
       </div>
       
       {/* 메인 영역: flex-1, h-full, overflow-y-auto, bg-hd-gray(설정파일색), relative */}
-      <main className="ml-[300px] p-6 flex-1 h-full overflow-y-auto bg-hd-gray relative main-content">
+      {/* ml-[300px]은 Sidebar 너비만큼 여백을 주는 것입니다 (Sidebar가 fixed일 경우 필요) */}
+      <main className="ml-[260px] flex-1 h-full overflow-y-auto bg-hd-gray relative main-content w-full">
         <Outlet />
       </main>
     </div>
@@ -61,58 +63,78 @@ const App: React.FC = () => {
   return (
     <BrowserRouter>
       <Routes>
-        {/* 로그인 등 사이드바가 없는 페이지가 있다면 MainLayout 밖에 정의 기본 경로 로그인으로*/}
+        {/* 로그인 등 사이드바가 없는 페이지 */}
         <Route path="/" element={<Navigate to="/login" replace />} />
         <Route path="/login" element={<LoginPage />} />
 
         {/* 사이드바가 포함된 메인 레이아웃 */}
         <Route element={<MainLayout />}>
           
-          {/* 1. 대시보드 (HDM-001) */}
-          <Route path="dashboard" element={<DashboardPage/>} />
+          {/* ---------------------------------------------------------------- */}
+          {/* [Group 1] 모든 권한 접근 가능 (VIEWER 이상) */}
+          {/* ---------------------------------------------------------------- */}
+          <Route element={<ProtectedRoute requiredRoles={['SUPERADMIN', 'ADMIN', 'VIEWER']} />}>
+            
+            {/* 1. 대시보드 (HDM-001) */}
+            <Route path="dashboard" element={<DashboardPage/>} />
 
-          {/* 2. 배출량 조회 그룹 */}
-          <Route path="emissions">
-            <Route path="period" element={<PeriodEmissionPage/>} />
-            <Route path="company" element={<CompanyEmissionPage />} />
-            <Route path="purpose" element={<OperationPurposeEmissionPage />} />
-            <Route path="process" element={<ProcessEmissionPage />} />
-            <Route path="product-class" element={<ProductEmissionPage />} />
-            <Route path="fuel" element={<FuelEmissionPage />} />
-            <Route path="target" element={<TargetComparisonPage />} />
-          </Route>
-
-          {/* 3. 저감 활동 */}
-          <Route path="activities" element={<ActivityInquiryPage />} />
-
-          {/* 4. 관리자 설정 그룹 */}
-          <Route path="admin">
-            {/* 4-1. 차량 기본 데이터 관리 */}
-            <Route path="vehicle">
-              <Route path="register" element={<VehicleRegisterPage/>} />
-              <Route path="manage" element={<VehicleManagementPage />} />
+            {/* 2. 배출량 조회 그룹 */}
+            <Route path="emissions">
+              <Route path="period" element={<PeriodEmissionPage/>} />
+              <Route path="company" element={<CompanyEmissionPage />} />
+              <Route path="purpose" element={<OperationPurposeEmissionPage />} />
+              <Route path="process" element={<ProcessEmissionPage />} />
+              <Route path="product-class" element={<ProductEmissionPage />} />
+              <Route path="fuel" element={<FuelEmissionPage />} />
+              <Route path="target" element={<TargetComparisonPage />} />
             </Route>
-            
-            {/* 4-2. 기준 정보 관리 (업체, 공정, 목적, 품목 등) */}
-            <Route path="company/manage" element={<CompanyManagementPage />} />
-            <Route path="car-category/manage" element={<CarModelManagementPage />} />
-            <Route path="process/manage" element={<ProcessManagementPage />} />
-            <Route path="purpose/manage" element={<PurposeManagementPage />} />
-            <Route path="product-class/manage" element={<ProductManagementPage />} />
 
-            {/* 4-3. 배출 관련 설정 */}
-            <Route path="emission-factor" element={<PagePlaceholder title="탄소 배출계수 관리 (HDM-027)" />} />
-            <Route path="calc-method" element={<PagePlaceholder title="탄소 배출량 계산 설정 (HDM-028)" />} />
-            <Route path="target-view" element={<PagePlaceholder title="탄소 배출 목표 관리 (HDM-029)" />} />
-            
-            {/* 4-4. 기타 관리 */}
-            <Route path="dashboard-setting" element={<PagePlaceholder title="대시보드 관리" />} />
-            <Route path="activity-manage" element={<ActivityManagementPage />} />
-            <Route path="data-upload" element={<DataUploadPage/>} />
+            {/* 3. 저감 활동 조회 */}
+            <Route path="activities" element={<ActivityInquiryPage />} />
           </Route>
 
-          {/* 5. 계정 */}
-          <Route path="register" element={<RegisterPage/>} />
+
+          {/* ---------------------------------------------------------------- */}
+          {/* [Group 2] 관리자 접근 가능 (ADMIN 이상) */}
+          {/* ---------------------------------------------------------------- */}
+          <Route element={<ProtectedRoute requiredRoles={['SUPERADMIN', 'ADMIN']} />}>
+            
+            {/* 4. 관리자 설정 그룹 */}
+            <Route path="admin">
+              {/* 4-1. 차량 기본 데이터 관리 */}
+              <Route path="vehicle">
+                <Route path="register" element={<VehicleRegisterPage/>} />
+                <Route path="manage" element={<VehicleManagementPage />} />
+              </Route>
+              
+              {/* 4-2. 기준 정보 관리 (업체, 공정, 목적, 품목 등) */}
+              <Route path="company/manage" element={<CompanyManagementPage />} />
+              <Route path="car-category/manage" element={<CarModelManagementPage />} />
+              <Route path="supply-type/manage" element={<ProcessManagementPage />} />
+              <Route path="purpose/manage" element={<PurposeManagementPage />} />
+              <Route path="supply-customer/manage" element={<ProductManagementPage />} />
+
+              {/* 4-3. 배출 관련 설정 */}
+              <Route path="emission-factor" element={<PagePlaceholder title="탄소 배출계수 관리 (HDM-027)" />} />
+              <Route path="calc-method" element={<PagePlaceholder title="탄소 배출량 계산 설정 (HDM-028)" />} />
+              <Route path="target-view" element={<PagePlaceholder title="탄소 배출 목표 관리 (HDM-029)" />} />
+              
+              {/* 4-4. 기타 관리 */}
+              <Route path="dashboard-setting" element={<PagePlaceholder title="대시보드 관리" />} />
+              <Route path="activity-manage" element={<ActivityManagementPage />} />
+              <Route path="data-upload" element={<DataUploadPage/>} />
+            </Route>
+          </Route>
+
+
+          {/* ---------------------------------------------------------------- */}
+          {/* [Group 3] 슈퍼 관리자만 접근 가능 (SUPERADMIN) */}
+          {/* ---------------------------------------------------------------- */}
+          <Route element={<ProtectedRoute requiredRoles={['SUPERADMIN']} />}>
+            {/* 5. 계정 등록 */}
+            <Route path="register" element={<RegisterPage/>} />
+          </Route>
+
         </Route>
       </Routes>
     </BrowserRouter>

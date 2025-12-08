@@ -13,7 +13,7 @@ interface AuthInfo {
 export const useAuth = (): AuthInfo => {
   // sessionStorage에서 토큰과 역할 정보 가져오기
   const token = sessionStorage.getItem('token');
-  const role = sessionStorage.getItem('role') || 'VIEWER';
+  const role = sessionStorage.getItem('role') || 'VIEWER'; 
 
   const isAuthenticated = !!token;
 
