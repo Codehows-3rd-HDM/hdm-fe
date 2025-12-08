@@ -8,11 +8,12 @@ const Sidebar: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
+  // 초기 닫힘 상태 설정 ('관리자 설정' 메뉴는 닫힌 상태로 시작)
   const [closedDepth1, setClosedDepth1] = useState<Set<string>>(() => new Set(['관리자 설정']));
   const [closedDepth2, setClosedDepth2] = useState<Set<string>>(new Set(['출입 차량의 기본 데이터 관리']));
 
-  //권한
-  const { role, hasRole } = useAuth();
+  // 권한 훅
+  const { hasRole } = useAuth();
 
   const handleToggleDepth1 = (title: string, hasSubItems: boolean, path?: string) => {
     if (!hasSubItems && path) {
@@ -21,8 +22,8 @@ const Sidebar: React.FC = () => {
     }
     setClosedDepth1(prev => {
       const newSet = new Set(prev);
-      if (newSet.has(title)) newSet.delete(title);
-      else newSet.add(title);
+      if (newSet.has(title)) newSet.delete(title); // 닫혀있으면 -> 연다 (삭제)
+      else newSet.add(title); // 열려있으면 -> 닫는다 (추가)
       return newSet;
     });
   };
@@ -40,29 +41,21 @@ const Sidebar: React.FC = () => {
     });
   };
 
-  // 로그아웃 사용하게 되면 사용
-  // const handleLogout = () => {
-  //   // sessionStorage에서 토큰 및 역할 제거
-  //   sessionStorage.removeItem('token');
-  //   sessionStorage.removeItem('role');
-  //   // 로그인 페이지로 리디렉션
-  //   window.location.href = '/login'; 
-  // };
-
   return (
-    <div className="fixed left-0 top-0 w-[300px] h-screen bg-white border-r border-[#e0e0e0] 
-                    font-[Malgun_Gothic,'Apple_SD_Gothic_Neo',sans-serif] flex flex-col overflow-y-auto pb-10">
+    // [수정] fixed w-[260px]로 변경 (App.tsx의 ml-[260px]과 일치시킴)
+    <div className="fixed left-0 top-0 w-[260px] h-screen bg-white border-r border-gray-200 flex flex-col overflow-y-auto pb-10 font-sans z-50">
+      
       {/* 로고 영역 */}
-      <div className="px-5 pt-[25px] pb-[15px] border-b border-[#f0f0f0] mb-[10px]">
-        <img src="/rogo.png" alt="HDM Logo" className="max-w-[220px] block h-auto" />
+      <div className="px-5 pt-6 pb-4 border-b border-gray-100 mb-2">
+        <img src="/rogo.png" alt="HDM Logo" className="max-w-[180px] block h-auto mx-auto" />
       </div>
 
       {menuItems.map((depth1) => {
-
+        // [1단계 권한 체크]
         if (depth1.requiredRoles && !hasRole(depth1.requiredRoles)) {
           return null; 
         }
-        
+
         const isClosed1 = closedDepth1.has(depth1.title);
         const hasSub1 = !!(depth1.items && depth1.items.length > 0);
         const isActive1 = depth1.path === location.pathname;
@@ -72,32 +65,36 @@ const Sidebar: React.FC = () => {
           <div key={depth1.title}>
             {/* --- Level 1 --- */}
             <div
-              className={`flex items-center justify-between pl-6 pr-6 mb-3 cursor-pointer text-base transition-all
-                ${isActive1 ? 'text-[#007bff] font-bold bg-[#eef6ff]' : 'text-[#333] font-semibold'}
-                hover:bg-[#f5f9ff] active:bg-[#eef6ff]
+              className={`
+                flex items-center justify-between px-6 py-3 mb-1 cursor-pointer text-[15px] transition-all duration-200
+                ${isActive1 
+                  ? 'text-blue-600 font-bold bg-blue-50' 
+                  : 'text-gray-700 font-semibold hover:bg-gray-50'
+                }
               `}
-              style={{ height: '50px' }}
               onClick={() => handleToggleDepth1(depth1.title, hasSub1, depth1.path)}
             >
-              <div className="flex items-center gap-x-4">
+              <div className="flex items-center gap-x-3">
                 {Icon && <Icon size={20} strokeWidth={1.5} />}
-                <span className="block leading-[2.2rem]">{depth1.title}</span>
+                <span>{depth1.title}</span>
               </div>
+              
+              {/* 화살표 아이콘 (조건부 렌더링) */}
               {hasSub1 && (
-                isClosed1
-                  ? <ChevronDown size={16} className="text-[#999] rotate-180" />
-                  : <ChevronDown size={16} className="text-[#999]" />
+                <ChevronDown 
+                  // 색상을 text-gray-400으로 명시하여 가시성 확보
+                  className={`text-gray-400 transition-transform duration-200 ${isClosed1 ? 'rotate-180' : 'rotate-0'}`} 
+                />
               )}
             </div>
 
             {/* --- Level 1 Content --- */}
             {hasSub1 && (
               <div
-                className="overflow-hidden transition-[max-height] duration-300 ease-in-out bg-white"
-                style={{ maxHeight: isClosed1 ? '0' : '800px' }}
+                className={`overflow-hidden transition-all duration-300 ease-in-out bg-white ${isClosed1 ? 'max-h-0 opacity-0' : 'max-h-[1000px] opacity-100'}`}
               >
                 {depth1.items!.map((depth2) => {
-
+                  // [2단계 권한 체크]
                   if (depth2.requiredRoles && !hasRole(depth2.requiredRoles)) {
                     return null;
                   }
@@ -114,32 +111,34 @@ const Sidebar: React.FC = () => {
                     <div key={depth2Key}>
                       {/* --- Level 2 --- */}
                       <div
-                        className={`flex items-center justify-between pr-6 mb-2 cursor-pointer text-sm transition-colors
-                          ${isHighlight2 ? 'text-[#007bff] font-semibold bg-[#eef6ff]' : 'text-[#555] font-normal'}
-                          hover:bg-[#f5f9ff] active:bg-[#eef6ff]
+                        className={`
+                          flex items-center justify-between pr-6 mb-1 cursor-pointer text-sm transition-colors duration-200 pl-10 py-2.5
+                          ${isHighlight2 
+                            ? 'text-blue-600 font-semibold bg-blue-50' 
+                            : 'text-gray-600 font-normal hover:bg-gray-50 hover:text-blue-600'
+                          }
                         `}
-                        style={{ paddingLeft: '40px', height: '45px' }}
                         onClick={() => handleToggleDepth2(depth2Key, hasSub2, depth2.path)}
                       >
-                        <div className="flex items-center gap-x-3">
-                          <span className={`text-[18px] ${isHighlight2 ? 'text-[#007bff]' : 'text-[#b0b0b0]'}`}>~</span>
-                          <span className="block leading-[2rem]">{depth2.title}</span>
+                        <div className="flex items-center gap-x-2">
+                          <span className={`text-lg leading-none ${isHighlight2 ? 'text-blue-600' : 'text-gray-300'}`}>~</span>
+                          <span>{depth2.title}</span>
                         </div>
                         {hasSub2 && (
-                          isClosed2
-                            ? <ChevronDown size={14} className="text-[#bbb] rotate-180" />
-                            : <ChevronDown size={14} className="text-[#bbb]" />
+                          <ChevronDown 
+                            size={14} 
+                            className={`ml-auto text-gray-300 transition-transform duration-200 ${isClosed2 ? 'rotate-180' : 'rotate-0'}`}
+                          />
                         )}
                       </div>
 
                       {/* --- Level 2 Content (Level 3) --- */}
                       {hasSub2 && (
                         <div
-                          className="overflow-hidden transition-[max-height] duration-300 ease-in-out bg-[#f9f9f9]"
-                          style={{ maxHeight: isClosed2 ? '0' : '500px' }}
+                          className={`overflow-hidden transition-all duration-300 ease-in-out bg-gray-50 ${isClosed2 ? 'max-h-0' : 'max-h-[500px]'}`}
                         >
                           {depth2.items!.map((depth3) => {
-
+                            // [3단계 권한 체크]
                             if (depth3.requiredRoles && !hasRole(depth3.requiredRoles)) {
                               return null;
                             }
@@ -148,17 +147,20 @@ const Sidebar: React.FC = () => {
                             return (
                               <div
                                 key={depth3.title}
-                                className={`flex items-center justify-between pr-6 mb-2 cursor-pointer text-[13px]
-                                  ${isActive3 ? 'text-[#007bff] font-semibold bg-[#eef6ff]' : 'text-[#666] font-normal'}
-                                  hover:bg-[#f5f9ff] active:bg-[#eef6ff]
+                                className={`
+                                  flex items-center pr-6 mb-1 cursor-pointer text-[13px] transition-colors duration-200 pl-[68px] py-2
+                                  ${isActive3 
+                                    ? 'text-blue-600 font-semibold bg-blue-50' 
+                                    : 'text-gray-500 font-normal hover:bg-white hover:text-blue-600'
+                                  }
                                 `}
-                                style={{ paddingLeft: '68px', height: '40px' }}
                                 onClick={() => navigate(depth3.path!)}
                               >
-                                <div className="flex items-center gap-x-3">
-                                  <Hexagon size={12} className={`${isActive3 ? 'fill-[#007bff]' : 'fill-[#ddd]'} stroke-none`} />
-                                  <span className="block leading-[1.8rem]">{depth3.title}</span>
-                                </div>
+                                <Hexagon 
+                                  size={12} 
+                                  className={`mr-2 ${isActive3 ? 'fill-blue-600 text-blue-600' : 'fill-gray-300 text-transparent'} stroke-none`} 
+                                />
+                                <span>{depth3.title}</span>
                               </div>
                             );
                           })}
@@ -172,17 +174,6 @@ const Sidebar: React.FC = () => {
           </div>
         );
       })}
-      
-      {/* 로그 아웃 사용하게 된다면
-       <div className="mt-auto pt-4 border-t border-gray-700">
-        <button
-          onClick={handleLogout}
-          className="flex items-center w-full p-3 my-2 rounded-lg text-red-400 hover:bg-gray-700 transition-colors"
-        >
-          <LogOut size={20} className="mr-3" />
-          로그아웃
-        </button>
-      </div> */}
     </div>
   );
 };

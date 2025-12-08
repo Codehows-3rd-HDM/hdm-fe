@@ -2,10 +2,10 @@ import React from 'react';
 import StandardDataManagementTable from '../../components/management/StandardDataManagementTable';
 import { type ProcessData, PROCESS_COLUMNS } from '../../types/data';
 
-const ProcessManagementPage: React.FC = () => {
+const SupplyTypeManagementPage: React.FC = () => {
   return (
     <StandardDataManagementTable<ProcessData>
-      title="생산 공정 기준정보 관리"
+      title="공급 유형 기준정보 관리"
       columns={PROCESS_COLUMNS}
       // initialData={MOCK_PROCESS_DATA}
       apiEndpoint="/api/admin/processes"
@@ -13,4 +13,4 @@ const ProcessManagementPage: React.FC = () => {
   );
 };
 
-export default ProcessManagementPage;
+export default SupplyTypeManagementPage;
