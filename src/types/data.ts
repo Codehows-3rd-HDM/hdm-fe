@@ -130,7 +130,7 @@ export const CAR_MODEL_COLUMNS: ColumnDefinition<CarModelData>[] = [
 
 // 4. 생산 공정 컬럼
 export const PROCESS_COLUMNS: ColumnDefinition<ProcessData>[] = [
-  { id: 'processName', header: '생산 공정명', searchable: true, sortable: true, editable: true, width: '80%', inputType: 'text' },
+  { id: 'processName', header: '공급 유형명', searchable: true, sortable: true, editable: true, width: '80%', inputType: 'text' },
   { id: 'actions', header: '액션', searchable: false, sortable: false, editable: false, width: '20%' },
 ];
 
@@ -143,7 +143,7 @@ export const PURPOSE_COLUMNS: ColumnDefinition<PurposeData>[] = [
 
 // 6. 생산 품목 구분 컬럼
 export const PRODUCT_COLUMNS: ColumnDefinition<ProductData>[] = [
-  { id: 'productClass', header: '생산품목 구분명', searchable: true, sortable: true, editable: true, width: '50%', inputType: 'text' },
+  { id: 'productClass', header: '공급 고객명', searchable: true, sortable: true, editable: true, width: '50%', inputType: 'text' },
   { id: 'note', header: '비고', searchable: false, sortable: false, editable: true, width: '30%', inputType: 'text' },
   { id: 'actions', header: '액션', searchable: false, sortable: false, editable: false, width: '20%' },
 ];

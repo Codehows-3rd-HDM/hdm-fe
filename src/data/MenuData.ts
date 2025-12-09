@@ -19,13 +19,13 @@ export const menuItems: MenuItem[] = [
     title: '배출량 조회',
     icon: BarChart2,
     items: [
-      { title: '기간별 탄소 총 배출량', path: '/emissions/period' }, // API: /emission/daily
-      { title: '협력사별', path: '/emissions/company' },           // API: /company/emission
-      { title: '운행 목적별', path: '/emissions/purpose' },           // API: /purpose/emission
-      { title: '공급 고객별', path: '/emissions/process' },           // API: /process/emission
-      { title: '생산품목 구분별', path: '/emissions/product-class' }, // API: /product-class/emission
-      { title: '연료별', path: '/emissions/fuel' },                   // API: /fuel/emission
-      { title: '목표 대비 탄소 배출량', path: '/emissions/target' },   // API: /target/compare
+      { title: '기간별 탄소 총 배출량', path: '/view/period' }, // API: /emission/daily
+      { title: '협력사별', path: '/view/company' },           // API: /company/emission
+      { title: '운행 목적별', path: '/view/purpose' },           // API: /purpose/emission
+      { title: '공급 유형별', path: '/view/supply-type' },           // API: /process/emission
+      { title: '공급 고객별', path: '/view/supply-customer' }, // API: /product-class/emission
+      { title: '연료별', path: '/view/fuel' },                   // API: /fuel/emission
+      { title: '목표 대비 탄소 배출량', path: '/view/target' },   // API: /target/compare
     ],
     requiredRoles: ['SUPERADMIN', 'ADMIN', 'VIEWER']
   },

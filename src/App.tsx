@@ -14,15 +14,16 @@ import PurposeManagementPage from './pages/admin/OperationPurposeManagementPage'
 import ProductManagementPage from './pages/admin/SupplyCustomerManagementPage';
 import CompanyEmissionPage from './pages/Emissions inquiry/CompanyEmissionPage';
 import OperationPurposeEmissionPage from './pages/Emissions inquiry/OperationPurposeEmissionPage';
-import ProcessEmissionPage from './pages/Emissions inquiry/ProcessEmissionPage';
-import ProductEmissionPage from './pages/Emissions inquiry/ProductEmissionPage';
+import ProductEmissionPage from './pages/Emissions inquiry/SupplyCustomerEmissionPage';
 import FuelEmissionPage from './pages/Emissions inquiry/FuelEmissionPage';
 import TargetComparisonPage from './pages/Emissions inquiry/TargetComparisonPage';
 import PeriodEmissionPage from './pages/Emissions inquiry/PeriodEmissionPage';
 import ActivityInquiryPage from './pages/activities/ActivityInquiryPage';
 import ActivityManagementPage from './pages/admin/ActivityManagementPage';
-import ProtectedRoute from './components/ProtectedRoute'; // ProtectedRoute 임포트
+import ProtectedRoute from './components/ProtectedRoute';
 import './App.css';
+import SupplyTypeEmissionPage from './pages/Emissions inquiry/SupplyTypeEmissionPage';
+import SupplyCustomerEmissionPage from './pages/Emissions inquiry/SupplyCustomerEmissionPage';
 
 // [임시] 페이지가 없을 때 보여줄 플레이스홀더 컴포넌트
 const PagePlaceholder = ({ title }: { title: string }) => {
@@ -79,12 +80,12 @@ const App: React.FC = () => {
             <Route path="dashboard" element={<DashboardPage/>} />
 
             {/* 2. 배출량 조회 그룹 */}
-            <Route path="emissions">
+            <Route path="view">
               <Route path="period" element={<PeriodEmissionPage/>} />
               <Route path="company" element={<CompanyEmissionPage />} />
               <Route path="purpose" element={<OperationPurposeEmissionPage />} />
-              <Route path="process" element={<ProcessEmissionPage />} />
-              <Route path="product-class" element={<ProductEmissionPage />} />
+              <Route path="supply-type" element={<SupplyTypeEmissionPage />} />
+              <Route path="supply-customer" element={<SupplyCustomerEmissionPage />} />
               <Route path="fuel" element={<FuelEmissionPage />} />
               <Route path="target" element={<TargetComparisonPage />} />
             </Route>
