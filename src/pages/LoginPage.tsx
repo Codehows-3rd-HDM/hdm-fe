@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { User, Lock, ArrowRight } from 'lucide-react';
-import { login } from '../apis/auth'; // API 함수 임포트
+import { login } from '../apis/authApi'; // API 함수 임포트
 
 const LoginPage: React.FC = () => {
   const navigate = useNavigate();
