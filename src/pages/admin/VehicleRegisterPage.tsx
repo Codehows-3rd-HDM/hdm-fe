@@ -27,7 +27,7 @@ const PAGE_OPTIONS = [
 
 const INITIAL_FORM_DATA: IntegratedFormData = {
   carNumber: '',
-  purpose: '',
+  purposeName: '',
   companyName: '',
   employeeId: '',
   distance: '',
@@ -41,7 +41,7 @@ const INITIAL_FORM_DATA: IntegratedFormData = {
   region: '', 
   addressDetail: '',
   fuelEfficiency: '',
-  scope: '',
+  defaultScope: '',
 };
 
 const INITIAL_OPTIONS: OptionsData = {
@@ -137,7 +137,7 @@ const VehicleBasicRegisterPage: React.FC = () => {
     switch (currentPage) {
       case '출입 차량 기준정보 등록':
         requiredFields = [
-          { key: 'carNumber', name: '차량번호' }, { key: 'purpose', name: '운행목적' },
+          { key: 'carNumber', name: '차량번호' }, { key: 'purposeName', name: '운행목적' },
           { key: 'companyName', name: '협력사명' }, { key: 'distance', name: '편도거리' },
           { key: 'categoryLarge', name: '차종 대분류' }, { key: 'categorySmall', name: '차종 소분류' },
           { key: 'carModel', name: '모델명' }, { key: 'fuelType', name: '연료종류' }
@@ -160,7 +160,7 @@ const VehicleBasicRegisterPage: React.FC = () => {
         requiredFields = [{ key: 'supplyType', name: '공급 유형명' }];
         break;
       case '운행목적 기본정보 등록':
-        requiredFields = [{ key: 'purpose', name: '운행목적' }, { key: 'scope', name: 'Scope' }];
+        requiredFields = [{ key: 'purposeName', name: '운행목적' }, { key: 'defaultScope', name: 'Scope' }];
         break;
       case '공급 고객 기본정보 등록':
         requiredFields = [{ key: 'supplyCustomer', name: '공급 고객명' }];
@@ -184,10 +184,18 @@ const VehicleBasicRegisterPage: React.FC = () => {
     setValidationErrors([]);
   };
 
+  function convertScope(scope: string | number | undefined): number | undefined {
+    if (scope === undefined || scope === null || String(scope).trim() === '') return undefined;
+    const s = String(scope).trim();
+    if (s === "Scope1" || s === "1") return 1;
+    if (s === "Scope3" || s === "3") return 3;
+    return 4; // 기타 (기본값)
+  }
+
   // -------------------------
   // [API] 제출 핸들러
   // -------------------------
-  const handleSubmit = async () => {
+    const handleSubmit = async () => {
     if (!validateForm()) {
       console.error('필수 입력 필드를 확인해 주세요.');
       return;
@@ -195,34 +203,38 @@ const VehicleBasicRegisterPage: React.FC = () => {
 
     setIsSubmitting(true);
 
-    // API 호출을 위해 데이터 포맷팅 (필요 시)
-    // 기존 API 함수들이 예전 필드명을 쓸 수 있으므로 as any로 캐스팅하여 전송
-    const payload = { ...formData };
-
     try {
-      if (currentPage === '출입 차량 기준정보 등록') {
-        await registerVehicle(payload as any);
-      } 
-      else if (currentPage === '협력사명과 주소지 기본정보 등록') {
-        // 주소 합치기 로직이 API 내부 또는 여기서 필요할 수 있음
-        await registerCompany(payload as any);
-      } 
-      else if (currentPage === '차종과 연비 기본정보 등록') {
-        await registerCarModel(payload as any);
-      } 
-      else if (currentPage === '공급 유형 기본정보 등록') {
-        await registerSupplyType(payload as any);
-      } 
-      else if (currentPage === '운행목적 기본정보 등록') {
-        await registerPurpose(payload as any);
+      // 폼 상태는 string 타입 유지 → 전송 직전에 숫자로 변환해서 payloadToSend 생성
+      const payloadToSend: any = { ...formData };
+
+      // 운행목적 페이지일 때만 defaultScope를 숫자로 변환하여 담아 보냄
+      if (currentPage === '운행목적 기본정보 등록') {
+        const converted = convertScope(formData.defaultScope as any);
+        // 서버가 defaultScope 필드를 필수 숫자형으로 받는다면 반드시 숫자 또는 명확히 undefined 처리
+        if (converted !== undefined) {
+          payloadToSend.defaultScope = converted;
+        } else {
+          // 변환 불가(빈값 등)이면 아예 필드 제거하거나 null로 보낼 수 있음 — 여기선 제거
+          delete payloadToSend.defaultScope;
+        }
       }
-      else if (currentPage === '공급 고객 기본정보 등록') {
-        await registerSupplyCustomer(payload as any);
+
+      if (currentPage === '출입 차량 기준정보 등록') {
+        await registerVehicle(payloadToSend);
+      } else if (currentPage === '협력사명과 주소지 기본정보 등록') {
+        await registerCompany(payloadToSend);
+      } else if (currentPage === '차종과 연비 기본정보 등록') {
+        await registerCarModel(payloadToSend);
+      } else if (currentPage === '공급 유형 기본정보 등록') {
+        await registerSupplyType(payloadToSend);
+      } else if (currentPage === '운행목적 기본정보 등록') {
+        await registerPurpose(payloadToSend);
+      } else if (currentPage === '공급 고객 기본정보 등록') {
+        await registerSupplyCustomer(payloadToSend);
       }
 
       alert(`${currentPage}이(가) 정상적으로 등록되었습니다.`);
       handleReset();
-
     } catch (error) {
       console.error("등록 실패:", error);
       alert("등록 중 오류가 발생했습니다.");
@@ -266,7 +278,7 @@ const VehicleBasicRegisterPage: React.FC = () => {
         return (
           <>
             <div className="flex flex-col gap-1"><RequiredLabel isRequired>차량번호</RequiredLabel><input name="carNumber" value={formData.carNumber} onChange={handleChange} className={twInput} /></div>
-            <SelectField name="purpose" label="운행목적" options={options.PURPOSE_OPTIONS} isRequired value={formData.purpose} />
+            <SelectField name="purposeName" label="운행목적" options={options.PURPOSE_OPTIONS} isRequired value={formData.purpose} />
             <div className="flex flex-col gap-1"><RequiredLabel isRequired>협력사명</RequiredLabel><input list="company-list" name="companyName" value={formData.companyName} onChange={handleChange} className={twInput} /><datalist id="company-list">{options.COMPANY_OPTIONS.map(v => <option key={v} value={v}/>)}</datalist></div>
             <div className="flex flex-col gap-1"><RequiredLabel>사원번호</RequiredLabel><input type="number" name="employeeId" value={formData.employeeId} onChange={handleChange} className={twInput} /></div>
             <div className="flex flex-col gap-1"><RequiredLabel isRequired>편도거리(km)</RequiredLabel><input type="number" name="distance" value={formData.distance} onChange={handleChange} className={twInput} /></div>
@@ -315,8 +327,8 @@ const VehicleBasicRegisterPage: React.FC = () => {
       case '운행목적 기본정보 등록':
         return (
           <>
-            <div className="col-span-2 flex flex-col gap-1"><RequiredLabel isRequired>운행목적</RequiredLabel><input name="purpose" value={formData.purpose} onChange={handleChange} className={twInput} /></div>
-            <SelectField name="scope" label="Scope" options={options.SCOPE_OPTIONS} isRequired value={formData.scope} />
+            <div className="col-span-2 flex flex-col gap-1"><RequiredLabel isRequired>운행목적</RequiredLabel><input name="purposeName" value={formData.purposeName} onChange={handleChange} className={twInput} /></div>
+            <SelectField name="defaultScope" label="Scope" options={options.SCOPE_OPTIONS} isRequired value={formData.defaultScope} />
           </>
         );
 
