@@ -34,7 +34,7 @@ const LoginPage: React.FC = () => {
 
       // 3. 페이지 이동
       alert(`환영합니다, ${response.userName}님! (${response.role})`);
-      navigate('/dashboard');
+      navigate('/main');
 
     } catch (error) {
       console.error(error);

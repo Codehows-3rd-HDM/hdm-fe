@@ -14,7 +14,6 @@ import PurposeManagementPage from './pages/admin/OperationPurposeManagementPage'
 import ProductManagementPage from './pages/admin/SupplyCustomerManagementPage';
 import CompanyEmissionPage from './pages/Emissions inquiry/CompanyEmissionPage';
 import OperationPurposeEmissionPage from './pages/Emissions inquiry/OperationPurposeEmissionPage';
-import ProductEmissionPage from './pages/Emissions inquiry/SupplyCustomerEmissionPage';
 import FuelEmissionPage from './pages/Emissions inquiry/FuelEmissionPage';
 import TargetComparisonPage from './pages/Emissions inquiry/TargetComparisonPage';
 import PeriodEmissionPage from './pages/Emissions inquiry/PeriodEmissionPage';
@@ -24,6 +23,8 @@ import ProtectedRoute from './components/ProtectedRoute';
 import './App.css';
 import SupplyTypeEmissionPage from './pages/Emissions inquiry/SupplyTypeEmissionPage';
 import SupplyCustomerEmissionPage from './pages/Emissions inquiry/SupplyCustomerEmissionPage';
+import MainPage from './pages/MainPage';
+import ExcelManagementPage from './pages/admin/ExcelManagementPage';
 
 // [임시] 페이지가 없을 때 보여줄 플레이스홀더 컴포넌트
 const PagePlaceholder = ({ title }: { title: string }) => {
@@ -43,17 +44,25 @@ const PagePlaceholder = ({ title }: { title: string }) => {
 
 // 메인 레이아웃 (사이드바 + 컨텐츠 영역)
 const MainLayout = () => {
+  const location = useLocation();
+  const isDashboard = location.pathname === '/dashboard';
+
   return (
     <div className="flex min-h-screen overflow-hidden">
       
-      {/* 사이드바: 프린트 시 숨길 대상 */}
-      <div className="sidebar print:hidden">
-        <Sidebar />
-      </div>
+      {/* 사이드바: 대시보드일 때 숨김 */}
+      {!isDashboard && (
+        <div className="sidebar print:hidden">
+            <Sidebar />
+        </div>
+      )}
       
-      {/* 메인 영역: flex-1, h-full, overflow-y-auto, bg-hd-gray(설정파일색), relative */}
-      {/* ml-[300px]은 Sidebar 너비만큼 여백을 주는 것입니다 (Sidebar가 fixed일 경우 필요) */}
-      <main className="ml-[260px] flex-1 h-full overflow-y-auto bg-hd-gray relative main-content w-full">
+      {/* 메인 영역: 대시보드일 때는 margin-left 제거하여 전체 화면 사용 */}
+      <main 
+        className={`flex-1 h-full overflow-y-auto bg-hd-gray relative main-content w-full 
+            ${!isDashboard ? 'ml-[260px]' : ''} /* 대시보드 아닐 때만 여백 */
+        `}
+      >
         <Outlet />
       </main>
     </div>
@@ -75,6 +84,8 @@ const App: React.FC = () => {
           {/* [Group 1] 모든 권한 접근 가능 (VIEWER 이상) */}
           {/* ---------------------------------------------------------------- */}
           <Route element={<ProtectedRoute requiredRoles={['SUPERADMIN', 'ADMIN', 'VIEWER']} />}>
+            {/* 메인 페이지 */}
+            <Route path="/main" element={<MainPage />} />
             
             {/* 1. 대시보드 (HDM-001) */}
             <Route path="dashboard" element={<DashboardPage/>} />
@@ -114,6 +125,7 @@ const App: React.FC = () => {
               <Route path="supply-type/manage" element={<ProcessManagementPage />} />
               <Route path="purpose/manage" element={<PurposeManagementPage />} />
               <Route path="supply-customer/manage" element={<ProductManagementPage />} />
+              <Route path='excel/manage' element={<ExcelManagementPage />} />
 
               {/* 4-3. 배출 관련 설정 */}
               <Route path="emission-factor" element={<PagePlaceholder title="탄소 배출계수 관리 (HDM-027)" />} />

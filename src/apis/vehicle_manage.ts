@@ -106,18 +106,18 @@ const MOCK_COMPANY_DATA: CompanyData[] = [
   { 
     id: 1, 
     vendorName: '현대정밀', 
-    processName: '조립', 
+    supplyType: '조립', 
     distance: '12.5', 
-    productClass: '1000', 
+    supplyCustomer: '1000', 
     address: '경상남도 창원시', 
     note: '' 
   },
   { 
     id: 2, 
     vendorName: 'Volvo KOREA', 
-    processName: '도장', 
+    supplyType: '도장', 
     distance: '45.0', 
-    productClass: 'clark', 
+    supplyCustomer: 'clark', 
     address: '경상남도 창원시 성산구', 
     note: '메인 협력사' 
   },
@@ -125,9 +125,9 @@ const MOCK_COMPANY_DATA: CompanyData[] = [
   ...Array.from({ length: 15 }, (_, i) => ({
     id: i + 3,
     vendorName: `협력업체_${i + 1}`,
-    processName: i % 2 === 0 ? '프레스' : '차체',
+    supplyType: i % 2 === 0 ? '프레스' : '차체',
     distance: String(Math.floor(Math.random() * 100)),
-    productClass: i % 3 === 0 ? '2000' : '3000',
+    supplyCustomer: i % 3 === 0 ? '2000' : '3000',
     address: `경기도 평택시 포승읍 ${i + 1}번길`,
     note: '-'
   }))
@@ -151,14 +151,14 @@ const MOCK_CAR_MODEL_DATA: CarModelData[] = [
 
 
 const MOCK_PROCESS_DATA: ProcessData[] = [
-  { id: 1, processName: '프레스' },
-  { id: 2, processName: '차체' },
-  { id: 3, processName: '도장' },
-  { id: 4, processName: '조립' },
-  { id: 5, processName: '엔진' },
-  { id: 6, processName: '변속기' },
-  { id: 7, processName: '시트' },
-  { id: 8, processName: '기타' },
+  { id: 1, supplyType: '프레스' },
+  { id: 2, supplyType: '차체' },
+  { id: 3, supplyType: '도장' },
+  { id: 4, supplyType: '조립' },
+  { id: 5, supplyType: '엔진' },
+  { id: 6, supplyType: '변속기' },
+  { id: 7, supplyType: '시트' },
+  { id: 8, supplyType: '기타' },
 ];
 
 const MOCK_PURPOSE_DATA: PurposeData[] = [
@@ -171,9 +171,9 @@ const MOCK_PURPOSE_DATA: PurposeData[] = [
 
 
 const MOCK_PRODUCT_DATA: ProductData[] = [
-  { id: 1, productClass: '1000', note: '기본 부품류' },
-  { id: 2, productClass: '2000', note: '전자 장비' },
-  { id: 3, productClass: '3000', note: '내장재' },
-  { id: 4, productClass: 'clark', note: '지게차 부품' },
-  { id: 5, productClass: '기타', note: '소모품 등' },
+  { id: 1, supplyCustomer: '1000', note: '기본 부품류' },
+  { id: 2, supplyCustomer: '2000', note: '전자 장비' },
+  { id: 3, supplyCustomer: '3000', note: '내장재' },
+  { id: 4, supplyCustomer: 'clark', note: '지게차 부품' },
+  { id: 5, supplyCustomer: '기타', note: '소모품 등' },
 ];

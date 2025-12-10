@@ -6,10 +6,10 @@ import { RefreshCw, ChevronDown } from 'lucide-react';
 // -------------------------
 const PAGE_OPTIONS = [
   '출입 차량 기준정보 등록',
-  '업체명과 주소지 기본정보 등록',
+  '협력사명과 주소지 기본정보 등록',
   '차종과 연비 기본정보 등록',
-  '생산공정 기본정보 등록',
-  '운행목적 기본정보 등록',
+  '공급 유형 기본정보 등록',
+  '공급 고객 기본정보 등록',
   '생산품목 구분 기본정보 등록',
 ];
 
@@ -23,6 +23,7 @@ interface OptionsData {
   PRODUCT_CLASS_OPTIONS: string[];
   SCOPE_OPTIONS: string[];
   PROCESS_OPTIONS: string[];
+  REGION_OPTIONS: string[]; // 지역 옵션
 }
 
 // 초기 로딩 시 사용할 빈 옵션 데이터
@@ -35,6 +36,7 @@ const INITIAL_OPTIONS: OptionsData = {
   PRODUCT_CLASS_OPTIONS: [],
   SCOPE_OPTIONS: [],
   PROCESS_OPTIONS: [],
+   REGION_OPTIONS: []
 };
 
 // 더미 데이터 (실제 API 응답으로 대체될 부분)
@@ -47,6 +49,8 @@ const DUMMY_OPTIONS: OptionsData = {
   PRODUCT_CLASS_OPTIONS: ['1000', '2000', '3000', 'clark', '기타'],
   SCOPE_OPTIONS: ['Scope1', 'Scope3', '기타'],
   PROCESS_OPTIONS: ['가공', '단조', '주물', '소재', '조립', '구매', '열처리', '표면처리', '구매', '폐기', 'IT', 'FA', '기타'],
+  REGION_OPTIONS: ['강원특별자치도','경기도','경상남도','경상북도','광주광역시','대구광역시','대전광역시','부산광역시','서울특별시','세종특별자치시','울산광역시','인천광역시','전라남도','전북특별자치도','제주특별자치도','충청남도','충청북도'
+  ],
 };
 
 
@@ -66,7 +70,8 @@ interface IntegratedFormData {
   note: string;
   processName: string;
   productClass: string;
-  address: string;
+  region: string;         // 도/광역시
+  addressDetail: string;  // 상세주소
   fuelEfficiency: string;
   scope: string;
 }
@@ -84,7 +89,8 @@ const INITIAL_FORM_DATA: IntegratedFormData = {
   note: '',
   processName: '',
   productClass: '',
-  address: '',
+  region: '', 
+  addressDetail: '',
   fuelEfficiency: '',
   scope: '',
 };
@@ -99,7 +105,7 @@ const fetchOptionsDataDummy = async (): Promise<OptionsData> => {
     // 실제 API 호출로 대체될 부분
     setTimeout(() => {
       resolve(DUMMY_OPTIONS); 
-    }, 500); // 0.5초 지연 시뮬레이션
+    }, 100); // 0.5초 지연 시뮬레이션
   });
 };
 
@@ -128,7 +134,7 @@ const VehicleBasicRegisterPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true); // 옵션 로딩과 페이지 로딩 통합
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
   
-  // [개선] 드롭다운 옵션 데이터를 관리하는 상태
+  // 드롭다운 옵션 데이터를 관리하는 상태
   const [options, setOptions] = useState<OptionsData>(INITIAL_OPTIONS);
 
   // 컴포넌트 마운트 시 옵션 데이터 로딩
@@ -141,7 +147,7 @@ const VehicleBasicRegisterPage: React.FC = () => {
         setOptions(fetchedOptions);
         
         // 페이지 데이터 로딩 시뮬레이션
-        await new Promise(resolve => setTimeout(resolve, 300));
+        await new Promise(resolve => setTimeout(resolve, 100));
 
       } catch (error) {
         console.error("데이터 로딩 중 오류 발생:", error);
@@ -199,7 +205,8 @@ const VehicleBasicRegisterPage: React.FC = () => {
           { key: 'processName', name: '생산공정' },
           { key: 'distance', name: '편도거리(km)' },
           { key: 'productClass', name: '품목구분' },
-          { key: 'address', name: '주소' },
+          { key: 'region', name: '지역(도/시)' },  
+          { key: 'addressDetail', name: '상세주소' },
         ];
         break;
       case PAGE_OPTIONS[2]: // 차종과 연비 기본정보 등록
@@ -265,6 +272,16 @@ const VehicleBasicRegisterPage: React.FC = () => {
       return;
     }
 
+    // 서버로 보낼 때는 region과 addressDetail을 합쳐서 address로 만듦
+    // const payload = { ...formData };
+    
+    if (currentPage === PAGE_OPTIONS[1]) {
+        // 주소 합치기 로직
+        const fullAddress = `${formData.region} ${formData.addressDetail}`;
+        console.log(`[주소 병합] ${fullAddress}`);
+        // payload.address = fullAddress; // 실제 전송 시 사용
+    }
+
     console.log(`[등록 요청] ${currentPage} 데이터:`, formData);
     // TODO: 여기에 실제 API 호출 로직을 추가하여 데이터를 서버에 전송합니다.
     alert(`${currentPage}이(가) 정상적으로 등록되었습니다. (콘솔 확인)`); // 임시 알림
@@ -314,7 +331,7 @@ const VehicleBasicRegisterPage: React.FC = () => {
       return (
         <div className="col-span-3 text-center py-10 text-gray-500">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-sky-500 mx-auto mb-3"></div>
-          옵션 데이터 불러오는 중...
+          로딩 중...
         </div>
       );
     }
@@ -405,9 +422,9 @@ const VehicleBasicRegisterPage: React.FC = () => {
       case PAGE_OPTIONS[1]:
         return (
           <>
-            {/* 업체명 */}
+            {/* 협력사명 */}
             <div className="flex flex-col gap-1">
-              <RequiredLabel isRequired>업체명</RequiredLabel>
+              <RequiredLabel isRequired>협력사명</RequiredLabel>
               <input name="vendorName" value={formData.vendorName} onChange={handleChange} className={twInput} />
             </div>
 
@@ -435,10 +452,23 @@ const VehicleBasicRegisterPage: React.FC = () => {
               value={formData.productClass}
             />
 
-            {/* 주소 */}
+            {/* 주소 입력 분리 (지역 선택 + 상세 주소) */}
+            <SelectField 
+                name="region" 
+                label="지역 (도/시)" 
+                options={options.REGION_OPTIONS} // 행정구역 옵션 사용
+                isRequired 
+                value={formData.region} 
+            />
             <div className="col-span-2 flex flex-col gap-1">
-              <RequiredLabel isRequired>주소</RequiredLabel>
-              <input name="address" value={formData.address} onChange={handleChange} className={twInput} />
+              <RequiredLabel isRequired>상세주소</RequiredLabel>
+              <input 
+                name="addressDetail" 
+                value={formData.addressDetail} 
+                onChange={handleChange} 
+                className={twInput} 
+                placeholder="나머지 상세 주소를 입력하세요"
+              />
             </div>
 
             {/* 비고 */}
