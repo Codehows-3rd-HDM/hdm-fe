@@ -36,7 +36,7 @@ const INITIAL_FORM_DATA: IntegratedFormData = {
   fuelType: '',
   carModel: '',
   note: '',
-  supplyType: '',
+  supplyTypeName: '',
   supplyCustomer: '',
   region: '', 
   addressDetail: '',
@@ -145,7 +145,7 @@ const VehicleBasicRegisterPage: React.FC = () => {
         break;
       case '협력사명과 주소지 기본정보 등록':
         requiredFields = [
-          { key: 'companyName', name: '협력사명' }, { key: 'supplyType', name: '공급 유형' },
+          { key: 'companyName', name: '협력사명' }, { key: 'supplyTypeName', name: '공급 유형' },
           { key: 'distance', name: '편도거리' }, { key: 'supplyCustomer', name: '공급 고객' },
           { key: 'region', name: '지역' }, { key: 'addressDetail', name: '상세주소' }
         ];
@@ -157,7 +157,7 @@ const VehicleBasicRegisterPage: React.FC = () => {
         ];
         break;
       case '공급 유형 기본정보 등록':
-        requiredFields = [{ key: 'supplyType', name: '공급 유형명' }];
+        requiredFields = [{ key: 'supplyTypeName', name: '공급 유형명' }];
         break;
       case '운행목적 기본정보 등록':
         requiredFields = [{ key: 'purposeName', name: '운행목적' }, { key: 'defaultScope', name: 'Scope' }];
@@ -295,7 +295,7 @@ const VehicleBasicRegisterPage: React.FC = () => {
         return (
           <>
             <div className="flex flex-col gap-1"><RequiredLabel isRequired>협력사명</RequiredLabel><input name="companyName" value={formData.companyName} onChange={handleChange} className={twInput} /></div>
-            <SelectField name="supplyType" label="공급 유형" options={options.SUPPLY_TYPE_OPTIONS} isRequired value={formData.supplyType} />
+            <SelectField name="supplyTypeName" label="공급 유형" options={options.SUPPLY_TYPE_OPTIONS} isRequired value={formData.supplyType} />
             <div className="flex flex-col gap-1"><RequiredLabel isRequired>편도거리(km)</RequiredLabel><input type="number" name="distance" value={formData.distance} onChange={handleChange} className={twInput} /></div>
             <SelectField name="supplyCustomer" label="공급 고객" options={options.SUPPLY_CUSTOMER_OPTIONS} isRequired value={formData.supplyCustomer} />
             <SelectField name="region" label="지역 (도/시)" options={options.REGION_OPTIONS} isRequired value={formData.region} />
@@ -319,7 +319,7 @@ const VehicleBasicRegisterPage: React.FC = () => {
       case '공급 유형 기본정보 등록':
         return (
           <>
-            <div className="col-span-3 flex flex-col gap-1"><RequiredLabel isRequired>공급 유형명</RequiredLabel><input name="supplyType" value={formData.supplyType} onChange={handleChange} className={twInput} /></div>
+            <div className="col-span-3 flex flex-col gap-1"><RequiredLabel isRequired>공급 유형명</RequiredLabel><input name="supplyTypeName" value={formData.supplyTypeName} onChange={handleChange} className={twInput} /></div>
           </>
         );
 
