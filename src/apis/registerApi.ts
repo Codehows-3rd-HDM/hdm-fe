@@ -79,10 +79,37 @@ export const registerVehicle = async (data: IntegratedFormData) => {
 
 // (2) 협력사명과 주소지 등록
 export const registerCompany = async (data: IntegratedFormData) => {
-  // 주소 합치기 로직이 필요하면 여기서 처리해서 보냄
-  const fullAddress = `${data.region} ${data.addressDetail}`;
-  console.log('[API] 협력사 등록 요청:', { ...data, fullAddress });
-  return new Promise(resolve => setTimeout(() => resolve({ success: true }), 500));
+
+  const token = sessionStorage.getItem('token');
+
+  if (!token) {
+    throw new Error('인증 토큰이 없습니다. 다시 로그인해주세요.');
+  }
+
+  try {
+    // 주소 합치기 로직
+    const fullAddress = `${data.region} ${data.addressDetail}`;
+    console.log('[API] 협력사 등록 요청:', { ...data, fullAddress });
+
+    const response = await fetch(`${BASE_URL}/admin/company `, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      // 에러 처리 (401 Unauthorized 등)
+      throw new Error(`등록 실패: ${response.statusText}`);
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('API Error:', error);
+    throw error;
+  }
 };
 
 // (3) 차종과 연비 등록

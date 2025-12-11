@@ -95,9 +95,9 @@ const VehicleBasicRegisterPage: React.FC = () => {
           CAT_LARGE_OPTIONS: fetchedOptions.CAT_LARGE_OPTIONS || [],
           CAT_SMALL_OPTIONS: fetchedOptions.CAT_SMALL_OPTIONS || [],
           FUEL_OPTIONS: fetchedOptions.FUEL_OPTIONS || [],
-          SUPPLY_CUSTOMER_OPTIONS: fetchedOptions.PRODUCT_CLASS_OPTIONS || [], 
+          SUPPLY_CUSTOMER_OPTIONS: fetchedOptions.SUPPLY_CUSTOMER_OPTIONS || [], 
           SCOPE_OPTIONS: fetchedOptions.SCOPE_OPTIONS || [],
-          SUPPLY_TYPE_OPTIONS: fetchedOptions.PROCESS_OPTIONS || [], 
+          SUPPLY_TYPE_OPTIONS: fetchedOptions.SUPPLY_TYPE_OPTIONS || [], 
           REGION_OPTIONS: fetchedOptions.REGION_OPTIONS || [],
         });
       } catch (error) {
