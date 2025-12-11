@@ -21,8 +21,8 @@ const monthlyData = Array.from({ length: 12 }, (_, i) => ({
   lastYear: Math.floor(Math.random() * 500) + 400,
 }));
 
-const yearlyHistoryData = Array.from({ length: 10 }, (_, i) => ({
-  year: currentYear - 9 + i,
+const yearlyHistoryData = Array.from({ length: 5 }, (_, i) => ({
+  year: currentYear - 5 + i,
   scope1: Math.floor(Math.random() * 1000) + 500,
   scope3: Math.floor(Math.random() * 1000) + 800,
 }));
@@ -126,7 +126,7 @@ export const ScopeAnalysisSection = () => (
       </ResponsiveContainer>
     </div>
 
-    <h3 className="text-lg font-bold mb-2.5 text-gray-800 text-center">연간 탄소 배출량 (최근 10년)</h3>
+    <h3 className="text-lg font-bold mb-2.5 text-gray-800 text-center">연간 탄소 배출량 (최근 5년)</h3>
     <div className="flex-1 min-h-[220px]">
       <ResponsiveContainer width="100%" height="100%">
         <BarChart data={yearlyHistoryData} margin={{ top: 30, right: 10, left: -20, bottom: 0 }}>

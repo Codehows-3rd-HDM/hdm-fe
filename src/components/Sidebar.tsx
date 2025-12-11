@@ -42,12 +42,14 @@ const Sidebar: React.FC = () => {
   };
 
   return (
-    // [수정] fixed w-[260px]로 변경 (App.tsx의 ml-[260px]과 일치시킴)
+    // fixed w-[260px]로 변경 (App.tsx의 ml-[260px]과 일치시킴)
     <div className="fixed left-0 top-0 w-[260px] h-screen bg-white border-r border-gray-200 flex flex-col overflow-y-auto pb-10 font-sans z-50">
       
       {/* 로고 영역 */}
       <div className="px-5 pt-6 pb-4 border-b border-gray-100 mb-2">
-        <img src="/rogo.png" alt="HDM Logo" className="max-w-[180px] block h-auto mx-auto" />
+        <img src="/rogo.png" alt="HDM Logo" className="max-w-[180px] block h-auto mx-auto" 
+        onClick={() => navigate('/main')}
+        />
       </div>
 
       {menuItems.map((depth1) => {

@@ -5,7 +5,7 @@ import {
 } from 'recharts';
 import { Search, Printer, Download, CheckSquare, Square, Loader2, ChevronDown } from 'lucide-react';
 import type { AnalysisColumn, AnalysisData, ScopeType } from '../../types/analysis';
-import { fetchAnalysisData, type AnalysisDataType } from '../../apis/emissions';
+import { fetchAnalysisData, type AnalysisDataType } from '../../apis/emissionsApi';
 
 // --- 상수 ---
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d', '#ffc658'];
@@ -22,7 +22,7 @@ interface CarbonAnalysisTemplateProps {
   title: string;
   hasScopeTabs?: boolean;
   columns: AnalysisColumn[];
-  dataType: AnalysisDataType; // [변경] initialData 대신 데이터 종류를 받음
+  dataType: AnalysisDataType;
 }
 
 const CarbonAnalysisTemplate: React.FC<CarbonAnalysisTemplateProps> = ({

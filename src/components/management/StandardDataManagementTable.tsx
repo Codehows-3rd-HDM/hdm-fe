@@ -5,7 +5,7 @@ import {
 } from 'lucide-react'; 
 import ExcelUploadModal from '../common/ExcelUploadModal';
 //API 모듈 임포트
-import { fetchManagementData, deleteManagementItem, updateManagementItem, deleteBatchManagementItems } from '../../apis/vehicle_manage';
+import { fetchManagementData, deleteManagementItem, updateManagementItem, deleteBatchManagementItems } from '../../apis/vehicle_manageApi';
 
 // --- 엑셀 다운로드 함수 (프론트 구현만) ---
 const downloadExcel = (data: any[], filename: string) => {

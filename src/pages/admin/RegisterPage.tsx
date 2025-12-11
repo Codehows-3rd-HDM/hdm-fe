@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { User, Lock } from 'lucide-react'; 
-import { createAccount } from '../../apis/auth'; // API 함수 임포트
+import { createAccount } from '../../apis/authApi'; // API 함수 임포트
 import Modal from '../../components/Modal';
 
 const RegisterPage: React.FC = () => {

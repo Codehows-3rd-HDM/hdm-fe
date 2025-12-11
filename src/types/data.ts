@@ -11,8 +11,13 @@ export interface ColumnDefinition<T> {
 }
 
 // ----------------------------------------------------------------------
-// [공통 옵션 상수] (등록 페이지와 동일한 상수)
+// [공통 옵션 상수]
 // ----------------------------------------------------------------------
+export const REGION_OPTIONS = [
+  '서울특별시', '부산광역시', '대구광역시', '인천광역시', '광주광역시', '대전광역시', '울산광역시', '세종특별자치시',
+  '경기도', '강원특별자치도', '충청북도', '충청남도', '전북특별자치도', '전라남도', '경상북도', '경상남도', '제주특별자치도'
+];
+
 const PURPOSE_OPTIONS = ['납품', '출퇴근', '고객', '기타'];
 const VENDOR_OPTIONS = ['Volvo KOREA', 'Volvo COE', 'Volvo CE', '현대제철', '삼성전자', 'LG화학'];
 const CAT_LARGE_OPTIONS = ['승용차', '상용트럭'];
@@ -47,9 +52,9 @@ export interface VehicleData {
 export interface CompanyData {
   id: number;
   vendorName: string;   // 업체명
-  processName: string;  // 생산공정
+  supplyType: string;  // 공급 유형
   distance: string;     // 편도거리
-  productClass: string; // 생산품목 구분
+  supplyCustomer: string; // 공급 고객
   address: string;      // 주소
   note: string;         // 비고
   isEditing?: boolean;
@@ -65,10 +70,10 @@ export interface CarModelData {
   isEditing?: boolean;
 }
 
-// 4. 생산 공정 정보 데이터 타입
+// 4. 공급 유형 정보 데이터 타입
 export interface ProcessData {
   id: number;
-  processName: string; // 공정명
+  supplyType: string; // 공급 유형
   isEditing?: boolean;
 }
 
@@ -80,10 +85,10 @@ export interface PurposeData {
   isEditing?: boolean;
 }
 
-// 6. 생산 품목 구분 정보 데이터 타입
+// 6. 공급 고객 정보 데이터 타입
 export interface ProductData {
   id: number;
-  productClass: string; // 품목 구분명
+  supplyCustomer: string; // 품목 구분명
   note: string;         // 비고
   isEditing?: boolean;
 }
@@ -111,9 +116,10 @@ export const VEHICLE_COLUMNS: ColumnDefinition<VehicleData>[] = [
 // 2. 업체명 및 주소지 컬럼
 export const COMPANY_COLUMNS: ColumnDefinition<CompanyData>[] = [
   { id: 'vendorName', header: '업체명', searchable: true, sortable: true, editable: true, width: '15%', inputType: 'search-select', selectOptions: VENDOR_OPTIONS },
-  { id: 'processName', header: '생산공정', searchable: true, sortable: true, editable: true, width: '10%', inputType: 'select', selectOptions: PROCESS_OPTIONS },
-  { id: 'productClass', header: '생산품목구분', searchable: true, sortable: true, editable: true, width: '10%', inputType: 'select', selectOptions: PRODUCT_CLASS_OPTIONS },
+  { id: 'supplyType', header: '공급 유형', searchable: true, sortable: true, editable: true, width: '10%', inputType: 'select', selectOptions: PROCESS_OPTIONS },
+  { id: 'supplyCustomer', header: '공급 고객', searchable: true, sortable: true, editable: true, width: '10%', inputType: 'select', selectOptions: PRODUCT_CLASS_OPTIONS },
   { id: 'distance', header: '편도거리(km)', searchable: false, sortable: true, editable: true, width: '10%', inputType: 'number' },
+  { id: 'address', header: '주소', searchable: true, sortable: true, editable: true, width: '10%', inputType: 'select', selectOptions: REGION_OPTIONS },
   { id: 'address', header: '주소', searchable: true, sortable: false, editable: true, width: '30%', inputType: 'text' },
   { id: 'note', header: '비고', searchable: false, sortable: false, editable: true, width: '15%', inputType: 'text' },
   { id: 'actions', header: '액션', searchable: false, sortable: false, editable: false, width: '10%' },
@@ -130,7 +136,7 @@ export const CAR_MODEL_COLUMNS: ColumnDefinition<CarModelData>[] = [
 
 // 4. 생산 공정 컬럼
 export const PROCESS_COLUMNS: ColumnDefinition<ProcessData>[] = [
-  { id: 'processName', header: '공급 유형명', searchable: true, sortable: true, editable: true, width: '80%', inputType: 'text' },
+  { id: 'supplyType', header: '공급 유형명', searchable: true, sortable: true, editable: true, width: '80%', inputType: 'text' },
   { id: 'actions', header: '액션', searchable: false, sortable: false, editable: false, width: '20%' },
 ];
 
@@ -143,7 +149,7 @@ export const PURPOSE_COLUMNS: ColumnDefinition<PurposeData>[] = [
 
 // 6. 생산 품목 구분 컬럼
 export const PRODUCT_COLUMNS: ColumnDefinition<ProductData>[] = [
-  { id: 'productClass', header: '공급 고객명', searchable: true, sortable: true, editable: true, width: '50%', inputType: 'text' },
+  { id: 'supplyCustomer', header: '공급 고객명', searchable: true, sortable: true, editable: true, width: '50%', inputType: 'text' },
   { id: 'note', header: '비고', searchable: false, sortable: false, editable: true, width: '30%', inputType: 'text' },
   { id: 'actions', header: '액션', searchable: false, sortable: false, editable: false, width: '20%' },
 ];
