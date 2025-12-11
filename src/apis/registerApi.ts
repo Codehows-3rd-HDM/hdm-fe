@@ -25,9 +25,9 @@ export interface IntegratedFormData {
   categorySmall: string;
   fuelType: string;
   carModel: string;
-  note: string;
+  remark: string;
   supplyTypeName: string;
-  supplyCustomer: string;
+  customerName: string;
   region: string;
   addressDetail: string;
   fuelEfficiency: string;
@@ -155,6 +155,31 @@ export const registerPurpose = async (data: IntegratedFormData) => {
 
 // (6) 공급 고객 등록 
 export const registerSupplyCustomer = async (data: IntegratedFormData) => {
-  console.log('[API] 공급 고객(품목) 등록 요청:', data);
-  return new Promise(resolve => setTimeout(() => resolve({ success: true }), 500));
+
+  const token = sessionStorage.getItem('token');
+
+  if (!token) {
+    throw new Error('인증 토큰이 없습니다. 다시 로그인해주세요.');
+  }
+
+  try {
+    const response = await fetch(`${BASE_URL}/admin/supply-customer `, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      // 에러 처리 (401 Unauthorized 등)
+      throw new Error(`등록 실패: ${response.statusText}`);
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('API Error:', error);
+    throw error;
+  }
 };

@@ -35,9 +35,9 @@ const INITIAL_FORM_DATA: IntegratedFormData = {
   categorySmall: '',
   fuelType: '',
   carModel: '',
-  note: '',
+  remark: '',
   supplyTypeName: '',
-  supplyCustomer: '',
+  customerName: '',
   region: '', 
   addressDetail: '',
   fuelEfficiency: '',
@@ -146,7 +146,7 @@ const VehicleBasicRegisterPage: React.FC = () => {
       case '협력사명과 주소지 기본정보 등록':
         requiredFields = [
           { key: 'companyName', name: '협력사명' }, { key: 'supplyTypeName', name: '공급 유형' },
-          { key: 'distance', name: '편도거리' }, { key: 'supplyCustomer', name: '공급 고객' },
+          { key: 'distance', name: '편도거리' }, { key: 'customerName', name: '공급 고객' },
           { key: 'region', name: '지역' }, { key: 'addressDetail', name: '상세주소' }
         ];
         break;
@@ -163,7 +163,7 @@ const VehicleBasicRegisterPage: React.FC = () => {
         requiredFields = [{ key: 'purposeName', name: '운행목적' }, { key: 'defaultScope', name: 'Scope' }];
         break;
       case '공급 고객 기본정보 등록':
-        requiredFields = [{ key: 'supplyCustomer', name: '공급 고객명' }];
+        requiredFields = [{ key: 'customerName', name: '공급 고객명' }];
         break;
     }
 
@@ -278,7 +278,7 @@ const VehicleBasicRegisterPage: React.FC = () => {
         return (
           <>
             <div className="flex flex-col gap-1"><RequiredLabel isRequired>차량번호</RequiredLabel><input name="carNumber" value={formData.carNumber} onChange={handleChange} className={twInput} /></div>
-            <SelectField name="purposeName" label="운행목적" options={options.PURPOSE_OPTIONS} isRequired value={formData.purpose} />
+            <SelectField name="purposeName" label="운행목적" options={options.PURPOSE_OPTIONS} isRequired value={formData.purposeName} />
             <div className="flex flex-col gap-1"><RequiredLabel isRequired>협력사명</RequiredLabel><input list="company-list" name="companyName" value={formData.companyName} onChange={handleChange} className={twInput} /><datalist id="company-list">{options.COMPANY_OPTIONS.map(v => <option key={v} value={v}/>)}</datalist></div>
             <div className="flex flex-col gap-1"><RequiredLabel>사원번호</RequiredLabel><input type="number" name="employeeId" value={formData.employeeId} onChange={handleChange} className={twInput} /></div>
             <div className="flex flex-col gap-1"><RequiredLabel isRequired>편도거리(km)</RequiredLabel><input type="number" name="distance" value={formData.distance} onChange={handleChange} className={twInput} /></div>
@@ -286,7 +286,7 @@ const VehicleBasicRegisterPage: React.FC = () => {
             <SelectField name="categorySmall" label="차종 소분류" options={options.CAT_SMALL_OPTIONS} isRequired value={formData.categorySmall} />
             <div className="flex flex-col gap-1"><RequiredLabel isRequired>모델명</RequiredLabel><input name="carModel" value={formData.carModel} onChange={handleChange} className={twInput} /></div>
             <SelectField name="fuelType" label="연료종류" options={options.FUEL_OPTIONS} isRequired value={formData.fuelType} />
-            <div className="col-span-3 flex flex-col gap-1"><RequiredLabel>비고</RequiredLabel><textarea name="note" value={formData.note} onChange={handleChange} className="w-full h-28 p-3 border border-gray-300 bg-gray-100 rounded text-sm outline-none" /></div>
+            <div className="col-span-3 flex flex-col gap-1"><RequiredLabel>비고</RequiredLabel><textarea name="remark" value={formData.remark} onChange={handleChange} className="w-full h-28 p-3 border border-gray-300 bg-gray-100 rounded text-sm outline-none" /></div>
           </>
         );
 
@@ -295,12 +295,12 @@ const VehicleBasicRegisterPage: React.FC = () => {
         return (
           <>
             <div className="flex flex-col gap-1"><RequiredLabel isRequired>협력사명</RequiredLabel><input name="companyName" value={formData.companyName} onChange={handleChange} className={twInput} /></div>
-            <SelectField name="supplyTypeName" label="공급 유형" options={options.SUPPLY_TYPE_OPTIONS} isRequired value={formData.supplyType} />
+            <SelectField name="supplyTypeName" label="공급 유형" options={options.SUPPLY_TYPE_OPTIONS} isRequired value={formData.supplyTypeName} />
             <div className="flex flex-col gap-1"><RequiredLabel isRequired>편도거리(km)</RequiredLabel><input type="number" name="distance" value={formData.distance} onChange={handleChange} className={twInput} /></div>
-            <SelectField name="supplyCustomer" label="공급 고객" options={options.SUPPLY_CUSTOMER_OPTIONS} isRequired value={formData.supplyCustomer} />
+            <SelectField name="customerName" label="공급 고객" options={options.SUPPLY_CUSTOMER_OPTIONS} isRequired value={formData.customerName} />
             <SelectField name="region" label="지역 (도/시)" options={options.REGION_OPTIONS} isRequired value={formData.region} />
             <div className="col-span-2 flex flex-col gap-1"><RequiredLabel isRequired>상세주소</RequiredLabel><input name="addressDetail" value={formData.addressDetail} onChange={handleChange} className={twInput} placeholder="나머지 상세 주소" /></div>
-            <div className="col-span-3 flex flex-col gap-1"><RequiredLabel>비고</RequiredLabel><textarea name="note" value={formData.note} onChange={handleChange} className="w-full h-28 p-3 border border-gray-300 bg-gray-100 rounded text-sm outline-none" /></div>
+            <div className="col-span-3 flex flex-col gap-1"><RequiredLabel>비고</RequiredLabel><textarea name="remark" value={formData.remark} onChange={handleChange} className="w-full h-28 p-3 border border-gray-300 bg-gray-100 rounded text-sm outline-none" /></div>
           </>
         );
 
@@ -336,8 +336,8 @@ const VehicleBasicRegisterPage: React.FC = () => {
       case '공급 고객 기본정보 등록':
         return (
           <>
-            <div className="col-span-3 flex flex-col gap-1"><RequiredLabel isRequired>공급 고객명</RequiredLabel><input name="supplyCustomer" value={formData.supplyCustomer} onChange={handleChange} className={twInput} /></div>
-            <div className="col-span-3 flex flex-col gap-1"><RequiredLabel>비고</RequiredLabel><textarea name="note" value={formData.note} onChange={handleChange} className="w-full h-28 p-3 border border-gray-300 bg-gray-100 rounded text-sm outline-none" /></div>
+            <div className="col-span-3 flex flex-col gap-1"><RequiredLabel isRequired>공급 고객명</RequiredLabel><input name="customerName" value={formData.customerName} onChange={handleChange} className={twInput} /></div>
+            <div className="col-span-3 flex flex-col gap-1"><RequiredLabel>비고</RequiredLabel><textarea name="remark" value={formData.remark} onChange={handleChange} className="w-full h-28 p-3 border border-gray-300 bg-gray-100 rounded text-sm outline-none" /></div>
           </>
         );
 
