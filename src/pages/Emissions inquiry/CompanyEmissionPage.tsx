@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell
 } from 'recharts';
-import { Printer, Download, ChevronDown } from 'lucide-react';
+import { Printer, Download, ChevronDown, Search } from 'lucide-react';
 import KoreaMapChart from '../../components/analysis/KoreaMapChart'; 
 
 // --- Mock Data ---
@@ -34,7 +34,9 @@ MOCK_COMPANY_DATA.forEach(d => d.ratio = parseFloat(((d.value / totalEmission) *
 
 const CompanyEmissionPage: React.FC = () => {
   const [selectedMonth, setSelectedMonth] = useState('all');
-  const [searchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchColumn, setSearchColumn] = useState<string>('all');
+  const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>(null);
 
   const currentYear = new Date().getFullYear();
   const [selectedYear, setSelectedYear] = useState<string>(currentYear.toString());
@@ -49,27 +51,92 @@ const CompanyEmissionPage: React.FC = () => {
     return options;
   }, [currentYear]);
 
-  // 필터링
+  // 필터링 및 정렬
   const filteredData = useMemo(() => {
-    return MOCK_COMPANY_DATA.filter(d => 
-      d.name.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-  }, [searchQuery]);
+    let processed = [...MOCK_COMPANY_DATA];
+
+    // 검색
+    if (searchQuery) {
+      processed = processed.filter(d => {
+        if (searchColumn === 'all') {
+          return (
+            d.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            d.address.toLowerCase().includes(searchQuery.toLowerCase())
+          );
+        } else if (searchColumn === 'name') {
+          return d.name.toLowerCase().includes(searchQuery.toLowerCase());
+        } else if (searchColumn === 'address') {
+          return d.address.toLowerCase().includes(searchQuery.toLowerCase());
+        }
+        return true;
+      });
+    }
+
+    // 정렬
+    if (sortConfig) {
+      processed.sort((a, b) => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const aVal = (a as any)[sortConfig.key];
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const bVal = (b as any)[sortConfig.key];
+        
+        if (typeof aVal === 'number' && typeof bVal === 'number') {
+          return sortConfig.direction === 'asc' ? aVal - bVal : bVal - aVal;
+        }
+        const strA = String(aVal);
+        const strB = String(bVal);
+        return sortConfig.direction === 'asc' 
+          ? strA.localeCompare(strB) 
+          : strB.localeCompare(strA);
+      });
+    }
+
+    return processed;
+  }, [searchQuery, searchColumn, sortConfig]);
 
   // 가로 스크롤 차트 width 계산
   const chartWidth = Math.max(filteredData.length * 60, 900);
 
+  // 정렬 핸들러
+  const handleSort = (key: string) => {
+    setSortConfig(prev => ({
+      key,
+      direction: prev?.key === key && prev.direction === 'asc' ? 'desc' : 'asc'
+    }));
+  };
+
+  // Print & Download 핸들러
+  const handlePrint = () => window.print();
+
+  const handleDownloadExcel = () => {
+    if (filteredData.length === 0) return;
+    const headers = ['No', '협력사명', '탄소배출량 (tCO2eq)', '비율 (%)', '주소'].join(',');
+    const rows = filteredData.map((d, idx) => [idx + 1, d.name, d.value, d.ratio, d.address].join(',')).join('\n');
+    const csvContent = `\ufeff${headers}\n${rows}`;
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `협력사별_탄소배출_${selectedYear}.csv`;
+    link.click();
+  };
+
   return (
-    <div className="p-8 min-h-screen bg-f4f7f9 font-sans">
+    <div className="p-8 min-h-screen bg-gray-50 font-sans">
       
       {/* 헤더 */}
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex justify-between items-center mb-6 print:hidden">
         <h2 className="text-2xl font-bold text-gray-800">협력사별 탄소 배출량</h2>
-        <div className="flex gap-2">
-          <button className="flex items-center px-4 py-2 bg-white border border-gray-300 rounded-md font-bold text-gray-700 shadow-sm hover:bg-gray-50">
+        <div className="flex gap-3">
+          <button 
+            onClick={handlePrint}
+            className="flex items-center px-4 py-2 bg-white text-gray-700 border border-gray-300 rounded-md font-bold hover:bg-gray-100 transition-colors shadow-sm"
+          >
             <Printer size={16} className="mr-2" /> Print
           </button>
-          <button className="flex items-center px-4 py-2 bg-green-600 text-white rounded-md font-bold shadow-sm hover:bg-green-700">
+          <button 
+            onClick={handleDownloadExcel}
+            className="flex items-center px-4 py-2 bg-green-600 text-white rounded-md font-bold hover:bg-green-700 transition-colors shadow-sm"
+          >
             <Download size={16} className="mr-2" /> Excel
           </button>
         </div>
@@ -123,7 +190,7 @@ const CompanyEmissionPage: React.FC = () => {
       {/* ========================== */}
       {/* 1. 상단 지도 (전체폭 + 크게) */}
       {/* ========================== */}
-      <div className="w-full bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-10 h-[1000px]">
+      <div className="w-full bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-10 h-[1200px]">
         <h3 className="text-lg font-bold text-gray-800 mb-4">지역별 탄소 배출량</h3>
         <KoreaMapChart data={MOCK_MAP_DATA} large />
       </div>
@@ -151,7 +218,7 @@ const CompanyEmissionPage: React.FC = () => {
                 <Tooltip formatter={(val: number) => val.toLocaleString()} />
 
                 <Bar dataKey="value" radius={[4, 4, 0, 0]}>
-                  {filteredData.map((entry, index) => (
+                  {filteredData.map((_, index) => (
                     <Cell 
                       key={index} 
                       fill={index < 5 ? '#1d4ed8' : '#60a5fa'} 
@@ -165,45 +232,110 @@ const CompanyEmissionPage: React.FC = () => {
       </div>
 
       {/* ========================== */}
-      {/* 3. 하단 데이터 테이블 (리뉴얼) */}
+      {/* 3. 하단 검색 & 데이터 테이블 */}
       {/* ========================== */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-        <div className="p-4 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
-          <h3 className="font-bold text-gray-700">상세 데이터 목록 ({filteredData.length}건)</h3>
+      
+      {/* 검색바 */}
+      <div className="flex items-center gap-3 mb-6 bg-blue-50 p-4 rounded-xl border border-blue-100 print:hidden">
+        <span className="font-bold text-blue-700 whitespace-nowrap">협력사명 검색</span>
+        
+        <div className="relative">
+          <select 
+            value={searchColumn} 
+            onChange={(e) => setSearchColumn(e.target.value)}
+            className="p-2 pr-8 border border-blue-200 rounded-md text-sm outline-none focus:ring-2 focus:ring-blue-500 appearance-none bg-white cursor-pointer"
+          >
+            <option value="all">전체 검색</option>
+            <option value="name">협력사명</option>
+            <option value="address">주소</option>
+          </select>
+          <ChevronDown size={16} className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none" />
         </div>
 
-        <div className="overflow-x-auto max-h-[500px]">
-          <table className="w-full text-sm text-left text-gray-700">
-            <thead className="bg-gray-100 text-gray-700 uppercase text-xs sticky top-0 z-10">
+        <div className="relative flex-1 max-w-md">
+          <input 
+            type="text" 
+            placeholder="검색어 입력" 
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full pl-3 pr-9 py-2 border border-blue-200 rounded-md text-sm outline-none focus:ring-2 focus:ring-blue-500"
+          />
+          <Search size={18} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" />
+        </div>
+      </div>
+
+      {/* 데이터 테이블 */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm text-gray-600">
+            <thead className="bg-gray-50 text-gray-700 font-bold uppercase text-xs border-b border-gray-200">
               <tr>
-                <th className="px-6 py-3 text-center w-16">No</th>
-                <th className="px-6 py-3">협력사명</th>
-                <th className="px-6 py-3 text-right">탄소 배출량 (tCO2eq)</th>
-                <th className="px-6 py-3 text-right">비율 (%)</th>
-                <th className="px-6 py-3">주소</th>
+                <th className="px-4 py-3 text-center w-16">No.</th>
+                <th 
+                  onClick={() => handleSort('name')}
+                  className="px-4 py-3 text-left cursor-pointer hover:bg-gray-100 transition-colors"
+                >
+                  <div className="flex items-center gap-1">
+                    협력사명
+                    {sortConfig?.key === 'name' && (
+                      <span>{sortConfig.direction === 'asc' ? '▲' : '▼'}</span>
+                    )}
+                  </div>
+                </th>
+                <th 
+                  onClick={() => handleSort('value')}
+                  className="px-4 py-3 text-center cursor-pointer hover:bg-gray-100 transition-colors"
+                >
+                  <div className="flex items-center justify-center gap-1">
+                    탄소배출량 (tCO2eq)
+                    {sortConfig?.key === 'value' && (
+                      <span>{sortConfig.direction === 'asc' ? '▲' : '▼'}</span>
+                    )}
+                  </div>
+                </th>
+                <th 
+                  onClick={() => handleSort('ratio')}
+                  className="px-4 py-3 text-center cursor-pointer hover:bg-gray-100 transition-colors"
+                >
+                  <div className="flex items-center justify-center gap-1">
+                    비율 (%)
+                    {sortConfig?.key === 'ratio' && (
+                      <span>{sortConfig.direction === 'asc' ? '▲' : '▼'}</span>
+                    )}
+                  </div>
+                </th>
+                <th 
+                  onClick={() => handleSort('address')}
+                  className="px-4 py-3 text-left cursor-pointer hover:bg-gray-100 transition-colors"
+                >
+                  <div className="flex items-center gap-1">
+                    주소
+                    {sortConfig?.key === 'address' && (
+                      <span>{sortConfig.direction === 'asc' ? '▲' : '▼'}</span>
+                    )}
+                  </div>
+                </th>
               </tr>
             </thead>
-
             <tbody className="divide-y divide-gray-100">
-              {filteredData.map((row, index) => (
-                <tr key={row.id} className="hover:bg-blue-50 transition-colors">
-                  <td className="px-6 py-4 text-center font-semibold">{index + 1}</td>
-                  <td className="px-6 py-4 font-bold text-gray-800">{row.name}</td>
-                  <td className="px-6 py-4 text-right font-semibold">{row.value.toLocaleString()}</td>
-                  <td className="px-6 py-4 text-right">{row.ratio}%</td>
-                  <td className="px-6 py-4 text-gray-600">{row.address}</td>
-                </tr>
-              ))}
-
-              {filteredData.length === 0 && (
+              {filteredData.length > 0 ? (
+                filteredData.map((row, idx) => (
+                  <tr key={row.id} className="hover:bg-gray-50 transition-colors">
+                    <td className="px-4 py-3 text-center text-gray-500">{idx + 1}</td>
+                    <td className="px-4 py-3 text-left text-gray-800 font-medium">{row.name}</td>
+                    <td className="px-4 py-3 text-center text-gray-800">{row.value.toLocaleString()}</td>
+                    <td className="px-4 py-3 text-center text-gray-800">{row.ratio}%</td>
+                    <td className="px-4 py-3 text-left text-gray-600">{row.address}</td>
+                  </tr>
+                ))
+              ) : (
                 <tr>
-                  <td colSpan={5} className="px-6 py-10 text-center text-gray-400">
-                    검색 결과가 없습니다.
+                  <td colSpan={5} className="px-6 py-10 text-center text-gray-500">
+                    데이터가 없습니다.
                   </td>
                 </tr>
               )}
             </tbody>
-
           </table>
         </div>
       </div>

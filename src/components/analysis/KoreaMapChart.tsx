@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import {
   ComposableMap,
   Geographies,
@@ -7,18 +7,15 @@ import {
 } from "react-simple-maps";
 import { scaleLinear } from "d3-scale";
 import { Tooltip } from "react-tooltip";
+import { fetchRegionalEmissionData } from "../../apis/mapApi";
 
 // 대한민국 TopoJSON
 const KOREA_TOPO_JSON =
   "https://raw.githubusercontent.com/southkorea/southkorea-maps/master/kostat/2018/json/skorea-provinces-2018-topo.json";
 
-interface MapData {
-  region: string;
-  value: number;
-}
-
 interface KoreaMapChartProps {
-  data: MapData[];
+  data?: { region: string; value: number }[];
+  large?: boolean; // CompanyEmissionPage passes `large` prop
 }
 
 // TopoJSON 영문명 → 실제 지역 한글명 매핑
@@ -42,7 +39,35 @@ const REGION_MAPPING: Record<string, string> = {
   "Jeju-do": "제주",
 };
 
-const KoreaMapChart: React.FC<KoreaMapChartProps> = ({ data }) => {
+const KoreaMapChart: React.FC<KoreaMapChartProps> = ({ data: propData, large = false }) => {
+  const [localData, setLocalData] = useState<{ region: string; value: number }[]>(propData ?? []);
+
+  // If no data prop provided, fetch from API (currently returns dummy data)
+  useEffect(() => {
+    let mounted = true;
+    const load = async () => {
+      if (propData && propData.length > 0) {
+        setLocalData(propData);
+        return;
+      }
+      try {
+        const d = await fetchRegionalEmissionData();
+        if (mounted) setLocalData(d);
+      } catch (e) {
+        console.error('Failed to fetch regional data', e);
+      } finally {
+        // finished
+      }
+    };
+    load();
+    return () => { mounted = false; };
+  }, [propData]);
+
+  const data = localData;
+
+  const maxValue = Math.max(...data.map((d) => d.value), 1);
+  const minValue = Math.min(...data.map((d) => d.value), 0);
+
   const dataMap = useMemo(() => {
     return data.reduce((acc, curr) => {
       acc[curr.region] = curr.value;
@@ -51,14 +76,16 @@ const KoreaMapChart: React.FC<KoreaMapChartProps> = ({ data }) => {
   }, [data]);
 
   const colorScale = useMemo(() => {
-    const maxValue = Math.max(...data.map((d) => d.value), 1);
     return scaleLinear<string>()
       .domain([0, maxValue])
       .range(["#E0F2FE", "#1E3A8A"]);
-  }, [data]);
+  }, [maxValue]);
+
+  const containerHeight = large ? 'h-[1100px]' : 'h-[700px]';
+  const projectionScale = large ? 7000 : 6200;
 
   return (
-    <div className="w-full h-[900px] relative bg-white rounded-xl shadow-md overflow-hidden">
+    <div className={`w-full ${containerHeight} relative bg-white rounded-xl shadow-md overflow-hidden`}>
       <h3 className="absolute top-4 left-1/2 -translate-x-1/2 text-lg font-bold z-10 text-gray-700">
         지역별 배출량 분포
       </h3>
@@ -66,20 +93,19 @@ const KoreaMapChart: React.FC<KoreaMapChartProps> = ({ data }) => {
       <ComposableMap
         projection="geoMercator"
         projectionConfig={{
-          scale: 6200,         // 대한민국에 최적화된 배율
-          center: [127.8, 36], // 한반도 중심
+          scale: projectionScale,
+          center: [127.8, 36],
         }}
-        width={800}
-        height={800}
-        style={{
-          width: "100%",
-          height: "100%",
-        }}
+        width={1000}
+        height={900}
+        style={{ width: "100%", height: "100%" }}
       >
         <ZoomableGroup zoom={1}>
           <Geographies geography={KOREA_TOPO_JSON}>
-            {({ geographies }) =>
-              geographies.map((geo) => {
+              {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+              {({ geographies }: { geographies: any[] }) =>
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                geographies.map((geo: any) => {
                 const engName = geo.properties.name;
                 const regionName = REGION_MAPPING[engName] || engName;
                 const value = dataMap[regionName] ?? 0;
@@ -98,7 +124,7 @@ const KoreaMapChart: React.FC<KoreaMapChartProps> = ({ data }) => {
                         outline: "none",
                       },
                       hover: {
-                        fill: "#F59E0B",
+                        fill: "#F59E0B", // hover color (orange)
                         cursor: "pointer",
                       },
                       pressed: {
@@ -126,10 +152,10 @@ const KoreaMapChart: React.FC<KoreaMapChartProps> = ({ data }) => {
 
       <div className="absolute bottom-4 right-4 flex flex-col gap-1 bg-white/90 p-2 rounded-md shadow-sm text-xs border border-gray-100">
         <div className="flex items-center gap-2">
-          <span className="w-3 h-3 bg-[#1E3A8A] rounded-sm"></span> High
+          <span className="w-3 h-3 rounded-sm" style={{ backgroundColor: colorScale(maxValue) }}></span> High
         </div>
         <div className="flex items-center gap-2">
-          <span className="w-3 h-3 bg-[#E0F2FE] rounded-sm"></span> Low
+          <span className="w-3 h-3 rounded-sm" style={{ backgroundColor: colorScale(minValue) }}></span> Low
         </div>
         <div className="flex items-center gap-2">
           <span className="w-3 h-3 bg-[#F3F4F6] rounded-sm border border-gray-200"></span>No Data

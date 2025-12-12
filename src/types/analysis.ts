@@ -25,5 +25,11 @@ export interface AnalysisData {
   monthlyTrend?: number[]; // 1월~12월 배출량 배열
 }
 
+// 지역별 데이터 (지도 시각화용)
+export interface MapData {
+  region: string;
+  value: number;
+}
+
 // 탭 옵션 타입
 export type ScopeType = 'total' | 'scope1' | 'scope3' | 'other';
