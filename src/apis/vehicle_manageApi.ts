@@ -124,7 +124,7 @@ const MOCK_COMPANY_DATA: CompanyData[] = [
   // 더미 데이터
   ...Array.from({ length: 15 }, (_, i) => ({
     id: i + 3,
-    vendorName: `협력업체_${i + 1}`,
+    vendorName: `협력사_${i + 1}`,
     supplyType: i % 2 === 0 ? '프레스' : '차체',
     distance: String(Math.floor(Math.random() * 100)),
     supplyCustomer: i % 3 === 0 ? '2000' : '3000',

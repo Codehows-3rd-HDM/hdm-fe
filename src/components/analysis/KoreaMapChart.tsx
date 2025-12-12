@@ -58,7 +58,7 @@ const KoreaMapChart: React.FC<KoreaMapChartProps> = ({ data }) => {
   }, [data]);
 
   return (
-    <div className="w-full h-[550px] relative bg-white rounded-xl shadow-md overflow-hidden">
+    <div className="w-full h-[900px] relative bg-white rounded-xl shadow-md overflow-hidden">
       <h3 className="absolute top-4 left-1/2 -translate-x-1/2 text-lg font-bold z-10 text-gray-700">
         지역별 배출량 분포
       </h3>
@@ -66,11 +66,11 @@ const KoreaMapChart: React.FC<KoreaMapChartProps> = ({ data }) => {
       <ComposableMap
         projection="geoMercator"
         projectionConfig={{
-          scale: 5200,         // 대한민국에 최적화된 배율
+          scale: 6200,         // 대한민국에 최적화된 배율
           center: [127.8, 36], // 한반도 중심
         }}
         width={800}
-        height={600}
+        height={800}
         style={{
           width: "100%",
           height: "100%",

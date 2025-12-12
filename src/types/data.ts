@@ -36,7 +36,7 @@ export interface VehicleData {
   id: number;
   carNumber: string;      // 차량번호
   purpose: string;        // 운행목적
-  vendorName: string;     // 업체명
+  vendorName: string;     // 협력사명
   employeeId: string;     // 사원번호
   distance: string;       // 편도거리
   categoryLarge: string;  // 차종 대분류
@@ -48,10 +48,10 @@ export interface VehicleData {
   isEditing?: boolean;
 }
 
-// 2. 업체명 및 주소지 정보 데이터 타입
+// 2. 협력사명 및 주소지 정보 데이터 타입
 export interface CompanyData {
   id: number;
-  vendorName: string;   // 업체명
+  vendorName: string;   // 협력사명
   supplyType: string;  // 공급 유형
   distance: string;     // 편도거리
   supplyCustomer: string; // 공급 고객
@@ -134,7 +134,7 @@ export const CAR_MODEL_COLUMNS: ColumnDefinition<CarModelData>[] = [
   { id: 'actions', header: '액션', searchable: false, sortable: false, editable: false, width: '10%' },
 ];
 
-// 4. 생산 공정 컬럼
+// 4. 공급 유형 컬럼
 export const PROCESS_COLUMNS: ColumnDefinition<ProcessData>[] = [
   { id: 'supplyType', header: '공급 유형명', searchable: true, sortable: true, editable: true, width: '80%', inputType: 'text' },
   { id: 'actions', header: '액션', searchable: false, sortable: false, editable: false, width: '20%' },
@@ -147,7 +147,7 @@ export const PURPOSE_COLUMNS: ColumnDefinition<PurposeData>[] = [
   { id: 'actions', header: '액션', searchable: false, sortable: false, editable: false, width: '20%' },
 ];
 
-// 6. 생산 품목 구분 컬럼
+// 6. 공급 고객 컬럼
 export const PRODUCT_COLUMNS: ColumnDefinition<ProductData>[] = [
   { id: 'supplyCustomer', header: '공급 고객명', searchable: true, sortable: true, editable: true, width: '50%', inputType: 'text' },
   { id: 'note', header: '비고', searchable: false, sortable: false, editable: true, width: '30%', inputType: 'text' },
