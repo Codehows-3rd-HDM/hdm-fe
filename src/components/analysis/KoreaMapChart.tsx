@@ -68,9 +68,19 @@ const KoreaMapChart: React.FC<KoreaMapChartProps> = ({ data: propData, large = f
   const maxValue = Math.max(...(data.length > 0 ? data.map((d) => d.value) : [1]), 1);
   const minValue = Math.min(...(data.length > 0 ? data.map((d) => d.value) : [0]), 0);
 
-  const dataMap = useMemo(() => {
+  
+
+  // Normalize region names for more robust matching (remove suffixes, spaces)
+  const normalize = (name: string) => {
+    if (!name) return '';
+    return name
+      .replace(/\s+/g, '')
+      .replace(/(특별자치도|특별자치시|광역시|특별시|도|시)$/g, '');
+  };
+
+  const normalizedDataMap = useMemo(() => {
     return data.reduce((acc, curr) => {
-      acc[curr.region] = curr.value;
+      acc[normalize(curr.region)] = curr.value;
       return acc;
     }, {} as Record<string, number>);
   }, [data]);
@@ -108,7 +118,8 @@ const KoreaMapChart: React.FC<KoreaMapChartProps> = ({ data: propData, large = f
                 geographies.map((geo: any) => {
                 const engName = geo.properties.name;
                 const regionName = REGION_MAPPING[engName] || engName;
-                const value = dataMap[regionName] ?? 0;
+                const norm = normalize(String(regionName));
+                const value = normalizedDataMap[norm] ?? 0;
 
                 return (
                   <Geography

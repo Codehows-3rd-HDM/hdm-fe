@@ -6,6 +6,7 @@ export interface OptionsData {
   COMPANY_OPTIONS: string[];
   CAT_LARGE_OPTIONS: string[];
   CAT_SMALL_OPTIONS: string[];
+  CAR_CATEGORY_MAP?: Record<string, string[]>;
   FUEL_OPTIONS: string[];
   SUPPLY_CUSTOMER_OPTIONS: string[];
   SCOPE_OPTIONS: string[];
@@ -51,6 +52,10 @@ const DUMMY_OPTIONS: OptionsData = {
     '부산광역시','서울특별시','세종특별자치시','울산광역시','인천광역시','전라남도','전북특별자치도',
     '제주특별자치도','충청남도','충청북도'
   ],
+  CAR_CATEGORY_MAP: {
+    '승용차': ['대형','중형','소형','경차'],
+    '상용트럭': ['1t 급','5t 급','8t 이상']
+  }
 };
 
 // ----------------------------------------------------------------------
@@ -94,9 +99,9 @@ export const registerVehicle = async (data: IntegratedFormData) => {
   const token = sessionStorage.getItem('token');
 
   if (!token) {
-    throw new Error('인증 토큰이 없습니다. 다시 로그인해주세요.');
+    throw new Error('인증 토큰이 없습니다. 다시 로그인해주세요.'); 
   }
-
+  console.log('Register Company Payload:', data); //여기까지도 ㅇㅋ
   try {
     // Vehicle 엔드포인트는 이름 기반으로 처리
     // 실제 ID 매핑은 백엔드에서 처리되어야 함
@@ -108,9 +113,9 @@ export const registerVehicle = async (data: IntegratedFormData) => {
       },
       body: JSON.stringify({
         carNumber: data.carNumber,
-        carName: data.carModel, // carName = carModel
-        carModel: data.carModel,
-        operationPurposeName: data.purposeName,
+        carName: data.carModel, 
+        carCategoryId: data.categorySmall,
+        operationPurposeName: data.operationPurposeName,
         companyNameForCreation: data.companyName,
         driverMemberId: data.employeeId,
         operationDistance: parseFloat(data.distance),
@@ -118,6 +123,8 @@ export const registerVehicle = async (data: IntegratedFormData) => {
         remark: data.remark,
       }),
     });
+    
+    console.log('Register Company Payload:', response);
 
     if (!response.ok) {
       throw new Error(`등록 실패: ${response.statusText}`);
@@ -138,17 +145,19 @@ export const registerCompany = async (data: IntegratedFormData) => {
   if (!token) {
     throw new Error('인증 토큰이 없습니다. 다시 로그인해주세요.');
   }
-
+  console.log('Register Company Payload:', data); //여기까지도 ㅇㅋ
   try {
     const fullAddress = `${data.region} ${data.addressDetail}`;
     const payload = {
       companyName: data.companyName,
       oneWayDistance: data.distance,
       address: fullAddress,
-      supplyType: { id: data.supplyTypeName }, // supplyType은 ID 필요
-      supplyCustomer: { id: data.customerName }, // supplyCustomer는 ID 필요
+      supplyTypeName: data.supplyTypeName , // supplyType은 ID 필요
+      customerName: data.customerName , // Customer는 ID 필요
       remark: data.remark,
     };
+
+    console.log('Register Company Payload:', payload);
 
     const response = await fetch(`${BASE_URL}/admin/company`, {
       method: 'POST',

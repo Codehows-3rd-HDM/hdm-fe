@@ -82,37 +82,41 @@ const VehicleBasicRegisterPage: React.FC = () => {
   
   const [options, setOptions] = useState<OptionsData>(INITIAL_OPTIONS);
 
-  // [API] 컴포넌트 마운트 시 옵션 데이터 로딩
+  // [API] 옵션 데이터 로딩 함수 (재사용 가능하도록 분리)
+  const fetchOptions = async () => {
+    setIsLoading(true);
+    try {
+      const fetchedOptions: any = await fetchRegistrationOptions();
+      // API 응답 키를 로컬 키로 매핑
+      setOptions({
+        PURPOSE_OPTIONS: fetchedOptions.PURPOSE_OPTIONS || [],
+        COMPANY_OPTIONS: fetchedOptions.COMPANY_OPTIONS || [], 
+        CAT_LARGE_OPTIONS: fetchedOptions.CAT_LARGE_OPTIONS || [],
+        CAT_SMALL_OPTIONS: fetchedOptions.CAT_SMALL_OPTIONS || [],
+        FUEL_OPTIONS: fetchedOptions.FUEL_OPTIONS || [],
+        SUPPLY_CUSTOMER_OPTIONS: fetchedOptions.SUPPLY_CUSTOMER_OPTIONS || [], 
+        SCOPE_OPTIONS: fetchedOptions.SCOPE_OPTIONS || [],
+        SUPPLY_TYPE_OPTIONS: fetchedOptions.SUPPLY_TYPE_OPTIONS || [], 
+        REGION_OPTIONS: fetchedOptions.REGION_OPTIONS || [],
+        CAR_CATEGORY_MAP: fetchedOptions.CAR_CATEGORY_MAP || {},
+      });
+    } catch (error) {
+      console.error("데이터 로딩 중 오류 발생:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const loadData = async () => {
-      setIsLoading(true);
-      try {
-        const fetchedOptions: any = await fetchRegistrationOptions();
-        // API 응답 키를 로컬 키로 매핑
-        setOptions({
-          PURPOSE_OPTIONS: fetchedOptions.PURPOSE_OPTIONS || [],
-          COMPANY_OPTIONS: fetchedOptions.COMPANY_OPTIONS || [], 
-          CAT_LARGE_OPTIONS: fetchedOptions.CAT_LARGE_OPTIONS || [],
-          CAT_SMALL_OPTIONS: fetchedOptions.CAT_SMALL_OPTIONS || [],
-          FUEL_OPTIONS: fetchedOptions.FUEL_OPTIONS || [],
-          SUPPLY_CUSTOMER_OPTIONS: fetchedOptions.SUPPLY_CUSTOMER_OPTIONS || [], 
-          SCOPE_OPTIONS: fetchedOptions.SCOPE_OPTIONS || [],
-          SUPPLY_TYPE_OPTIONS: fetchedOptions.SUPPLY_TYPE_OPTIONS || [], 
-          REGION_OPTIONS: fetchedOptions.REGION_OPTIONS || [],
-        });
-      } catch (error) {
-        console.error("데이터 로딩 중 오류 발생:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    loadData();
+    fetchOptions();
   }, []);
 
   const handlePageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setCurrentPage(e.target.value);
     setFormData(INITIAL_FORM_DATA);
-    setValidationErrors([]); 
+    setValidationErrors([]);
+    // 페이지 전환 시에도 최신 옵션을 불러옵니다.
+    fetchOptions().catch(console.error);
   };
 
   const handleChange = (
@@ -123,7 +127,12 @@ const VehicleBasicRegisterPage: React.FC = () => {
       const num = parseFloat(value);
       if (num < 0) return;
     }
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData(prev => {
+      const next = { ...prev, [name]: value } as IntegratedFormData;
+      // 대분류를 변경하면 소분류를 초기화
+      if (name === 'categoryLarge') next.categorySmall = '';
+      return next;
+    });
   };
 
   // -------------------------
@@ -211,27 +220,31 @@ const VehicleBasicRegisterPage: React.FC = () => {
           carNumber: formData.carNumber,
           carModel: formData.carModel, // 모델 이름
           companyName: formData.companyName,
-          operationPurpose: formData.purposeName,
+          operationPurposeName: formData.purposeName,
           operationDistance: parseFloat(formData.distance),
           driverMemberId: formData.employeeId,
           carName: formData.carNumber, // 차이름 = 차량번호
           remark: formData.remark,
         };
-        await registerVehicle(payload as IntegratedFormData);
+        await registerVehicle(payload as unknown as IntegratedFormData);
+        // 등록 성공 시 옵션을 재조회해서 드롭다운 반영
+        await fetchOptions();
       } else if (currentPage === '협력사명과 주소지 기본정보 등록') {
         // Company 등록
         const payload = {
           companyName: formData.companyName,
           oneWayDistance: parseFloat(formData.distance),
           address: `${formData.region} ${formData.addressDetail}`,
-          supplyType: formData.supplyTypeName,
-          supplyCustomer: formData.customerName,
+          supplyTypeName: formData.supplyTypeName,
+          customerName: formData.customerName,
           remark: formData.remark,
           region: formData.region,
           addressDetail: formData.addressDetail,
           distance: formData.distance,
         } as any;
-        await registerCompany(payload as IntegratedFormData);
+        console.log('Company registered:', payload); // 여기까지 ㅇㅋ
+        await registerCompany(payload as unknown as IntegratedFormData);
+        await fetchOptions();
       } else if (currentPage === '차종과 연비 기본정보 등록') {
         // CarModel 등록
         const payload = {
@@ -240,27 +253,31 @@ const VehicleBasicRegisterPage: React.FC = () => {
           fuelType: formData.fuelType,
           fuelEfficiency: formData.fuelEfficiency,
         } as any;
-        await registerCarModel(payload as IntegratedFormData);
+        await registerCarModel(payload as unknown as IntegratedFormData);
+        await fetchOptions();
       } else if (currentPage === '공급 유형 기본정보 등록') {
         // SupplyType 등록
         const payload = {
           supplyTypeName: formData.supplyTypeName,
         } as any;
-        await registerSupplyType(payload as IntegratedFormData);
+        await registerSupplyType(payload as unknown as IntegratedFormData);
+        await fetchOptions();
       } else if (currentPage === '운행목적 기본정보 등록') {
         // OperationPurpose 등록
         const payload = {
           purposeName: formData.purposeName,
           defaultScope: formData.defaultScope,
         } as any;
-        await registerPurpose(payload as IntegratedFormData);
+        await registerPurpose(payload as unknown as IntegratedFormData);
+        await fetchOptions();
       } else if (currentPage === '공급 고객 기본정보 등록') {
         // SupplyCustomer 등록
         const payload = {
           customerName: formData.customerName,
           remark: formData.remark,
         } as any;
-        await registerSupplyCustomer(payload as IntegratedFormData);
+        await registerSupplyCustomer(payload as unknown as IntegratedFormData);
+        await fetchOptions();
       }
 
       alert(`${currentPage}이(가) 정상적으로 등록되었습니다.`);
@@ -313,7 +330,7 @@ const VehicleBasicRegisterPage: React.FC = () => {
             <div className="flex flex-col gap-1"><RequiredLabel>사원번호</RequiredLabel><input type="number" name="employeeId" value={formData.employeeId} onChange={handleChange} className={twInput} /></div>
             <div className="flex flex-col gap-1"><RequiredLabel isRequired>편도거리(km)</RequiredLabel><input type="number" name="distance" value={formData.distance} onChange={handleChange} className={twInput} /></div>
             <SelectField name="categoryLarge" label="차종 대분류" options={options.CAT_LARGE_OPTIONS} isRequired value={formData.categoryLarge} />
-            <SelectField name="categorySmall" label="차종 소분류" options={options.CAT_SMALL_OPTIONS} isRequired value={formData.categorySmall} />
+            <SelectField name="categorySmall" label="차종 소분류" options={options.CAR_CATEGORY_MAP?.[formData.categoryLarge] ?? options.CAT_SMALL_OPTIONS} isRequired value={formData.categorySmall} />
             <div className="flex flex-col gap-1"><RequiredLabel isRequired>모델명</RequiredLabel><input name="carModel" value={formData.carModel} onChange={handleChange} className={twInput} /></div>
             <SelectField name="fuelType" label="연료종류" options={options.FUEL_OPTIONS} isRequired value={formData.fuelType} />
             <div className="col-span-3 flex flex-col gap-1"><RequiredLabel>비고</RequiredLabel><textarea name="remark" value={formData.remark} onChange={handleChange} className="w-full h-28 p-3 border border-gray-300 bg-gray-100 rounded text-sm outline-none" /></div>
@@ -339,7 +356,7 @@ const VehicleBasicRegisterPage: React.FC = () => {
         return (
           <>
             <SelectField name="categoryLarge" label="차종 대분류" options={options.CAT_LARGE_OPTIONS} isRequired value={formData.categoryLarge} />
-            <SelectField name="categorySmall" label="차종 소분류" options={options.CAT_SMALL_OPTIONS} isRequired value={formData.categorySmall} />
+            <SelectField name="categorySmall" label="차종 소분류" options={options.CAR_CATEGORY_MAP?.[formData.categoryLarge] ?? options.CAT_SMALL_OPTIONS} isRequired value={formData.categorySmall} />
             <SelectField name="fuelType" label="연료종류" options={options.FUEL_OPTIONS} isRequired value={formData.fuelType} />
             <div className="flex flex-col gap-1"><RequiredLabel isRequired>연비(km/L)</RequiredLabel><input type="number" name="fuelEfficiency" value={formData.fuelEfficiency} onChange={handleChange} className={twInput} /></div>
           </>
