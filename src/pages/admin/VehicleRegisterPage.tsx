@@ -88,10 +88,10 @@ const VehicleBasicRegisterPage: React.FC = () => {
       setIsLoading(true);
       try {
         const fetchedOptions: any = await fetchRegistrationOptions();
-        // API 응답 키를 로컬 키로 매핑 (명칭 변경 대응)
+        // API 응답 키를 로컬 키로 매핑
         setOptions({
           PURPOSE_OPTIONS: fetchedOptions.PURPOSE_OPTIONS || [],
-          COMPANY_OPTIONS: fetchedOptions.VENDOR_OPTIONS || [], 
+          COMPANY_OPTIONS: fetchedOptions.COMPANY_OPTIONS || [], 
           CAT_LARGE_OPTIONS: fetchedOptions.CAT_LARGE_OPTIONS || [],
           CAT_SMALL_OPTIONS: fetchedOptions.CAT_SMALL_OPTIONS || [],
           FUEL_OPTIONS: fetchedOptions.FUEL_OPTIONS || [],
@@ -204,33 +204,63 @@ const VehicleBasicRegisterPage: React.FC = () => {
     setIsSubmitting(true);
 
     try {
-      // 폼 상태는 string 타입 유지 → 전송 직전에 숫자로 변환해서 payloadToSend 생성
-      const payloadToSend: any = { ...formData };
-
-      // 운행목적 페이지일 때만 defaultScope를 숫자로 변환하여 담아 보냄
-      if (currentPage === '운행목적 기본정보 등록') {
-        const converted = convertScope(formData.defaultScope as any);
-        // 서버가 defaultScope 필드를 필수 숫자형으로 받는다면 반드시 숫자 또는 명확히 undefined 처리
-        if (converted !== undefined) {
-          payloadToSend.defaultScope = converted;
-        } else {
-          // 변환 불가(빈값 등)이면 아예 필드 제거하거나 null로 보낼 수 있음 — 여기선 제거
-          delete payloadToSend.defaultScope;
-        }
-      }
-
+      // 각 페이지별로 필요한 필드만 추출해서 전송
       if (currentPage === '출입 차량 기준정보 등록') {
-        await registerVehicle(payloadToSend);
+        // Vehicle 등록 - carNumber, carModel, company, operationPurpose, operationDistance, driverMemberId
+        const payload = {
+          carNumber: formData.carNumber,
+          carModel: formData.carModel, // 모델 이름
+          companyName: formData.companyName,
+          operationPurpose: formData.purposeName,
+          operationDistance: parseFloat(formData.distance),
+          driverMemberId: formData.employeeId,
+          carName: formData.carNumber, // 차이름 = 차량번호
+          remark: formData.remark,
+        };
+        await registerVehicle(payload as IntegratedFormData);
       } else if (currentPage === '협력사명과 주소지 기본정보 등록') {
-        await registerCompany(payloadToSend);
+        // Company 등록
+        const payload = {
+          companyName: formData.companyName,
+          oneWayDistance: parseFloat(formData.distance),
+          address: `${formData.region} ${formData.addressDetail}`,
+          supplyType: formData.supplyTypeName,
+          supplyCustomer: formData.customerName,
+          remark: formData.remark,
+          region: formData.region,
+          addressDetail: formData.addressDetail,
+          distance: formData.distance,
+        } as any;
+        await registerCompany(payload as IntegratedFormData);
       } else if (currentPage === '차종과 연비 기본정보 등록') {
-        await registerCarModel(payloadToSend);
+        // CarModel 등록
+        const payload = {
+          categoryLarge: formData.categoryLarge,
+          categorySmall: formData.categorySmall,
+          fuelType: formData.fuelType,
+          fuelEfficiency: formData.fuelEfficiency,
+        } as any;
+        await registerCarModel(payload as IntegratedFormData);
       } else if (currentPage === '공급 유형 기본정보 등록') {
-        await registerSupplyType(payloadToSend);
+        // SupplyType 등록
+        const payload = {
+          supplyTypeName: formData.supplyTypeName,
+        } as any;
+        await registerSupplyType(payload as IntegratedFormData);
       } else if (currentPage === '운행목적 기본정보 등록') {
-        await registerPurpose(payloadToSend);
+        // OperationPurpose 등록
+        const payload = {
+          purposeName: formData.purposeName,
+          defaultScope: formData.defaultScope,
+        } as any;
+        await registerPurpose(payload as IntegratedFormData);
       } else if (currentPage === '공급 고객 기본정보 등록') {
-        await registerSupplyCustomer(payloadToSend);
+        // SupplyCustomer 등록
+        const payload = {
+          customerName: formData.customerName,
+          remark: formData.remark,
+        } as any;
+        await registerSupplyCustomer(payload as IntegratedFormData);
       }
 
       alert(`${currentPage}이(가) 정상적으로 등록되었습니다.`);
@@ -364,7 +394,7 @@ const VehicleBasicRegisterPage: React.FC = () => {
         <div className="flex items-center gap-2">
             <button
             onClick={handleReset}
-            className={`w-10 h-10 rounded-full flex items-center justify-center bg-gray-100 text-gray-600 hover:bg-red-100 hover:text-red-500 transition-all duration-500 ease-in-out ${isResetting ? 'rotate-[360deg] scale-110' : ''}`}
+            className={`w-10 h-10 rounded-full flex items-center justify-center bg-gray-100 text-gray-600 hover:bg-red-100 hover:text-red-500 transition-all duration-500 ease-in-out ${isResetting ? 'rotate-360 scale-110' : ''}`}
             title="초기화 버튼"
             >
             <RefreshCw size={20} /> 

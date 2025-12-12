@@ -59,22 +59,75 @@ const DUMMY_OPTIONS: OptionsData = {
 
 // 1. 초기 옵션 데이터 조회
 export const fetchRegistrationOptions = async (): Promise<OptionsData> => {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      console.log('[API] 옵션 데이터 로드 완료');
-      resolve(DUMMY_OPTIONS);
-    }, 300);
-  });
+  const token = sessionStorage.getItem('token');
+
+  if (!token) {
+    console.warn('인증 토큰이 없습니다. 더미 데이터를 사용합니다.');
+    return DUMMY_OPTIONS;
+  }
+
+  try {
+    const response = await fetch(`${BASE_URL}/admin/options`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      console.warn('옵션 조회 실패, 더미 데이터를 사용합니다.');
+      return DUMMY_OPTIONS;
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('옵션 조회 API 오류:', error);
+    return DUMMY_OPTIONS;
+  }
 };
 
 // 2. 개별 등록 API 함수들
-// 추후 axios.post('/api/vehicle', data) 형태로 변경
-
 // (1) 출입 차량 등록
 export const registerVehicle = async (data: IntegratedFormData) => {
-  console.log('[API] 차량 등록 요청:', data);
-  // 실제로는 필요한 필드만 추려서 보낼 수 있음
-  return new Promise(resolve => setTimeout(() => resolve({ success: true }), 500));
+  const token = sessionStorage.getItem('token');
+
+  if (!token) {
+    throw new Error('인증 토큰이 없습니다. 다시 로그인해주세요.');
+  }
+
+  try {
+    // Vehicle 엔드포인트는 이름 기반으로 처리
+    // 실제 ID 매핑은 백엔드에서 처리되어야 함
+    const response = await fetch(`${BASE_URL}/admin/vehicle`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        carNumber: data.carNumber,
+        carName: data.carModel, // carName = carModel
+        carModel: data.carModel,
+        operationPurposeName: data.purposeName,
+        companyNameForCreation: data.companyName,
+        driverMemberId: data.employeeId,
+        operationDistance: parseFloat(data.distance),
+        fuelType: data.fuelType,
+        remark: data.remark,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`등록 실패: ${response.statusText}`);
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('API Error:', error);
+    throw error;
+  }
 };
 
 // (2) 협력사명과 주소지 등록
@@ -87,21 +140,26 @@ export const registerCompany = async (data: IntegratedFormData) => {
   }
 
   try {
-    // 주소 합치기 로직
     const fullAddress = `${data.region} ${data.addressDetail}`;
-    console.log('[API] 협력사 등록 요청:', { ...data, fullAddress });
+    const payload = {
+      companyName: data.companyName,
+      oneWayDistance: data.distance,
+      address: fullAddress,
+      supplyType: { id: data.supplyTypeName }, // supplyType은 ID 필요
+      supplyCustomer: { id: data.customerName }, // supplyCustomer는 ID 필요
+      remark: data.remark,
+    };
 
-    const response = await fetch(`${BASE_URL}/admin/company `, {
+    const response = await fetch(`${BASE_URL}/admin/company`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`,
       },
-      body: JSON.stringify(data),
+      body: JSON.stringify(payload),
     });
 
     if (!response.ok) {
-      // 에러 처리 (401 Unauthorized 등)
       throw new Error(`등록 실패: ${response.statusText}`);
     }
 
@@ -122,17 +180,23 @@ export const registerCarModel = async (data: IntegratedFormData) => {
   }
 
   try {
-    const response = await fetch(`${BASE_URL}/admin/car-model `, {
+    const payload = {
+      parentCategoryName: data.categoryLarge,
+      childCategoryName: data.categorySmall,
+      fuelType: data.fuelType,
+      customEfficiency: parseFloat(data.fuelEfficiency),
+    };
+
+    const response = await fetch(`${BASE_URL}/admin/car-model`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`,
       },
-      body: JSON.stringify(data),
+      body: JSON.stringify(payload),
     });
 
     if (!response.ok) {
-      // 에러 처리 (401 Unauthorized 등)
       throw new Error(`등록 실패: ${response.statusText}`);
     }
 
@@ -153,17 +217,20 @@ export const registerSupplyType = async (data: IntegratedFormData) => {
   }
 
   try {
-    const response = await fetch(`${BASE_URL}/admin/supply-type `, {
+    const payload = {
+      supplyTypeName: data.supplyTypeName,
+    };
+
+    const response = await fetch(`${BASE_URL}/admin/supply-type`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`,
       },
-      body: JSON.stringify(data),
+      body: JSON.stringify(payload),
     });
 
     if (!response.ok) {
-      // 에러 처리 (401 Unauthorized 등)
       throw new Error(`등록 실패: ${response.statusText}`);
     }
 
@@ -184,17 +251,21 @@ export const registerPurpose = async (data: IntegratedFormData) => {
   }
 
   try {
+    const payload = {
+      purposeName: data.purposeName,
+      defaultScope: data.defaultScope ? parseInt(data.defaultScope, 10) : undefined,
+    };
+
     const response = await fetch(`${BASE_URL}/admin/operation-purpose`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`,
       },
-      body: JSON.stringify(data),
+      body: JSON.stringify(payload),
     });
 
     if (!response.ok) {
-      // 에러 처리 (401 Unauthorized 등)
       throw new Error(`등록 실패: ${response.statusText}`);
     }
 
@@ -215,17 +286,21 @@ export const registerSupplyCustomer = async (data: IntegratedFormData) => {
   }
 
   try {
-    const response = await fetch(`${BASE_URL}/admin/supply-customer `, {
+    const payload = {
+      customerName: data.customerName,
+      remark: data.remark,
+    };
+
+    const response = await fetch(`${BASE_URL}/admin/supply-customer`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`,
       },
-      body: JSON.stringify(data),
+      body: JSON.stringify(payload),
     });
 
     if (!response.ok) {
-      // 에러 처리 (401 Unauthorized 등)
       throw new Error(`등록 실패: ${response.statusText}`);
     }
 

@@ -25,6 +25,7 @@ import SupplyTypeEmissionPage from './pages/Emissions inquiry/SupplyTypeEmission
 import SupplyCustomerEmissionPage from './pages/Emissions inquiry/SupplyCustomerEmissionPage';
 import MainPage from './pages/MainPage';
 import ExcelManagementPage from './pages/admin/ExcelManagementPage';
+import EmissionFactorPage from './pages/admin/EmissionFactorPage';
 
 // [임시] 페이지가 없을 때 보여줄 플레이스홀더 컴포넌트
 const PagePlaceholder = ({ title }: { title: string }) => {
@@ -141,7 +142,7 @@ const App: React.FC = () => {
               <Route path='excel/manage' element={<ExcelManagementPage />} />
 
               {/* 4-3. 배출 관련 설정 */}
-              <Route path="emission-factor" element={<PagePlaceholder title="탄소 배출계수 관리 (HDM-027)" />} />
+              <Route path="emission-factor" element={<EmissionFactorPage/>} />
               <Route path="calc-method" element={<PagePlaceholder title="탄소 배출량 계산 설정 (HDM-028)" />} />
               <Route path="target-view" element={<PagePlaceholder title="탄소 배출 목표 관리 (HDM-029)" />} />
               

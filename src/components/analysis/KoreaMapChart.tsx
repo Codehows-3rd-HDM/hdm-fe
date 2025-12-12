@@ -42,7 +42,7 @@ const REGION_MAPPING: Record<string, string> = {
 const KoreaMapChart: React.FC<KoreaMapChartProps> = ({ data: propData, large = false }) => {
   const [localData, setLocalData] = useState<{ region: string; value: number }[]>(propData ?? []);
 
-  // If no data prop provided, fetch from API (currently returns dummy data)
+  // api 전 더미데이터 반환
   useEffect(() => {
     let mounted = true;
     const load = async () => {
@@ -65,8 +65,8 @@ const KoreaMapChart: React.FC<KoreaMapChartProps> = ({ data: propData, large = f
 
   const data = localData;
 
-  const maxValue = Math.max(...data.map((d) => d.value), 1);
-  const minValue = Math.min(...data.map((d) => d.value), 0);
+  const maxValue = Math.max(...(data.length > 0 ? data.map((d) => d.value) : [1]), 1);
+  const minValue = Math.min(...(data.length > 0 ? data.map((d) => d.value) : [0]), 0);
 
   const dataMap = useMemo(() => {
     return data.reduce((acc, curr) => {
@@ -141,12 +141,14 @@ const KoreaMapChart: React.FC<KoreaMapChartProps> = ({ data: propData, large = f
 
       <Tooltip
         id="map-tooltip"
+        place="top"
         style={{
           backgroundColor: "rgba(30, 41, 59, 0.9)",
           color: "#fff",
           borderRadius: "8px",
           fontSize: "12px",
           zIndex: 50,
+          padding: "8px 12px",
         }}
       />
 
