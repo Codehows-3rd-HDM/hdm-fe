@@ -223,13 +223,13 @@ const VehicleBasicRegisterPage: React.FC = () => {
         // Vehicle 등록 - carNumber, carModel, company, Purpose, operationDistance, driverMemberId
         const payload = {
           carNumber: formData.carNumber, // 차이름 = 차량번호
-          carName: formData.carModel, // 모델 이름
-          childCategoryId: formData.categorySmallId,
+          carModel: formData.carModel, // 모델 이름
+          categorySmallId: formData.categorySmallId,
           fuelType: formData.fuelType,
           companyName: formData.companyName,
           purposeName: formData.purposeName,
-          operationDistance: formData.distance,
-          driverMemberId: formData.employeeId,
+          distance: formData.distance,
+          employeeId: formData.employeeId,
           remark: formData.remark,
         };
         console.log('Vehicle payload:', payload);
