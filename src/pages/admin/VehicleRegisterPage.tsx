@@ -27,20 +27,28 @@ const PAGE_OPTIONS = [
 
 const INITIAL_FORM_DATA: IntegratedFormData = {
   carNumber: '',
+  purposeId: null,
   purposeName: '',
+  companyId: null,
   companyName: '',
   employeeId: '',
-  distance: '',
+  distance: 0,
+  categoryLargeId: null,
   categoryLarge: '',
+  categorySmallId: null,
   categorySmall: '',
+  fuelTypeId: null,
   fuelType: '',
   carModel: '',
   remark: '',
+  supplyTypeId: null,
   supplyTypeName: '',
+  customerId: null,
   customerName: '',
   region: '', 
   addressDetail: '',
   fuelEfficiency: '',
+  defaultScopeId: null,
   defaultScope: '',
 };
 
@@ -193,14 +201,6 @@ const VehicleBasicRegisterPage: React.FC = () => {
     setValidationErrors([]);
   };
 
-  function convertScope(scope: string | number | undefined): number | undefined {
-    if (scope === undefined || scope === null || String(scope).trim() === '') return undefined;
-    const s = String(scope).trim();
-    if (s === "Scope1" || s === "1") return 1;
-    if (s === "Scope3" || s === "3") return 3;
-    return 4; // 기타 (기본값)
-  }
-
   // -------------------------
   // [API] 제출 핸들러
   // -------------------------
@@ -215,13 +215,13 @@ const VehicleBasicRegisterPage: React.FC = () => {
     try {
       // 각 페이지별로 필요한 필드만 추출해서 전송
       if (currentPage === '출입 차량 기준정보 등록') {
-        // Vehicle 등록 - carNumber, carModel, company, operationPurpose, operationDistance, driverMemberId
+        // Vehicle 등록 - carNumber, carModel, company, Purpose, operationDistance, driverMemberId
         const payload = {
           carNumber: formData.carNumber,
           carModel: formData.carModel, // 모델 이름
           companyName: formData.companyName,
-          operationPurposeName: formData.purposeName,
-          operationDistance: parseFloat(formData.distance),
+          purposeName: formData.purposeName,
+          operationDistance: formData.distance,
           driverMemberId: formData.employeeId,
           carName: formData.carNumber, // 차이름 = 차량번호
           remark: formData.remark,
@@ -233,7 +233,7 @@ const VehicleBasicRegisterPage: React.FC = () => {
         // Company 등록
         const payload = {
           companyName: formData.companyName,
-          oneWayDistance: parseFloat(formData.distance),
+          oneWayDistance: formData.distance,
           address: `${formData.region} ${formData.addressDetail}`,
           supplyTypeName: formData.supplyTypeName,
           customerName: formData.customerName,
@@ -296,13 +296,27 @@ const VehicleBasicRegisterPage: React.FC = () => {
   const twInput = 'h-11 px-3 border border-gray-300 bg-gray-100 rounded text-sm outline-none focus:ring-2 focus:ring-sky-400 focus:border-sky-400 transition-colors w-full';
   const twSelectBase = twInput + ' cursor-pointer appearance-none bg-white';
   
-  const SelectField: React.FC<{ name: keyof IntegratedFormData; label: string; options: string[]; isRequired?: boolean; value: string; }> = ({ name, label, options, isRequired = false, value }) => (
+  const SelectField: React.FC<{ name: keyof IntegratedFormData; idName?: keyof IntegratedFormData; label: string; options: string[] | {id: number, name: string}[]; isRequired?: boolean; value: string; }> = ({ name, idName, label, options, isRequired = false, value }) => (
     <div className="flex flex-col gap-1">
       <RequiredLabel isRequired={isRequired}>{label}</RequiredLabel>
       <div className="relative">
-        <select name={name} value={value} onChange={handleChange} className={twSelectBase} disabled={isLoading}>
+        <select name={name} value={value} onChange={(e) => {
+          if (Array.isArray(options) && options.length > 0 && typeof options[0] === 'object' && 'id' in options[0]) {
+            const selected = (options as {id: number, name: string}[]).find(opt => opt.name === e.target.value);
+            if (selected && idName) {
+              setFormData(prev => ({ ...prev, [name]: selected.name, [idName]: selected.id }));
+            } else {
+              handleChange(e);
+            }
+          } else {
+            handleChange(e);
+          }
+        }} className={twSelectBase} disabled={isLoading}>
           <option value="">선택</option>
-          {options.map(v => <option key={v} value={v}>{v}</option>)}
+          {Array.isArray(options) && options.length > 0 && typeof options[0] === 'object' && 'id' in options[0]
+            ? (options as {id: number, name: string}[]).map(opt => <option key={opt.id} value={opt.name}>{opt.name}</option>)
+            : (options as string[]).map(v => <option key={v} value={v}>{v}</option>)
+          }
         </select>
         <ChevronDown size={18} className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none text-gray-500" />
       </div>
@@ -325,14 +339,14 @@ const VehicleBasicRegisterPage: React.FC = () => {
         return (
           <>
             <div className="flex flex-col gap-1"><RequiredLabel isRequired>차량번호</RequiredLabel><input name="carNumber" value={formData.carNumber} onChange={handleChange} className={twInput} /></div>
-            <SelectField name="purposeName" label="운행목적" options={options.PURPOSE_OPTIONS} isRequired value={formData.purposeName} />
-            <div className="flex flex-col gap-1"><RequiredLabel isRequired>협력사명</RequiredLabel><input list="company-list" name="companyName" value={formData.companyName} onChange={handleChange} className={twInput} /><datalist id="company-list">{options.COMPANY_OPTIONS.map(v => <option key={v} value={v}/>)}</datalist></div>
+            <SelectField name="purposeName" idName="purposeId" label="운행목적" options={options.PURPOSE_OPTIONS} isRequired value={formData.purposeName} />
+            <SelectField name="companyName" idName="companyId" label="협력사명" options={options.COMPANY_OPTIONS} isRequired value={formData.companyName} />
             <div className="flex flex-col gap-1"><RequiredLabel>사원번호</RequiredLabel><input type="number" name="employeeId" value={formData.employeeId} onChange={handleChange} className={twInput} /></div>
             <div className="flex flex-col gap-1"><RequiredLabel isRequired>편도거리(km)</RequiredLabel><input type="number" name="distance" value={formData.distance} onChange={handleChange} className={twInput} /></div>
-            <SelectField name="categoryLarge" label="차종 대분류" options={options.CAT_LARGE_OPTIONS} isRequired value={formData.categoryLarge} />
-            <SelectField name="categorySmall" label="차종 소분류" options={options.CAR_CATEGORY_MAP?.[formData.categoryLarge] ?? options.CAT_SMALL_OPTIONS} isRequired value={formData.categorySmall} />
+            <SelectField name="categoryLarge" idName="categoryLargeId" label="차종 대분류" options={options.CAT_LARGE_OPTIONS} isRequired value={formData.categoryLarge} />
+            <SelectField name="categorySmall" idName="categorySmallId" label="차종 소분류" options={options.CAR_CATEGORY_MAP?.[formData.categoryLarge] ?? options.CAT_SMALL_OPTIONS} isRequired value={formData.categorySmall} />
             <div className="flex flex-col gap-1"><RequiredLabel isRequired>모델명</RequiredLabel><input name="carModel" value={formData.carModel} onChange={handleChange} className={twInput} /></div>
-            <SelectField name="fuelType" label="연료종류" options={options.FUEL_OPTIONS} isRequired value={formData.fuelType} />
+            <SelectField name="fuelType" idName="fuelTypeId" label="연료종류" options={options.FUEL_OPTIONS} isRequired value={formData.fuelType} />
             <div className="col-span-3 flex flex-col gap-1"><RequiredLabel>비고</RequiredLabel><textarea name="remark" value={formData.remark} onChange={handleChange} className="w-full h-28 p-3 border border-gray-300 bg-gray-100 rounded text-sm outline-none" /></div>
           </>
         );

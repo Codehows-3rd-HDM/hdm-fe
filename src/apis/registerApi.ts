@@ -2,15 +2,15 @@ const BASE_URL = import.meta.env.VITE_API_URL || '/api';
 
 // 1. 옵션 데이터 타입
 export interface OptionsData {
-  PURPOSE_OPTIONS: string[];
-  COMPANY_OPTIONS: string[];
-  CAT_LARGE_OPTIONS: string[];
-  CAT_SMALL_OPTIONS: string[];
-  CAR_CATEGORY_MAP?: Record<string, string[]>;
-  FUEL_OPTIONS: string[];
-  SUPPLY_CUSTOMER_OPTIONS: string[];
-  SCOPE_OPTIONS: string[];
-  SUPPLY_TYPE_OPTIONS: string[];
+  PURPOSE_OPTIONS: { id: number; name: string }[];
+  COMPANY_OPTIONS: { id: number; name: string }[];
+  CAT_LARGE_OPTIONS: { id: number; name: string }[];
+  CAT_SMALL_OPTIONS: { id: number; name: string }[];
+  CAR_CATEGORY_MAP?: Record<string, { id: number; name: string }[]>;
+  FUEL_OPTIONS: { id: number; name: string }[];
+  SUPPLY_CUSTOMER_OPTIONS: { id: number; name: string }[];
+  SCOPE_OPTIONS: { id: number; name: string }[];
+  SUPPLY_TYPE_OPTIONS: { id: number; name: string }[];
   REGION_OPTIONS: string[];
 }
 
@@ -18,43 +18,116 @@ export interface OptionsData {
 // 필요하다면 각 등록 API별로 Pick<IntegratedFormData, 'key1' | 'key2'> 로 쪼개서 정의할 수도 있습니다.
 export interface IntegratedFormData {
   carNumber: string;
+  purposeId: number | null;
   purposeName: string;
+  companyId: number | null;
   companyName: string;
   employeeId: string;
-  distance: string;
+  distance: number;
+  categoryLargeId: number | null;
   categoryLarge: string;
+  categorySmallId: number | null;
   categorySmall: string;
+  fuelTypeId: number | null;
   fuelType: string;
   carModel: string;
   remark: string;
+  supplyTypeId: number | null;
   supplyTypeName: string;
+  customerId: number | null;
   customerName: string;
   region: string;
   addressDetail: string;
   fuelEfficiency: string;
+  defaultScopeId: number | null;
   defaultScope: string;
 }
 
 // ----------------------------------------------------------------------
-// [Mock Data] 더미 데이터 - 추후 페이지 접속시 데이터 가져와야함
+// [Mock Data] 더미 데이터
 // ----------------------------------------------------------------------
 const DUMMY_OPTIONS: OptionsData = {
-  PURPOSE_OPTIONS: ['납품', '출퇴근', '고객', '기타'],
-  COMPANY_OPTIONS: ['Volvo KOREA', 'Volvo COE', 'Volvo CE', '현대제철', '삼성전자', 'LG화학'],
-  CAT_LARGE_OPTIONS: ['승용차', '상용트럭'],
-  CAT_SMALL_OPTIONS: ['대형', '중형', '소형', '경차'],
-  FUEL_OPTIONS: ['가솔린', '디젤', 'LPG', 'CNG', '전기', '수소', '중유', '등유', '도시가스'],
-  SUPPLY_CUSTOMER_OPTIONS: ['1000', '2000', '3000', 'clark', '기타'],
-  SCOPE_OPTIONS: ['Scope1', 'Scope3', '기타'],
-  SUPPLY_TYPE_OPTIONS: ['가공', '단조', '주물', '소재', '조립', '구매', '열처리', '표면처리', '구매', '폐기', 'IT', 'FA', '기타'],
+  PURPOSE_OPTIONS: [
+    { id: 1, name: '납품' },
+    { id: 2, name: '출퇴근' },
+    { id: 3, name: '고객' },
+    { id: 4, name: '기타' }
+  ],
+  COMPANY_OPTIONS: [
+    { id: 1, name: 'Volvo KOREA' },
+    { id: 2, name: 'Volvo COE' },
+    { id: 3, name: 'Volvo CE' },
+    { id: 4, name: '현대제철' },
+    { id: 5, name: '삼성전자' },
+    { id: 6, name: 'LG화학' }
+  ],
+  CAT_LARGE_OPTIONS: [
+    { id: 1, name: '승용차' },
+    { id: 2, name: '상용트럭' }
+  ],
+  CAT_SMALL_OPTIONS: [
+    { id: 1, name: '대형' },
+    { id: 2, name: '중형' },
+    { id: 3, name: '소형' },
+    { id: 4, name: '경차' },
+    { id: 5, name: '1t 급' },
+    { id: 6, name: '5t 급' },
+    { id: 7, name: '8t 이상' }
+  ],
+  FUEL_OPTIONS: [
+    { id: 1, name: '가솔린' },
+    { id: 2, name: '디젤' },
+    { id: 3, name: 'LPG' },
+    { id: 4, name: 'CNG' },
+    { id: 5, name: '전기' },
+    { id: 6, name: '수소' },
+    { id: 7, name: '중유' },
+    { id: 8, name: '등유' },
+    { id: 9, name: '도시가스' }
+  ],
+  SUPPLY_CUSTOMER_OPTIONS: [
+    { id: 1, name: '1000' },
+    { id: 2, name: '2000' },
+    { id: 3, name: '3000' },
+    { id: 4, name: 'clark' },
+    { id: 5, name: '기타' }
+  ],
+  SCOPE_OPTIONS: [
+    { id: 1, name: 'Scope1' },
+    { id: 2, name: 'Scope3' },
+    { id: 3, name: '기타' }
+  ],
+  SUPPLY_TYPE_OPTIONS: [
+    { id: 1, name: '가공' },
+    { id: 2, name: '단조' },
+    { id: 3, name: '주물' },
+    { id: 4, name: '소재' },
+    { id: 5, name: '조립' },
+    { id: 6, name: '구매' },
+    { id: 7, name: '열처리' },
+    { id: 8, name: '표면처리' },
+    { id: 9, name: '폐기' },
+    { id: 10, name: 'IT' },
+    { id: 11, name: 'FA' },
+    { id: 12, name: '기타' }
+  ],
   REGION_OPTIONS: [
     '강원특별자치도','경기도','경상남도','경상북도','광주광역시','대구광역시','대전광역시',
     '부산광역시','서울특별시','세종특별자치시','울산광역시','인천광역시','전라남도','전북특별자치도',
     '제주특별자치도','충청남도','충청북도'
   ],
   CAR_CATEGORY_MAP: {
-    '승용차': ['대형','중형','소형','경차'],
-    '상용트럭': ['1t 급','5t 급','8t 이상']
+    '승용차': [
+      { id: 1, name: '대형' },
+      { id: 2, name: '중형' },
+      { id: 3, name: '소형' },
+      { id: 4, name: '경차' }
+    ],
+    '상용트럭': [
+      { id: 5, name: '1t 급' },
+      { id: 6, name: '5t 급' },
+      { id: 7, name: '8t 이상' }
+    ]
   }
 };
 
@@ -114,12 +187,12 @@ export const registerVehicle = async (data: IntegratedFormData) => {
       body: JSON.stringify({
         carNumber: data.carNumber,
         carName: data.carModel, 
-        carCategoryId: data.categorySmall,
-        operationPurposeName: data.operationPurposeName,
+        childCategoryId: data.categorySmallId,
+        fuelType: data.fuelType,
+        purposeName: data.purposeName,
         companyNameForCreation: data.companyName,
         driverMemberId: data.employeeId,
-        operationDistance: parseFloat(data.distance),
-        fuelType: data.fuelType,
+        operationDistance: data.distance,
         remark: data.remark,
       }),
     });
@@ -299,7 +372,7 @@ export const registerSupplyCustomer = async (data: IntegratedFormData) => {
       customerName: data.customerName,
       remark: data.remark,
     };
-
+    console.log('Register SupplyCustomer Payload:', payload);
     const response = await fetch(`${BASE_URL}/admin/supply-customer`, {
       method: 'POST',
       headers: {
@@ -308,6 +381,7 @@ export const registerSupplyCustomer = async (data: IntegratedFormData) => {
       },
       body: JSON.stringify(payload),
     });
+    console.log('Register SupplyCustomer Payload:', payload);
 
     if (!response.ok) {
       throw new Error(`등록 실패: ${response.statusText}`);
