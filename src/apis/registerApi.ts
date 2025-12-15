@@ -1,9 +1,38 @@
 const BASE_URL = import.meta.env.VITE_API_URL || '/api';
 
+import axios from 'axios';
+
+// axios 인터셉터 설정 (토큰 자동 포함)
+const axiosInstance = axios.create({
+  baseURL: BASE_URL,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
+
+// 요청 인터셉터: 모든 요청에 토큰 자동 추가
+axiosInstance.interceptors.request.use(
+  (config) => {
+    const token = sessionStorage.getItem('token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
+// 응답 인터셉터: 에러만 throw
+axiosInstance.interceptors.response.use(
+  (response) => response,
+  (error) => Promise.reject(error)
+);
+
 // 1. 옵션 데이터 타입
 export interface OptionsData {
   PURPOSE_OPTIONS: { id: number; name: string }[];
   COMPANY_OPTIONS: { id: number; name: string }[];
+  COMPANY_LIST?: { id: number; name: string; oneWayDistance: number }[];
   CAT_LARGE_OPTIONS: { id: number; name: string }[];
   CAT_SMALL_OPTIONS: { id: number; name: string }[];
   CAR_CATEGORY_MAP?: Record<string, { id: number; name: string }[]>;
@@ -60,6 +89,14 @@ const DUMMY_OPTIONS: OptionsData = {
     { id: 4, name: '현대제철' },
     { id: 5, name: '삼성전자' },
     { id: 6, name: 'LG화학' }
+  ],
+  COMPANY_LIST: [
+    { id: 1, name: 'Volvo KOREA', oneWayDistance: 10 },
+    { id: 2, name: 'Volvo COE', oneWayDistance: 20 },
+    { id: 3, name: 'Volvo CE', oneWayDistance: 15 },
+    { id: 4, name: '현대제철', oneWayDistance: 25 },
+    { id: 5, name: '삼성전자', oneWayDistance: 30 },
+    { id: 6, name: 'LG화학', oneWayDistance: 18 }
   ],
   CAT_LARGE_OPTIONS: [
     { id: 1, name: '승용차' },
@@ -137,29 +174,9 @@ const DUMMY_OPTIONS: OptionsData = {
 
 // 1. 초기 옵션 데이터 조회
 export const fetchRegistrationOptions = async (): Promise<OptionsData> => {
-  const token = sessionStorage.getItem('token');
-
-  if (!token) {
-    console.warn('인증 토큰이 없습니다. 더미 데이터를 사용합니다.');
-    return DUMMY_OPTIONS;
-  }
-
   try {
-    const response = await fetch(`${BASE_URL}/admin/options`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`,
-      },
-    });
-
-    if (!response.ok) {
-      console.warn('옵션 조회 실패, 더미 데이터를 사용합니다.');
-      return DUMMY_OPTIONS;
-    }
-
-    const data = await response.json();
-    return data;
+    const response = await axiosInstance.get('/admin/options');
+    return response.data;
   } catch (error) {
     console.error('옵션 조회 API 오류:', error);
     return DUMMY_OPTIONS;
@@ -169,41 +186,22 @@ export const fetchRegistrationOptions = async (): Promise<OptionsData> => {
 // 2. 개별 등록 API 함수들
 // (1) 출입 차량 등록
 export const registerVehicle = async (data: IntegratedFormData) => {
-  const token = sessionStorage.getItem('token');
-
-  if (!token) {
-    throw new Error('인증 토큰이 없습니다. 다시 로그인해주세요.'); 
-  }
-  console.log('Register Company Payload:', data); //여기까지도 ㅇㅋ
   try {
-    // Vehicle 엔드포인트는 이름 기반으로 처리
-    // 실제 ID 매핑은 백엔드에서 처리되어야 함
-    const response = await fetch(`${BASE_URL}/admin/vehicle`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`,
-      },
-      body: JSON.stringify({
-        carNumber: data.carNumber,
-        carName: data.carModel, 
-        childCategoryId: data.categorySmallId,
-        fuelType: data.fuelType,
-        purposeName: data.purposeName,
-        companyNameForCreation: data.companyName,
-        driverMemberId: data.employeeId,
-        operationDistance: data.distance,
-        remark: data.remark,
-      }),
-    });
+    const payload ={
+      carNumber: data.carNumber,
+      carName: data.carModel, 
+      childCategoryId: data.categorySmallId,
+      fuelType: data.fuelType,
+      purposeName: data.purposeName,
+      companyNameForCreation: data.companyName,
+      driverMemberId: data.employeeId,
+      operationDistance: data.distance,
+      remark: data.remark,
+    };
     
-    console.log('Register Company Payload:', response);
-
-    if (!response.ok) {
-      throw new Error(`등록 실패: ${response.statusText}`);
-    }
-
-    return await response.json();
+    console.log('Register Vehicle Payload:', payload);
+    const response = await axiosInstance.post('/admin/vehicle', payload);
+    return response.data;
   } catch (error) {
     console.error('API Error:', error);
     throw error;
@@ -212,40 +210,19 @@ export const registerVehicle = async (data: IntegratedFormData) => {
 
 // (2) 협력사명과 주소지 등록
 export const registerCompany = async (data: IntegratedFormData) => {
-
-  const token = sessionStorage.getItem('token');
-
-  if (!token) {
-    throw new Error('인증 토큰이 없습니다. 다시 로그인해주세요.');
-  }
-  console.log('Register Company Payload:', data); //여기까지도 ㅇㅋ
   try {
     const fullAddress = `${data.region} ${data.addressDetail}`;
     const payload = {
       companyName: data.companyName,
       oneWayDistance: data.distance,
       address: fullAddress,
-      supplyTypeName: data.supplyTypeName , // supplyType은 ID 필요
-      customerName: data.customerName , // Customer는 ID 필요
+      supplyTypeName: data.supplyTypeName,
+      customerName: data.customerName,
       remark: data.remark,
     };
 
-    console.log('Register Company Payload:', payload);
-
-    const response = await fetch(`${BASE_URL}/admin/company`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`,
-      },
-      body: JSON.stringify(payload),
-    });
-
-    if (!response.ok) {
-      throw new Error(`등록 실패: ${response.statusText}`);
-    }
-
-    return await response.json();
+    const response = await axiosInstance.post('/admin/company', payload);
+    return response.data;
   } catch (error) {
     console.error('API Error:', error);
     throw error;
@@ -254,13 +231,6 @@ export const registerCompany = async (data: IntegratedFormData) => {
 
 // (3) 차종과 연비 등록
 export const registerCarModel = async (data: IntegratedFormData) => {
-
-  const token = sessionStorage.getItem('token');
-
-  if (!token) {
-    throw new Error('인증 토큰이 없습니다. 다시 로그인해주세요.');
-  }
-
   try {
     const payload = {
       parentCategoryName: data.categoryLarge,
@@ -269,20 +239,8 @@ export const registerCarModel = async (data: IntegratedFormData) => {
       customEfficiency: parseFloat(data.fuelEfficiency),
     };
 
-    const response = await fetch(`${BASE_URL}/admin/car-model`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`,
-      },
-      body: JSON.stringify(payload),
-    });
-
-    if (!response.ok) {
-      throw new Error(`등록 실패: ${response.statusText}`);
-    }
-
-    return await response.json();
+    const response = await axiosInstance.post('/admin/car-model', payload);
+    return response.data;
   } catch (error) {
     console.error('API Error:', error);
     throw error;
@@ -291,32 +249,13 @@ export const registerCarModel = async (data: IntegratedFormData) => {
 
 // (4) 공급 유형 등록
 export const registerSupplyType = async (data: IntegratedFormData) => {
-
-  const token = sessionStorage.getItem('token');
-
-  if (!token) {
-    throw new Error('인증 토큰이 없습니다. 다시 로그인해주세요.');
-  }
-
   try {
     const payload = {
       supplyTypeName: data.supplyTypeName,
     };
 
-    const response = await fetch(`${BASE_URL}/admin/supply-type`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`,
-      },
-      body: JSON.stringify(payload),
-    });
-
-    if (!response.ok) {
-      throw new Error(`등록 실패: ${response.statusText}`);
-    }
-
-    return await response.json();
+    const response = await axiosInstance.post('/admin/supply-type', payload);
+    return response.data;
   } catch (error) {
     console.error('API Error:', error);
     throw error;
@@ -325,33 +264,15 @@ export const registerSupplyType = async (data: IntegratedFormData) => {
 
 // (5) 운행 목적 등록
 export const registerPurpose = async (data: IntegratedFormData) => {
-
-  const token = sessionStorage.getItem('token');
-
-  if (!token) {
-    throw new Error('인증 토큰이 없습니다. 다시 로그인해주세요.');
-  }
-
   try {
     const payload = {
       purposeName: data.purposeName,
-      defaultScope: data.defaultScope ? parseInt(data.defaultScope, 10) : undefined,
+      defaultScopeId: data.defaultScope ? parseInt(String(data.defaultScope), 10) : undefined,
     };
 
-    const response = await fetch(`${BASE_URL}/admin/operation-purpose`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`,
-      },
-      body: JSON.stringify(payload),
-    });
-
-    if (!response.ok) {
-      throw new Error(`등록 실패: ${response.statusText}`);
-    }
-
-    return await response.json();
+    console.log('Register Purpose Payload:', payload);
+    const response = await axiosInstance.post('/admin/operation-purpose', payload);
+    return response.data;
   } catch (error) {
     console.error('API Error:', error);
     throw error;
@@ -360,34 +281,14 @@ export const registerPurpose = async (data: IntegratedFormData) => {
 
 // (6) 공급 고객 등록 
 export const registerSupplyCustomer = async (data: IntegratedFormData) => {
-
-  const token = sessionStorage.getItem('token');
-
-  if (!token) {
-    throw new Error('인증 토큰이 없습니다. 다시 로그인해주세요.');
-  }
-
   try {
     const payload = {
       customerName: data.customerName,
       remark: data.remark,
     };
-    console.log('Register SupplyCustomer Payload:', payload);
-    const response = await fetch(`${BASE_URL}/admin/supply-customer`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`,
-      },
-      body: JSON.stringify(payload),
-    });
-    console.log('Register SupplyCustomer Payload:', payload);
 
-    if (!response.ok) {
-      throw new Error(`등록 실패: ${response.statusText}`);
-    }
-
-    return await response.json();
+    const response = await axiosInstance.post('/admin/supply-customer', payload);
+    return response.data;
   } catch (error) {
     console.error('API Error:', error);
     throw error;

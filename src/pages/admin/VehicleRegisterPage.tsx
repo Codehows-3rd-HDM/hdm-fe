@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { RefreshCw, ChevronDown } from 'lucide-react';
+import Modal from '../../components/Modal';
 // [API] 분리된 API 모듈 임포트
 import { 
   fetchRegistrationOptions, 
@@ -87,6 +88,10 @@ const VehicleBasicRegisterPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalMessage, setModalMessage] = useState('');
+  const [modalTitle, setModalTitle] = useState('');
+  const [modalIsSuccess, setModalIsSuccess] = useState(false);
   
   const [options, setOptions] = useState<OptionsData>(INITIAL_OPTIONS);
 
@@ -217,15 +222,17 @@ const VehicleBasicRegisterPage: React.FC = () => {
       if (currentPage === '출입 차량 기준정보 등록') {
         // Vehicle 등록 - carNumber, carModel, company, Purpose, operationDistance, driverMemberId
         const payload = {
-          carNumber: formData.carNumber,
-          carModel: formData.carModel, // 모델 이름
+          carNumber: formData.carNumber, // 차이름 = 차량번호
+          carName: formData.carModel, // 모델 이름
+          childCategoryId: formData.categorySmallId,
+          fuelType: formData.fuelType,
           companyName: formData.companyName,
           purposeName: formData.purposeName,
           operationDistance: formData.distance,
           driverMemberId: formData.employeeId,
-          carName: formData.carNumber, // 차이름 = 차량번호
           remark: formData.remark,
         };
+        console.log('Vehicle payload:', payload);
         await registerVehicle(payload as unknown as IntegratedFormData);
         // 등록 성공 시 옵션을 재조회해서 드롭다운 반영
         await fetchOptions();
@@ -266,7 +273,7 @@ const VehicleBasicRegisterPage: React.FC = () => {
         // OperationPurpose 등록
         const payload = {
           purposeName: formData.purposeName,
-          defaultScope: formData.defaultScope,
+          defaultScope: formData.defaultScopeId,
         } as any;
         await registerPurpose(payload as unknown as IntegratedFormData);
         await fetchOptions();
@@ -280,11 +287,17 @@ const VehicleBasicRegisterPage: React.FC = () => {
         await fetchOptions();
       }
 
-      alert(`${currentPage}이(가) 정상적으로 등록되었습니다.`);
+      setModalTitle('등록 완료');
+      setModalMessage(`${currentPage}이(가) 정상적으로 등록되었습니다.`);
+      setModalIsSuccess(true);
+      setIsModalOpen(true);
       handleReset();
     } catch (error) {
       console.error("등록 실패:", error);
-      alert("등록 중 오류가 발생했습니다.");
+      setModalTitle('등록 오류');
+      setModalMessage("등록 중 오류가 발생했습니다.");
+      setModalIsSuccess(false);
+      setIsModalOpen(true);
     } finally {
       setIsSubmitting(false);
     }
@@ -340,7 +353,14 @@ const VehicleBasicRegisterPage: React.FC = () => {
           <>
             <div className="flex flex-col gap-1"><RequiredLabel isRequired>차량번호</RequiredLabel><input name="carNumber" value={formData.carNumber} onChange={handleChange} className={twInput} /></div>
             <SelectField name="purposeName" idName="purposeId" label="운행목적" options={options.PURPOSE_OPTIONS} isRequired value={formData.purposeName} />
-            <SelectField name="companyName" idName="companyId" label="협력사명" options={options.COMPANY_OPTIONS} isRequired value={formData.companyName} />
+            <div className="flex flex-col gap-1"><RequiredLabel isRequired>협력사명</RequiredLabel><input list="company-list" name="companyName" value={formData.companyName} onChange={(e) => {
+              const company = options.COMPANY_LIST?.find(c => c.name === e.target.value);
+              if (company) {
+                setFormData(prev => ({ ...prev, companyName: company.name, companyId: company.id, distance: company.oneWayDistance }));
+              } else {
+                handleChange(e);
+              }
+            }} className={twInput} /><datalist id="company-list">{options.COMPANY_LIST?.map(c => <option key={c.id} value={c.name}/>)}</datalist></div>
             <div className="flex flex-col gap-1"><RequiredLabel>사원번호</RequiredLabel><input type="number" name="employeeId" value={formData.employeeId} onChange={handleChange} className={twInput} /></div>
             <div className="flex flex-col gap-1"><RequiredLabel isRequired>편도거리(km)</RequiredLabel><input type="number" name="distance" value={formData.distance} onChange={handleChange} className={twInput} /></div>
             <SelectField name="categoryLarge" idName="categoryLargeId" label="차종 대분류" options={options.CAT_LARGE_OPTIONS} isRequired value={formData.categoryLarge} />
@@ -389,7 +409,7 @@ const VehicleBasicRegisterPage: React.FC = () => {
         return (
           <>
             <div className="col-span-2 flex flex-col gap-1"><RequiredLabel isRequired>운행목적</RequiredLabel><input name="purposeName" value={formData.purposeName} onChange={handleChange} className={twInput} /></div>
-            <SelectField name="defaultScope" label="Scope" options={options.SCOPE_OPTIONS} isRequired value={formData.defaultScope} />
+            <SelectField name="defaultScope" idName="defaultScopeId" label="Scope" options={options.SCOPE_OPTIONS} isRequired value={formData.defaultScope} />
           </>
         );
 
@@ -458,6 +478,14 @@ const VehicleBasicRegisterPage: React.FC = () => {
           {isSubmitting ? '등록 중...' : '등록하기'}
         </button>
       </div>
+
+      <Modal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        message={modalMessage}
+        title={modalTitle}
+        isSuccess={modalIsSuccess}
+      />
     </div>
   );
 };

@@ -50,7 +50,7 @@ const MainPage: React.FC = () => {
 
           {(role === 'SUPERADMIN' || role === 'ADMIN') && (
             <button
-              onClick={() => navigate('/admin')}
+              onClick={() => navigate('/admin/vehicle/manage')}
               className="group flex flex-col items-center justify-center w-64 h-40 bg-white/10 backdrop-blur-sm rounded-2xl border border-white/20 hover:bg-white/20 transition-all duration-300 hover:-translate-y-2 hover:shadow-xl cursor-pointer"
             >
               <Settings size={48} className="mb-4 text-purple-400 group-hover:text-white transition-colors" />
@@ -61,7 +61,7 @@ const MainPage: React.FC = () => {
 
           {role === 'SUPERADMIN' && (
             <button
-              onClick={() => navigate('/admin/register')}
+              onClick={() => navigate('/register')}
               className="group flex flex-col items-center justify-center w-64 h-40 bg-white/10 backdrop-blur-sm rounded-2xl border border-white/20 hover:bg-white/20 transition-all duration-300 hover:-translate-y-2 hover:shadow-xl cursor-pointer"
             >
               <UserPlus size={48} className="mb-4 text-green-400 group-hover:text-white transition-colors" />

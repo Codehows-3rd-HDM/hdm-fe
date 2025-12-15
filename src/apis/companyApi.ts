@@ -1,5 +1,7 @@
 // import type { AnalysisData } from '../types/analysis';// 프로젝트 타입 경로에 맞춰 수정
 // If you don't have a central types file, just export a lightweight type:
+import axios from 'axios';
+
 export type AnalysisDataTypeLocal = 'company' | 'supply-type' | 'supply-customer' | 'fuel' | 'purpose';
 
 export interface AnalysisData {
@@ -15,6 +17,22 @@ export interface AnalysisData {
 
 const BASE = import.meta.env.VITE_API_URL ?? '/api';
 
+const axiosInstance = axios.create({
+  baseURL: BASE,
+});
+
+// 요청 인터셉터: 토큰 자동 추가
+axiosInstance.interceptors.request.use(
+  (config) => {
+    const token = sessionStorage.getItem('token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
 export async function fetchAnalysisData(
   dataType: AnalysisDataTypeLocal | string,
   year: string,
@@ -28,14 +46,9 @@ export async function fetchAnalysisData(
   if (month && month !== 'all') params.set('month', month);
   if (scope && scope !== 'total') params.set('scope', scope);
 
-  const url = `${BASE}/emissions?${params.toString()}`;
-
   try {
-    const res = await fetch(url);
-    if (!res.ok) throw new Error(`API ${res.status} ${res.statusText}`);
-    const json = await res.json();
-    // Expecting array of items with fields matching AnalysisData
-    return json as AnalysisData[];
+    const response = await axiosInstance.get(`/emissions?${params.toString()}`);
+    return response.data as AnalysisData[];
   } catch (err) {
     // 네트워크 실패 또는 개발용: mock 데이터 반환 (안전)
     console.warn('[fetchAnalysisData] fetch failed, returning mock data. Error:', err);
