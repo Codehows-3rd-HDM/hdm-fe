@@ -33,12 +33,14 @@ interface StandardDataManagementTableProps<T> {
   title: string;
   columns: ColumnDefinition<T>[];
   apiEndpoint: string; // [변경] initialData 대신 endpoint만 받음
+  disableDelete?: boolean; // 차종 모델 페이지에서 삭제 비활성화
 }
 
 const StandardDataManagementTable = <T extends { id: number, [key: string]: any }>({ 
   title, 
   columns, 
-  apiEndpoint 
+  apiEndpoint,
+  disableDelete = false 
 }: StandardDataManagementTableProps<T>) => {
   
   // --- 상태 관리 ---
@@ -499,7 +501,7 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
                                             <Edit2 size={16} />
                                         </button>
                                     )}
-                                    {!isRowEditing && (
+                                    {!isRowEditing && !disableDelete && (
                                         <button 
                                             onClick={() => handleSingleDelete(rowId)} 
                                             className="p-1.5 bg-red-100 text-red-700 rounded hover:bg-red-200" title="삭제"
@@ -562,9 +564,11 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
                     <button onClick={handleBatchSave} className="flex items-center px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 shadow-sm font-bold text-sm">
                         <Save size={16} className="mr-2" /> 전체 저장
                     </button>
-                    <button onClick={handleBatchDelete} className="flex items-center px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 shadow-sm font-bold text-sm">
-                        <Trash2 size={16} className="mr-2" /> 선택 삭제 ({selectedRows.length})
-                    </button>
+                    {!disableDelete && (
+                        <button onClick={handleBatchDelete} className="flex items-center px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 shadow-sm font-bold text-sm">
+                            <Trash2 size={16} className="mr-2" /> 선택 삭제 ({selectedRows.length})
+                        </button>
+                    )}
                     <button onClick={handleCancelBatchEdit} className="flex items-center px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 shadow-sm font-bold text-sm">
                         <X size={16} className="mr-2" /> 취소
                     </button>

@@ -100,25 +100,25 @@ export interface ProductData {
 
 // 1. 출입 차량 컬럼
 export const VEHICLE_COLUMNS: ColumnDefinition<VehicleData>[] = [
-  { id: 'carNumber', header: '차량번호', searchable: true, sortable: true, editable: true, width: '10%', inputType: 'text' },
-  { id: 'purpose', header: '운행목적', searchable: true, sortable: true, editable: true, width: '8%', inputType: 'select', selectOptions: PURPOSE_OPTIONS },
+  { id: 'carNumber', header: '차량번호', searchable: true, sortable: true, editable: false, width: '10%', inputType: 'text' },
+  { id: 'purpose', header: '운행목적', searchable: true, sortable: true, editable: false, width: '8%', inputType: 'select', selectOptions: PURPOSE_OPTIONS },
   { id: 'scope', header: 'Scope', searchable: false, sortable: true, editable: false, width: '8%' }, 
-  { id: 'vendorName', header: '업체명', searchable: true, sortable: true, editable: true, width: '10%', inputType: 'search-select', selectOptions: VENDOR_OPTIONS },
-  { id: 'employeeId', header: '사원번호', searchable: true, sortable: true, editable: true, width: '8%', inputType: 'number' },
-  { id: 'distance', header: '편도거리(km)', searchable: false, sortable: true, editable: true, width: '8%', inputType: 'number' },
-  { id: 'categoryLarge', header: '대분류', searchable: true, sortable: true, editable: true, width: '8%', inputType: 'select', selectOptions: CAT_LARGE_OPTIONS },
-  { id: 'categorySmall', header: '소분류', searchable: true, sortable: true, editable: true, width: '8%', inputType: 'select', selectOptions: CAT_SMALL_OPTIONS },
-  { id: 'carModel', header: '모델명', searchable: true, sortable: true, editable: true, width: '10%', inputType: 'text' },
-  { id: 'fuelType', header: '연료', searchable: true, sortable: true, editable: true, width: '8%', inputType: 'select', selectOptions: FUEL_OPTIONS },
-  { id: 'note', header: '비고', searchable: false, sortable: false, editable: true, width: '10%', inputType: 'text' },
+  { id: 'vendorName', header: '업체명', searchable: true, sortable: true, editable: false, width: '10%', inputType: 'search-select', selectOptions: VENDOR_OPTIONS },
+  { id: 'employeeId', header: '사원번호', searchable: true, sortable: true, editable: false, width: '8%', inputType: 'number' },
+  { id: 'distance', header: '편도거리(km)', searchable: false, sortable: true, editable: false, width: '8%', inputType: 'number' },
+  { id: 'categoryLarge', header: '대분류', searchable: true, sortable: true, editable: false, width: '8%', inputType: 'select', selectOptions: CAT_LARGE_OPTIONS },
+  { id: 'categorySmall', header: '소분류', searchable: true, sortable: true, editable: false, width: '8%', inputType: 'select', selectOptions: CAT_SMALL_OPTIONS },
+  { id: 'carModel', header: '모델명', searchable: true, sortable: true, editable: false, width: '10%', inputType: 'text' },
+  { id: 'fuelType', header: '연료', searchable: true, sortable: true, editable: false, width: '8%', inputType: 'select', selectOptions: FUEL_OPTIONS },
+  { id: 'note', header: '비고', searchable: false, sortable: false, editable: false, width: '10%', inputType: 'text' },
   { id: 'actions', header: '액션', searchable: false, sortable: false, editable: false, width: '10%' },
 ];
 
 // 2. 업체명 및 주소지 컬럼
 export const COMPANY_COLUMNS: ColumnDefinition<CompanyData>[] = [
   { id: 'companyName', header: '업체명', searchable: true, sortable: true, editable: true, width: '15%', inputType: 'text' },
-  { id: 'supplyType', header: '공급 유형', searchable: true, sortable: true, editable: false, width: '12%', inputType: 'select', selectOptions: PROCESS_OPTIONS },
-  { id: 'supplyCustomer', header: '공급 고객', searchable: true, sortable: true, editable: false, width: '12%', inputType: 'select', selectOptions: PRODUCT_CLASS_OPTIONS },
+  { id: 'supplyType', header: '공급 유형', searchable: true, sortable: true, editable: true, width: '12%', inputType: 'select', selectOptions: PROCESS_OPTIONS },
+  { id: 'supplyCustomer', header: '공급 고객', searchable: true, sortable: true, editable: true, width: '12%', inputType: 'select', selectOptions: PRODUCT_CLASS_OPTIONS },
   { id: 'oneWayDistance', header: '편도거리(km)', searchable: false, sortable: true, editable: true, width: '10%', inputType: 'number' },
   { id: 'region', header: '지역 (시/도)', searchable: true, sortable: true, editable: true, width: '12%', inputType: 'select', selectOptions: REGION_OPTIONS },
   { id: 'addressDetail', header: '상세주소', searchable: true, sortable: false, editable: true, width: '25%', inputType: 'text' },
