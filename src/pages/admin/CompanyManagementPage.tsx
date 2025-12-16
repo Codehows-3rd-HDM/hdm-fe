@@ -7,8 +7,7 @@ const CompanyManagementPage: React.FC = () => {
     <StandardDataManagementTable<CompanyData>
       title="협력사 및 주소지 기준정보 관리"
       columns={COMPANY_COLUMNS}
-      // initialData={MOCK_COMPANY_DATA}
-      apiEndpoint="/api/admin/companies"
+      apiEndpoint="/admin/companies"
     />
   );
 };

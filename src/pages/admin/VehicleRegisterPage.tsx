@@ -242,21 +242,16 @@ const VehicleBasicRegisterPage: React.FC = () => {
           companyName: formData.companyName,
           oneWayDistance: formData.distance,
           address: `${formData.region} ${formData.addressDetail}`,
-          supplyTypeName: formData.supplyTypeName,
-          customerName: formData.customerName,
+          supplyTypeId: formData.supplyTypeId,
+          customerId: formData.customerId,
           remark: formData.remark,
-          region: formData.region,
-          addressDetail: formData.addressDetail,
-          distance: formData.distance,
         } as any;
-        console.log('Company registered:', payload); // 여기까지 ㅇㅋ
         await registerCompany(payload as unknown as IntegratedFormData);
         await fetchOptions();
       } else if (currentPage === '차종과 연비 기본정보 등록') {
         // CarModel 등록
         const payload = {
-          categoryLarge: formData.categoryLarge,
-          categorySmall: formData.categorySmall,
+          categorySmallId: formData.categorySmallId,
           fuelType: formData.fuelType,
           fuelEfficiency: formData.fuelEfficiency,
         } as any;
@@ -295,7 +290,7 @@ const VehicleBasicRegisterPage: React.FC = () => {
     } catch (error) {
       console.error("등록 실패:", error);
       setModalTitle('등록 오류');
-      setModalMessage("등록 중 오류가 발생했습니다.");
+      setModalMessage(error instanceof Error ? error.message : "등록 중 오류가 발생했습니다.");
       setModalIsSuccess(false);
       setIsModalOpen(true);
     } finally {
@@ -376,9 +371,9 @@ const VehicleBasicRegisterPage: React.FC = () => {
         return (
           <>
             <div className="flex flex-col gap-1"><RequiredLabel isRequired>협력사명</RequiredLabel><input name="companyName" value={formData.companyName} onChange={handleChange} className={twInput} /></div>
-            <SelectField name="supplyTypeName" label="공급 유형" options={options.SUPPLY_TYPE_OPTIONS} isRequired value={formData.supplyTypeName} />
+            <SelectField name="supplyTypeName" idName="supplyTypeId" label="공급 유형" options={options.SUPPLY_TYPE_OPTIONS} isRequired value={formData.supplyTypeName} />
             <div className="flex flex-col gap-1"><RequiredLabel isRequired>편도거리(km)</RequiredLabel><input type="number" name="distance" value={formData.distance} onChange={handleChange} className={twInput} /></div>
-            <SelectField name="customerName" label="공급 고객" options={options.SUPPLY_CUSTOMER_OPTIONS} isRequired value={formData.customerName} />
+            <SelectField name="customerName" idName="customerId" label="공급 고객" options={options.SUPPLY_CUSTOMER_OPTIONS} isRequired value={formData.customerName} />
             <SelectField name="region" label="지역 (도/시)" options={options.REGION_OPTIONS} isRequired value={formData.region} />
             <div className="col-span-2 flex flex-col gap-1"><RequiredLabel isRequired>상세주소</RequiredLabel><input name="addressDetail" value={formData.addressDetail} onChange={handleChange} className={twInput} placeholder="나머지 상세 주소" /></div>
             <div className="col-span-3 flex flex-col gap-1"><RequiredLabel>비고</RequiredLabel><textarea name="remark" value={formData.remark} onChange={handleChange} className="w-full h-28 p-3 border border-gray-300 bg-gray-100 rounded text-sm outline-none" /></div>

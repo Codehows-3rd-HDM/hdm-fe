@@ -51,12 +51,13 @@ export interface VehicleData {
 // 2. 협력사명 및 주소지 정보 데이터 타입
 export interface CompanyData {
   id: number;
-  vendorName: string;   // 협력사명
-  supplyType: string;  // 공급 유형
-  distance: string;     // 편도거리
+  companyName: string;   // 협력사명
+  supplyType: string;   // 공급 유형
   supplyCustomer: string; // 공급 고객
-  address: string;      // 주소
-  note: string;         // 비고
+  oneWayDistance: number; // 편도거리
+  region: string;       // 지역 (시/도)
+  addressDetail: string; // 상세주소
+  remark: string;       // 비고
   isEditing?: boolean;
 }
 
@@ -115,21 +116,21 @@ export const VEHICLE_COLUMNS: ColumnDefinition<VehicleData>[] = [
 
 // 2. 업체명 및 주소지 컬럼
 export const COMPANY_COLUMNS: ColumnDefinition<CompanyData>[] = [
-  { id: 'vendorName', header: '업체명', searchable: true, sortable: true, editable: true, width: '15%', inputType: 'search-select', selectOptions: VENDOR_OPTIONS },
-  { id: 'supplyType', header: '공급 유형', searchable: true, sortable: true, editable: true, width: '10%', inputType: 'select', selectOptions: PROCESS_OPTIONS },
-  { id: 'supplyCustomer', header: '공급 고객', searchable: true, sortable: true, editable: true, width: '10%', inputType: 'select', selectOptions: PRODUCT_CLASS_OPTIONS },
-  { id: 'distance', header: '편도거리(km)', searchable: false, sortable: true, editable: true, width: '10%', inputType: 'number' },
-  { id: 'address', header: '주소', searchable: true, sortable: true, editable: true, width: '10%', inputType: 'select', selectOptions: REGION_OPTIONS },
-  { id: 'address', header: '주소', searchable: true, sortable: false, editable: true, width: '30%', inputType: 'text' },
-  { id: 'note', header: '비고', searchable: false, sortable: false, editable: true, width: '15%', inputType: 'text' },
+  { id: 'companyName', header: '업체명', searchable: true, sortable: true, editable: true, width: '15%', inputType: 'text' },
+  { id: 'supplyType', header: '공급 유형', searchable: true, sortable: true, editable: false, width: '12%', inputType: 'select', selectOptions: PROCESS_OPTIONS },
+  { id: 'supplyCustomer', header: '공급 고객', searchable: true, sortable: true, editable: false, width: '12%', inputType: 'select', selectOptions: PRODUCT_CLASS_OPTIONS },
+  { id: 'oneWayDistance', header: '편도거리(km)', searchable: false, sortable: true, editable: true, width: '10%', inputType: 'number' },
+  { id: 'region', header: '지역 (시/도)', searchable: true, sortable: true, editable: true, width: '12%', inputType: 'select', selectOptions: REGION_OPTIONS },
+  { id: 'addressDetail', header: '상세주소', searchable: true, sortable: false, editable: true, width: '25%', inputType: 'text' },
+  { id: 'remark', header: '비고', searchable: false, sortable: false, editable: true, width: '14%', inputType: 'text' },
   { id: 'actions', header: '액션', searchable: false, sortable: false, editable: false, width: '10%' },
 ];
 
 // 3. 차종 및 연비 컬럼
 export const CAR_MODEL_COLUMNS: ColumnDefinition<CarModelData>[] = [
-  { id: 'categoryLarge', header: '차종 대분류', searchable: true, sortable: true, editable: true, width: '25%', inputType: 'select', selectOptions: CAT_LARGE_OPTIONS },
-  { id: 'categorySmall', header: '차종 소분류', searchable: true, sortable: true, editable: true, width: '25%', inputType: 'select', selectOptions: CAT_SMALL_OPTIONS },
-  { id: 'fuelType', header: '연료 종류', searchable: true, sortable: true, editable: true, width: '20%', inputType: 'select', selectOptions: FUEL_OPTIONS },
+  { id: 'categoryLarge', header: '차종 대분류', searchable: true, sortable: true, editable: false, width: '25%', inputType: 'select', selectOptions: CAT_LARGE_OPTIONS },
+  { id: 'categorySmall', header: '차종 소분류', searchable: true, sortable: true, editable: false, width: '25%', inputType: 'select', selectOptions: CAT_SMALL_OPTIONS },
+  { id: 'fuelType', header: '연료 종류', searchable: true, sortable: true, editable: false, width: '20%', inputType: 'select', selectOptions: FUEL_OPTIONS },
   { id: 'fuelEfficiency', header: '연비 (km/L)', searchable: false, sortable: true, editable: true, width: '20%', inputType: 'number' },
   { id: 'actions', header: '액션', searchable: false, sortable: false, editable: false, width: '10%' },
 ];

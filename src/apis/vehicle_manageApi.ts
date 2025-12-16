@@ -105,31 +105,34 @@ const MOCK_VEHICLE_DATA: VehicleData[] = [
 const MOCK_COMPANY_DATA: CompanyData[] = [
   { 
     id: 1, 
-    vendorName: '현대정밀', 
+    companyName: '현대정밀', 
     supplyType: '조립', 
-    distance: '12.5', 
-    supplyCustomer: '1000', 
-    address: '경상남도 창원시', 
-    note: '' 
+    supplyCustomer: '1000',
+    oneWayDistance: 12.5,
+    region: '경상남도',
+    addressDetail: '창원시', 
+    remark: '' 
   },
   { 
     id: 2, 
-    vendorName: 'Volvo KOREA', 
+    companyName: 'Volvo KOREA', 
     supplyType: '도장', 
-    distance: '45.0', 
-    supplyCustomer: 'clark', 
-    address: '경상남도 창원시 성산구', 
-    note: '메인 협력사' 
+    supplyCustomer: 'clark',
+    oneWayDistance: 45.0,
+    region: '경상남도',
+    addressDetail: '창원시 성산구',
+    remark: '메인 협력사' 
   },
   // 더미 데이터
   ...Array.from({ length: 15 }, (_, i) => ({
     id: i + 3,
-    vendorName: `협력사_${i + 1}`,
+    companyName: `협력사_${i + 1}`,
     supplyType: i % 2 === 0 ? '프레스' : '차체',
-    distance: String(Math.floor(Math.random() * 100)),
     supplyCustomer: i % 3 === 0 ? '2000' : '3000',
-    address: `경기도 평택시 포승읍 ${i + 1}번길`,
-    note: '-'
+    oneWayDistance: Math.floor(Math.random() * 100),
+    region: '경기도',
+    addressDetail: `평택시 포승읍 ${i + 1}번길`,
+    remark: '-'
   }))
 ];
 

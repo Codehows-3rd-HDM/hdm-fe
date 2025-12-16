@@ -1,32 +1,4 @@
-const BASE_URL = import.meta.env.VITE_API_URL || '/api';
-
-import axios from 'axios';
-
-// axios 인터셉터 설정 (토큰 자동 포함)
-const axiosInstance = axios.create({
-  baseURL: BASE_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
-
-// 요청 인터셉터: 모든 요청에 토큰 자동 추가
-axiosInstance.interceptors.request.use(
-  (config) => {
-    const token = sessionStorage.getItem('token');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => Promise.reject(error)
-);
-
-// 응답 인터셉터: 에러만 throw
-axiosInstance.interceptors.response.use(
-  (response) => response,
-  (error) => Promise.reject(error)
-);
+import axiosInstance from './axiosInstance';
 
 // 1. 옵션 데이터 타입
 export interface OptionsData {
@@ -216,8 +188,8 @@ export const registerCompany = async (data: IntegratedFormData) => {
       companyName: data.companyName,
       oneWayDistance: data.distance,
       address: fullAddress,
-      supplyTypeName: data.supplyTypeName,
-      customerName: data.customerName,
+      supplyTypeId: data.supplyTypeId,
+      customerId: data.customerId,
       remark: data.remark,
     };
 
@@ -233,8 +205,7 @@ export const registerCompany = async (data: IntegratedFormData) => {
 export const registerCarModel = async (data: IntegratedFormData) => {
   try {
     const payload = {
-      parentCategoryName: data.categoryLarge,
-      childCategoryName: data.categorySmall,
+      carCategoryId: data.categorySmallId,
       fuelType: data.fuelType,
       customEfficiency: parseFloat(data.fuelEfficiency),
     };
