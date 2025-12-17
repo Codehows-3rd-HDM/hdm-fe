@@ -1,61 +1,325 @@
-import React from 'react';
-import { Download, Upload, FileSpreadsheet } from 'lucide-react';
+import React, { useState, useRef } from "react";
+import {
+  Download,
+  Upload,
+  FileSpreadsheet,
+  Save,
+  AlertCircle,
+  X,
+} from "lucide-react";
+import * as XLSX from "xlsx";
+import axios from "axios";
+import Modal from "../../components/Modal";
+import ConfirmModal from "../../components/ConfirmModal"; // (선택) 확인 모달 있으면 사용
 
-const MANAGEMENT_ITEMS = [
-  { title: '출입 차량 기준정보', endpoint: '/vehicles' },
-  // { title: '협력사 기준정보', endpoint: '/companies' },
-  // { title: '차종/연비 기준정보', endpoint: '/carmodels' },
-  // { title: '공급 유형 기준정보', endpoint: '/processes' },
-  // { title: '운행 목적 기준정보', endpoint: '/purposes' },
-  // { title: '공급 고객 기준정보', endpoint: '/products' },
-];
+const BASE_URL = import.meta.env.VITE_API_URL || "/api";
 
 const ExcelManagementPage: React.FC = () => {
-  
-  const handleUpload = (title: string) => {
-    alert(`[${title}] 엑셀 업로드 모달을 엽니다.`);
-    // TODO: ExcelUploadModal 연결
+  // --- [UI 상태] ---
+  const [isDragOver, setIsDragOver] = useState(false);
+  const [headers, setHeaders] = useState<string[]>([]);
+  const [excelData, setExcelData] = useState<any[]>([]); // 파싱된 엑셀 데이터
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // --- [모달 상태] ---
+  const [alertModalOpen, setAlertModalOpen] = useState(false);
+  const [alertState, setAlertState] = useState({
+    title: "",
+    message: "",
+    isSuccess: true,
+  });
+
+  // --- [1. 엑셀 파일 읽기 로직 (모달에서 가져옴)] ---
+  const handleFileRead = (file: File) => {
+    if (!file.name.endsWith(".xlsx") && !file.name.endsWith(".xls")) {
+      alert("엑셀 파일만 업로드 가능합니다.");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const data = new Uint8Array(e.target?.result as ArrayBuffer);
+      const workbook = XLSX.read(data, { type: "array" });
+      const sheetName = workbook.SheetNames[0];
+      const worksheet = workbook.Sheets[sheetName];
+
+      const jsonData = XLSX.utils.sheet_to_json(worksheet, {
+        defval: "",
+      }) as any[];
+
+      if (jsonData.length > 0) {
+        setHeaders(Object.keys(jsonData[0])); // 헤더 추출
+        setExcelData(jsonData); // 데이터 저장
+      }
+    };
+    reader.readAsArrayBuffer(file);
   };
 
-  const handleDownload = (title: string) => {
-    alert(`[${title}] 전체 데이터를 엑셀로 다운로드합니다.`);
-    // TODO: API 호출 및 다운로드 로직
+  // 드래그 앤 드롭 핸들러
+  const onDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(true);
+  };
+  const onDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(false);
+    if (e.dataTransfer.files.length > 0) {
+      handleFileRead(e.dataTransfer.files[0]);
+    }
+  };
+
+  // 초기화 (취소 버튼용)
+  const handleReset = () => {
+    setExcelData([]);
+    setHeaders([]);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  // const openUploadModal = () => {
+  //   setUploadModalOpen(true);
+  // };
+
+  // ✅ [핵심 로직] 엑셀 파싱 및 서버 전송
+  //const handleFileUpload = async (excelData: any[]) => {
+  // 1. 모달 닫기
+  //   setUploadModalOpen(false);
+
+  // const reader = new FileReader();
+
+  // reader.onload = async (e) => {
+  //   try {
+  //     const data = e.target?.result;
+  //     if (!data) throw new Error("파일을 읽을 수 없습니다.");
+  //     const workbook = XLSX.read(data, { type: "binary" });
+  //     const sheetName = workbook.SheetNames[0];
+  //     const sheet = workbook.Sheets[sheetName];
+  //     const jsonData = XLSX.utils.sheet_to_json(sheet);
+
+  // --- [2. 서버 전송 로직 (기존 페이지 로직 유지)] ---
+  const handleServerUpload = async () => {
+    if (excelData.length === 0) {
+      alert("업로드할 데이터가 없습니다.");
+      return;
+    }
+
+    // 2. 데이터 매핑
+    const requestData = excelData.map((row: any) => ({
+      // [기초 정보]
+      purposeName: row["운행\r\n목적"] || "",
+      scope: row["Scope"] ? String(row["Scope"]) : "3",
+      fuelName: row["연료 종류"] || "",
+      emissionFactor: row["탄소\r\n배출\r\n계수"] || 0,
+
+      // [업체 정보]
+      companyName: row["업체"] || "",
+      address: row["주소"] || "",
+      supplyTypeName: row["공급유형"] || "",
+      supplyCustomerName: row["공급고객"] || "",
+
+      // [핵심] 거리 값 하나를 보내면 백엔드가 알아서 나눔!
+      distanceInput: row["편도거리\r\n(km)"] || row["편도거리"] || 0,
+
+      // [차종 정보]
+      bigCategory: row["차종구분 \r\n(대분류)"] || "",
+      smallCategory: row["차종구분 \r\n(소분류)"] || "",
+      efficiency: row["연비\r\n(ℓ/km)"] || 0,
+
+      // [차량 정보]
+      carNumber: row["차량 번호"] || "",
+      carModelName: row["차종"] || "",
+      driverMemberId: row["사원\r\n번호"] || "", // 👈 사원번호 변수명 체크 완료!
+      //emplyeeName: row["소유주"] || ""
+    }));
+
+    console.log("서버 전송 데이터:", requestData);
+
+    try {
+      // 서버 전송 시작
+      const token =
+        sessionStorage.getItem("token") || localStorage.getItem("token");
+
+      // Axios POST 요청
+      await axios.post(
+        `${BASE_URL}/admin/excel/upload/base-info`,
+        requestData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json", // 명시해주면 더 좋음
+          },
+        }
+      );
+
+      // 성공 처리
+      setAlertState({
+        title: "업로드 성공",
+        message: `총 ${requestData.length}건이 성공적으로 등록되었습니다! 🎉`,
+        isSuccess: true,
+      });
+      setAlertModalOpen(true);
+
+      // 성공후 초기화
+      handleReset();
+    } catch (error: any) {
+      console.error("업로드 실패:", error);
+      let errorMessage = "서버 저장 중 오류가 발생했습니다.";
+
+      if (error.response) {
+        if (error.response.status === 401) {
+          errorMessage = "로그인 세션이 만료되었습니다.";
+        } else {
+          errorMessage = error.response.data?.message || "서버 에러 발생";
+        }
+      } else if (error.request) {
+        errorMessage = "서버와 통신할 수 없습니다.";
+      }
+
+      setAlertState({
+        title: "업로드 실패",
+        message: errorMessage,
+        isSuccess: false,
+      });
+      setAlertModalOpen(true);
+    }
   };
 
   return (
     <div className="p-8 bg-gray-50 min-h-screen font-sans">
-      <div className="mb-8">
-        <h2 className="text-2xl font-bold text-gray-800 mb-2">기준정보 엑셀 관리</h2>
-        <p className="text-gray-500">각 기준정보 데이터를 엑셀 파일로 일괄 등록하거나 다운로드할 수 있습니다.</p>
+      {/* 1. Header Area */}
+      <div className="mb-6 flex justify-between items-end">
+        <div>
+          <h2 className="text-2xl font-bold text-gray-800 mb-2">
+            통합 기준정보 관리
+          </h2>
+          <p className="text-gray-500">
+            업체, 차량, 차종 등 모든 기준정보를 엑셀 파일 하나로 일괄
+            등록합니다.
+          </p>
+        </div>
+
+        {/* 우측 상단 다운로드 버튼 (기존 유지) */}
+        <button
+          onClick={() => alert("양식 다운로드 준비 중입니다.")}
+          className="flex items-center px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg text-sm font-bold hover:bg-gray-50 transition-colors shadow-sm"
+        >
+          <FileSpreadsheet size={16} className="mr-2 text-green-600" />
+          양식 다운로드
+        </button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {MANAGEMENT_ITEMS.map((item, index) => (
-          <div key={index} className="bg-white p-6 rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
-            <div className="flex items-center mb-4">
-              <div className="p-3 bg-green-100 text-green-600 rounded-lg mr-4">
-                <FileSpreadsheet size={24} />
-              </div>
-              <h3 className="text-lg font-bold text-gray-800">{item.title}</h3>
-            </div>
-            
-            <div className="flex gap-3 mt-4">
-              <button 
-                onClick={() => handleUpload(item.title)}
-                className="flex-1 flex items-center justify-center py-2.5 bg-gray-800 text-white rounded-lg text-sm font-bold hover:bg-gray-900 transition-colors"
+      {/* 2. Upload Area (드래그 앤 드롭) */}
+      <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200 mb-6">
+        <div
+          className={`border-2 border-dashed rounded-lg h-32 flex flex-col items-center justify-center cursor-pointer transition-all ${
+            isDragOver
+              ? "border-blue-500 bg-blue-50 text-blue-500"
+              : "border-gray-300 bg-gray-50 text-gray-600"
+          }`}
+          onDragOver={onDragOver}
+          onDragLeave={() => setIsDragOver(false)}
+          onDrop={onDrop}
+          onClick={() => fileInputRef.current?.click()}
+        >
+          <Upload
+            size={40}
+            className={`mb-2 ${isDragOver ? "text-blue-500" : "text-gray-400"}`}
+          />
+          <span className="font-bold text-lg">클릭하여 엑셀 파일 업로드</span>
+          <span className="text-sm mt-1 text-gray-500">
+            또는 파일을 여기로 드래그하세요
+          </span>
+          <input
+            type="file"
+            ref={fileInputRef}
+            className="hidden"
+            accept=".xlsx, .xls"
+            onChange={(e) =>
+              e.target.files && handleFileRead(e.target.files[0])
+            }
+          />
+        </div>
+      </div>
+
+      {/* 3. Preview & Action Area */}
+      {excelData.length > 0 ? (
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+          {/* 테이블 헤더 & 버튼 */}
+          <div className="p-4 border-b border-gray-200 flex justify-between items-center bg-gray-50">
+            <h3 className="font-bold text-gray-700 flex items-center">
+              <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full mr-2">
+                {excelData.length}건
+              </span>
+              데이터 미리보기
+            </h3>
+            <div className="flex gap-2">
+              <button
+                onClick={handleReset}
+                className="px-3 py-1.5 border border-gray-300 bg-white text-gray-600 rounded text-sm hover:bg-gray-100 flex items-center"
               >
-                <Upload size={16} className="mr-2" /> 업로드
+                <X size={14} className="mr-1" /> 취소
               </button>
-              <button 
-                onClick={() => handleDownload(item.title)}
-                className="flex-1 flex items-center justify-center py-2.5 bg-white border border-gray-300 text-gray-700 rounded-lg text-sm font-bold hover:bg-gray-50 transition-colors"
+              <button
+                onClick={handleServerUpload}
+                className="px-4 py-1.5 bg-blue-600 text-white rounded text-sm font-bold hover:bg-blue-700 flex items-center shadow-sm"
               >
-                <Download size={16} className="mr-2" /> 다운로드
+                <Save size={16} className="mr-2" /> 최종 등록
               </button>
             </div>
           </div>
-        ))}
-      </div>
+
+          {/* 테이블 본문 */}
+          <div className="overflow-x-auto max-h-[500px]">
+            <table className="w-full text-sm text-left">
+              <thead className="text-xs text-gray-700 uppercase bg-gray-100 sticky top-0">
+                <tr>
+                  {headers.map((header) => (
+                    <th
+                      key={header}
+                      className="px-6 py-3 border-b whitespace-nowrap"
+                    >
+                      {header}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {excelData.map((row, idx) => (
+                  <tr key={idx} className="bg-white border-b hover:bg-gray-50">
+                    {headers.map((header) => (
+                      <td
+                        key={header}
+                        className="px-6 py-3 whitespace-nowrap text-gray-700"
+                      >
+                        {row[header]}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      ) : (
+        // 데이터 없을 때 안내 메시지
+        <div className="text-center p-12 text-gray-400 bg-white rounded-xl border border-dashed border-gray-200">
+          <AlertCircle size={48} className="mx-auto mb-4 opacity-20" />
+          <p className="text-lg font-medium text-gray-300">
+            업로드된 데이터가 없습니다.
+          </p>
+          <p className="text-sm text-gray-400">
+            위 영역을 클릭하여 엑셀 파일을 추가해주세요.
+          </p>
+        </div>
+      )}
+
+      {/* 결과 알림 모달 */}
+      <Modal
+        isOpen={alertModalOpen}
+        onClose={() => setAlertModalOpen(false)}
+        title={alertState.title}
+        message={alertState.message}
+        isSuccess={alertState.isSuccess}
+      />
     </div>
   );
 };
