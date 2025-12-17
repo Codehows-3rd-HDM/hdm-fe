@@ -1,32 +1,32 @@
 import { useState, useMemo, useEffect } from 'react';
 import type { ColumnDefinition } from '../../types/data';
 import { 
-  ArrowUp, ArrowDown, ArrowUpDown, Search, Save, Trash2, X, CheckSquare, Edit2, Upload, Download, Loader2 
+  ArrowUp, ArrowDown, ArrowUpDown, Search, Save, Trash2, X, CheckSquare, Edit2, Loader2 
 } from 'lucide-react'; 
-import ExcelUploadModal from '../common/ExcelUploadModal';
+// import ExcelUploadModal from '../common/ExcelUploadModal';
 //API 모듈 임포트
 import axiosInstance from '../../apis/axiosInstance';
 
 // --- 엑셀 다운로드 함수 (프론트 구현만) ---
-const downloadExcel = (data: any[], filename: string) => {
-  if (data.length === 0) {
-    alert('다운로드할 데이터가 없습니다.');
-    return;
-  }
-  const headers = Object.keys(data[0]).filter(key => key !== 'isEditing' && key !== 'id');
-  const csvContent = [
-    headers.join(','),
-    ...data.map(row => headers.map(header => row[header]).join(','))
-  ].join('\n');
+// const downloadExcel = (data: any[], filename: string) => {
+//   if (data.length === 0) {
+//     alert('다운로드할 데이터가 없습니다.');
+//     return;
+//   }
+//   const headers = Object.keys(data[0]).filter(key => key !== 'isEditing' && key !== 'id');
+//   const csvContent = [
+//     headers.join(','),
+//     ...data.map(row => headers.map(header => row[header]).join(','))
+//   ].join('\n');
   
-  const blob = new Blob(["\ufeff", csvContent], { type: 'text/csv;charset=utf-8;' });
-  const link = document.createElement('a');
-  link.href = URL.createObjectURL(blob);
-  link.download = `${filename}_${new Date().toISOString().slice(0,10)}.csv`;
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-};
+//   const blob = new Blob(["\ufeff", csvContent], { type: 'text/csv;charset=utf-8;' });
+//   const link = document.createElement('a');
+//   link.href = URL.createObjectURL(blob);
+//   link.download = `${filename}_${new Date().toISOString().slice(0,10)}.csv`;
+//   document.body.appendChild(link);
+//   link.click();
+//   document.body.removeChild(link);
+// };
 
 // --- Props 정의 ---
 interface StandardDataManagementTableProps<T> {
@@ -51,7 +51,7 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
   const [searchQuery, setSearchQuery] = useState('');
   const [searchColumn, setSearchColumn] = useState<'all' | keyof T>('all');
   
-  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+  // const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [isBatchEditing, setIsBatchEditing] = useState(false);
   const [selectedRows, setSelectedRows] = useState<number[]>([]);
   
@@ -64,6 +64,8 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
       setLoading(true);
       try {
         let endpoint = apiEndpoint;
+        console.log(`[${title}] 데이터 로딩 시작 - 원본 엔드포인트: ${apiEndpoint}`);
+
         if (endpoint.includes('car-models')) {
           endpoint = '/admin/car-model/search';
         } else if (endpoint.includes('companies')) {
@@ -74,11 +76,18 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
           endpoint = '/admin/supply-type/search';
         } else if (endpoint.includes('purposes')) {
           endpoint = '/admin/operation-purpose/search';
-        } else if (endpoint.includes('supply-customer-class')) {
+        } else if (endpoint.includes('supply-customer')) {
           endpoint = '/admin/supply-customer/search';
         }
+
+        console.log(`[${title}] 최종 API 엔드포인트: ${endpoint}`);
         const response = await axiosInstance.get(endpoint);
+        console.log(`[${title}] API 응답 상태: ${response.status}`);
+        console.log(`[${title}] API 응답 데이터:`, response.data);
+
         let rawData = response.data.content || response.data;
+        console.log(`[${title}] 추출된 데이터 개수: ${Array.isArray(rawData) ? rawData.length : 'N/A'}`);
+        console.log(`[${title}] 추출된 데이터 샘플:`, Array.isArray(rawData) && rawData.length > 0 ? rawData[0] : '데이터 없음');
         
         // 데이터 변환
         if (endpoint.includes('car-models')) {
@@ -148,8 +157,15 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
             note: item.remark || ''
           }));
         }
+
+        console.log(`[${title}] 데이터 변환 완료. 최종 데이터 개수: ${Array.isArray(rawData) ? rawData.length : 'N/A'}`);
+        console.log(`[${title}] 변환된 데이터 샘플:`, Array.isArray(rawData) && rawData.length > 0 ? rawData[0] : '데이터 없음');
+
+        setData(rawData);
+        console.log(`[${title}] 데이터 상태에 설정됨. 현재 데이터 개수: ${Array.isArray(rawData) ? rawData.length : 'N/A'}`);
+
       } catch (error) {
-        console.error("Failed to fetch data:", error);
+        console.error(`[${title}] 데이터 로딩 중 오류 발생:`, error);
       } finally {
         setLoading(false);
       }
@@ -434,7 +450,7 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
         </div>
 
         {/* 엑셀 버튼 영역 */}
-        <div className="flex gap-2">
+        {/* <div className="flex gap-2">
           <button 
             onClick={() => setIsUploadModalOpen(true)} 
             className="flex items-center px-4 py-2 bg-green-600 text-white rounded-md text-sm font-bold hover:bg-green-700 transition-colors shadow-sm"
@@ -447,7 +463,7 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
           >
             <Download size={16} className="mr-2" /> Excel 다운로드
           </button>
-        </div>
+        </div> */}
       </div>
       
       {/* 3. 테이블 영역 */}
@@ -642,7 +658,7 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
         </div>
       </div>
 
-      {/* 엑셀 업로드 모달 연결 */}
+      {/* 엑셀 업로드 모달 연결
       <ExcelUploadModal 
         isOpen={isUploadModalOpen}
         onClose={() => setIsUploadModalOpen(false)}
@@ -652,7 +668,7 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
             alert("업로드 로직 구현 필요");
             setIsUploadModalOpen(false);
         }}
-      />
+      /> */}
     </div>
   );
 };
