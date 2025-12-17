@@ -240,12 +240,14 @@ const VehicleBasicRegisterPage: React.FC = () => {
         // Company 등록
         const payload = {
           companyName: formData.companyName,
-          oneWayDistance: formData.distance,
-          address: `${formData.region} ${formData.addressDetail}`,
+          distance: formData.distance,
+          region: formData.region,
+          addressDetail: formData.addressDetail,
           supplyTypeId: formData.supplyTypeId,
           customerId: formData.customerId,
           remark: formData.remark,
         } as any;
+        console.log('Company payload:', payload);
         await registerCompany(payload as unknown as IntegratedFormData);
         await fetchOptions();
       } else if (currentPage === '차종과 연비 기본정보 등록') {
@@ -385,7 +387,7 @@ const VehicleBasicRegisterPage: React.FC = () => {
         return (
           <>
             <SelectField name="categoryLarge" label="차종 대분류" options={options.CAT_LARGE_OPTIONS} isRequired value={formData.categoryLarge} />
-            <SelectField name="categorySmall" label="차종 소분류" options={options.CAR_CATEGORY_MAP?.[formData.categoryLarge] ?? options.CAT_SMALL_OPTIONS} isRequired value={formData.categorySmall} />
+            <SelectField name="categorySmall" idName="categorySmallId" label="차종 소분류" options={options.CAR_CATEGORY_MAP?.[formData.categoryLarge] ?? options.CAT_SMALL_OPTIONS} isRequired value={formData.categorySmall} />
             <SelectField name="fuelType" label="연료종류" options={options.FUEL_OPTIONS} isRequired value={formData.fuelType} />
             <div className="flex flex-col gap-1"><RequiredLabel isRequired>연비(km/L)</RequiredLabel><input type="number" name="fuelEfficiency" value={formData.fuelEfficiency} onChange={handleChange} className={twInput} /></div>
           </>

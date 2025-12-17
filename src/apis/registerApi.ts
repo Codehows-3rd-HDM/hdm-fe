@@ -161,7 +161,7 @@ export const registerVehicle = async (data: IntegratedFormData) => {
   try {
     const payload ={
       carNumber: data.carNumber,
-      carName: data.carModel, 
+      carName: data.carModel,
       childCategoryId: data.categorySmallId,
       fuelType: data.fuelType,
       purposeName: data.purposeName,
