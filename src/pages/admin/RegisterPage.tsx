@@ -72,7 +72,7 @@ const RegisterPage: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center h-full p-10 bg-white max-w-[500px] mx-auto font-sans">
+    <div className="flex flex-col items-center justify-center p-10 bg-white max-w-[500px] mx-auto font-sans">
       <h2 className="text-2xl font-bold mb-10 text-gray-800">계정 등록</h2>
 
       {/* 아이디 입력칸 */}

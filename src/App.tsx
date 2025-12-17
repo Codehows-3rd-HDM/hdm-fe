@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { BrowserRouter, Routes, Route, Outlet, useLocation, Navigate } from 'react-router-dom';
 import Sidebar from './components/Sidebar';
 import LoginPage from './pages/LoginPage';
@@ -25,6 +25,7 @@ import SupplyTypeEmissionPage from './pages/Emissions inquiry/SupplyTypeEmission
 import SupplyCustomerEmissionPage from './pages/Emissions inquiry/SupplyCustomerEmissionPage';
 import MainPage from './pages/MainPage';
 import ExcelManagementPage from './pages/admin/ExcelManagementPage';
+import EmissionFactorPage from './pages/admin/EmissionFactorPage';
 
 // [임시] 페이지가 없을 때 보여줄 플레이스홀더 컴포넌트
 const PagePlaceholder = ({ title }: { title: string }) => {
@@ -47,27 +48,40 @@ const MainLayout = () => {
   const location = useLocation();
   const isDashboard = location.pathname === '/dashboard';
 
+  // 🔥 사이드바 토글 상태
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+  const toggleSidebar = () => {
+    setIsSidebarOpen(prev => !prev);
+  };
+
   return (
     <div className="flex min-h-screen overflow-hidden">
-      
-      {/* 사이드바: 대시보드일 때 숨김 */}
+
+      {/* 대시보드 아닐 때만 사이드바 표시 */}
       {!isDashboard && (
-        <div className="sidebar print:hidden">
-            <Sidebar />
+        <div
+          className={`print:hidden transition-all duration-300`}
+        >
+          <Sidebar isOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
         </div>
       )}
-      
-      {/* 메인 영역: 대시보드일 때는 margin-left 제거하여 전체 화면 사용 */}
+
+      {/* 메인 콘텐츠 영역: 사이드바 너비만큼 margin-left 조정 */}
       <main 
-        className={`flex-1 h-full overflow-y-auto bg-hd-gray relative main-content w-full 
-            ${!isDashboard ? 'ml-[260px]' : ''} /* 대시보드 아닐 때만 여백 */
-        `}
+        className={`flex-1 transition-all duration-300 ease-in-out ${
+          isDashboard ? 'ml-[0px]':
+          isSidebarOpen ? 'ml-[260px]' : 'ml-[80px]'
+        }`}
       >
-        <Outlet />
+        <div>
+           <Outlet />
+        </div>
       </main>
     </div>
   );
 };
+
 
 const App: React.FC = () => {
   return (
@@ -128,7 +142,7 @@ const App: React.FC = () => {
               <Route path='excel/manage' element={<ExcelManagementPage />} />
 
               {/* 4-3. 배출 관련 설정 */}
-              <Route path="emission-factor" element={<PagePlaceholder title="탄소 배출계수 관리 (HDM-027)" />} />
+              <Route path="emission-factor" element={<EmissionFactorPage/>} />
               <Route path="calc-method" element={<PagePlaceholder title="탄소 배출량 계산 설정 (HDM-028)" />} />
               <Route path="target-view" element={<PagePlaceholder title="탄소 배출 목표 관리 (HDM-029)" />} />
               

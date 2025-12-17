@@ -23,7 +23,7 @@ const getFuelData = (): AnalysisData[] => [
 // 3. 업체별 데이터 (랜덤 생성)
 const getVendorData = (): AnalysisData[] => Array.from({ length: 10 }, (_, i) => ({
     id: i + 1,
-    name: `협력업체 ${String.fromCharCode(65 + i)}`,
+    name: `협력사 ${String.fromCharCode(65 + i)}`,
     totalEmission: Math.floor(Math.random() * 10000) + 1000,
     ratio: 10,
     distance: Math.floor(Math.random() * 5000) + 500,

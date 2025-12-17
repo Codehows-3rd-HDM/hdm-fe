@@ -5,7 +5,7 @@ import {
 } from 'lucide-react'; 
 import ExcelUploadModal from '../common/ExcelUploadModal';
 //API 모듈 임포트
-import { fetchManagementData, deleteManagementItem, updateManagementItem, deleteBatchManagementItems } from '../../apis/vehicle_manageApi';
+import axiosInstance from '../../apis/axiosInstance';
 
 // --- 엑셀 다운로드 함수 (프론트 구현만) ---
 const downloadExcel = (data: any[], filename: string) => {
@@ -33,12 +33,14 @@ interface StandardDataManagementTableProps<T> {
   title: string;
   columns: ColumnDefinition<T>[];
   apiEndpoint: string; // [변경] initialData 대신 endpoint만 받음
+  disableDelete?: boolean; // 차종 모델 페이지에서 삭제 비활성화
 }
 
 const StandardDataManagementTable = <T extends { id: number, [key: string]: any }>({ 
   title, 
   columns, 
-  apiEndpoint 
+  apiEndpoint,
+  disableDelete = false 
 }: StandardDataManagementTableProps<T>) => {
   
   // --- 상태 관리 ---
@@ -61,8 +63,49 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
     const loadData = async () => {
       setLoading(true);
       try {
-        const result = await fetchManagementData(apiEndpoint);
-        setData(result as T[]);
+        let endpoint = apiEndpoint;
+        if (endpoint.includes('car-models')) {
+          endpoint = '/admin/car-model/search';
+        } else if (endpoint.includes('companies')) {
+          endpoint = '/admin/company/search';
+        }
+        const response = await axiosInstance.get(endpoint);
+        let rawData = response.data.content || response.data;
+        
+        // 데이터 변환
+        if (endpoint.includes('car-models')) {
+          rawData = rawData.map((item: any) => ({
+            ...item,
+            categoryLarge: item.parentCategoryName || '',
+            categorySmall: item.carCategoryName || '',
+            fuelEfficiency: item.customEfficiency || '',
+            // ID 값 유지
+            carCategoryId: item.carCategoryId
+          }));
+        } else if (endpoint.includes('companies')) {
+          rawData = rawData.map((item: any) => {
+            // 주소 파싱: "서울특별시 강남구" -> region: "서울특별시", addressDetail: "강남구"
+            const addressParts = (item.address || '').split(' ');
+            const region = addressParts[0] || '';
+            const addressDetail = addressParts.slice(1).join(' ') || '';
+            
+            return {
+              ...item,
+              companyName: item.companyName || '',
+              supplyType: item.supplyTypeName || '',
+              supplyCustomer: item.supplyCustomerName || '',
+              oneWayDistance: item.oneWayDistance || 0,
+              region: region,
+              addressDetail: addressDetail,
+              remark: item.remark || '',
+              // ID 값들 유지
+              supplyTypeId: item.supplyTypeId,
+              supplyCustomerId: item.supplyCustomerId
+            };
+          });
+        }
+        
+        setData(rawData);
       } catch (error) {
         console.error("Failed to fetch data:", error);
       } finally {
@@ -143,20 +186,46 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
       if (!rowData) return;
 
       // API 호출
-      const success = await updateManagementItem(apiEndpoint, rowId, rowData);
-      if (success) {
-          alert("저장되었습니다.");
-          toggleEditMode(rowId); 
+      let endpoint = apiEndpoint;
+      let payload: any = rowData;
+      
+      if (endpoint.includes('car-models')) {
+        endpoint = `/admin/car-model/${rowId}`;
+        // 프론트 데이터 -> 백엔드 데이터 변환
+        payload = {
+          carCategoryId: rowData.carCategoryId || rowData.id, // 기존 ID 유지
+          fuelType: rowData.fuelType,
+          customEfficiency: parseFloat(rowData.fuelEfficiency)
+        };
+      } else if (endpoint.includes('companies')) {
+        endpoint = `/admin/company/${rowId}`;
+        // 프론트 데이터 -> 백엔드 데이터 변환
+        payload = {
+          companyName: rowData.companyName,
+          supplyTypeId: rowData.supplyTypeId, // 기존 ID 유지
+          supplyCustomerId: rowData.supplyCustomerId, // 기존 ID 유지
+          oneWayDistance: rowData.oneWayDistance,
+          address: `${rowData.region} ${rowData.addressDetail}`.trim(),
+          remark: rowData.remark
+        };
       }
+      
+      await axiosInstance.put(endpoint, payload);
+      alert("저장되었습니다.");
+      toggleEditMode(rowId);
   };
 
   // [API] 개별 삭제
   const handleSingleDelete = async (rowId: number) => {
       if (window.confirm(`ID ${rowId} 행을 정말 삭제하시겠습니까?`)) {
-          const success = await deleteManagementItem(apiEndpoint, rowId);
-          if (success) {
-              setData(prev => prev.filter(row => row.id !== rowId));
+          let endpoint = apiEndpoint;
+          if (endpoint.includes('car-models')) {
+            endpoint = `/admin/car-model/${rowId}`;
+          } else if (endpoint.includes('companies')) {
+            endpoint = `/admin/company/${rowId}`;
           }
+          await axiosInstance.delete(endpoint);
+          setData(prev => prev.filter(row => row.id !== rowId));
       }
   };
 
@@ -185,10 +254,22 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
         return;
     }
     if (window.confirm(`${selectedRows.length}개의 행을 정말 삭제하시겠습니까?`)) {
-        const success = await deleteBatchManagementItems(apiEndpoint, selectedRows);
-        if (success) {
-            setData(prev => prev.filter(row => !selectedRows.includes(row.id)));
-            setSelectedRows([]);
+        try {
+          for (const rowId of selectedRows) {
+            let endpoint = apiEndpoint;
+            if (endpoint.includes('car-models')) {
+              endpoint = `/admin/car-model/${rowId}`;
+            } else if (endpoint.includes('companies')) {
+              endpoint = `/admin/company/${rowId}`;
+            }
+            await axiosInstance.delete(endpoint);
+          }
+          setData(prev => prev.filter(row => !selectedRows.includes(row.id)));
+          setSelectedRows([]);
+          alert("일괄 삭제가 완료되었습니다.");
+        } catch (error) {
+          console.error("일괄 삭제 실패:", error);
+          alert("일괄 삭제 중 오류가 발생했습니다.");
         }
     }
   };
@@ -420,7 +501,7 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
                                             <Edit2 size={16} />
                                         </button>
                                     )}
-                                    {!isRowEditing && (
+                                    {!isRowEditing && !disableDelete && (
                                         <button 
                                             onClick={() => handleSingleDelete(rowId)} 
                                             className="p-1.5 bg-red-100 text-red-700 rounded hover:bg-red-200" title="삭제"
@@ -483,9 +564,11 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
                     <button onClick={handleBatchSave} className="flex items-center px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 shadow-sm font-bold text-sm">
                         <Save size={16} className="mr-2" /> 전체 저장
                     </button>
-                    <button onClick={handleBatchDelete} className="flex items-center px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 shadow-sm font-bold text-sm">
-                        <Trash2 size={16} className="mr-2" /> 선택 삭제 ({selectedRows.length})
-                    </button>
+                    {!disableDelete && (
+                        <button onClick={handleBatchDelete} className="flex items-center px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 shadow-sm font-bold text-sm">
+                            <Trash2 size={16} className="mr-2" /> 선택 삭제 ({selectedRows.length})
+                        </button>
+                    )}
                     <button onClick={handleCancelBatchEdit} className="flex items-center px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 shadow-sm font-bold text-sm">
                         <X size={16} className="mr-2" /> 취소
                     </button>
