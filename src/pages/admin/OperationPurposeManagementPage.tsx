@@ -9,6 +9,7 @@ const PurposeManagementPage: React.FC = () => {
       columns={PURPOSE_COLUMNS}
       // initialData={MOCK_PURPOSE_DATA}
       apiEndpoint="/api/admin/purposes"
+      disableDelete={true}
     />
   );
 };

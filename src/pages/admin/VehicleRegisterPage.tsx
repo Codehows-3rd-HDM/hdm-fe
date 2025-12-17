@@ -104,6 +104,7 @@ const VehicleBasicRegisterPage: React.FC = () => {
       setOptions({
         PURPOSE_OPTIONS: fetchedOptions.PURPOSE_OPTIONS || [],
         COMPANY_OPTIONS: fetchedOptions.COMPANY_OPTIONS || [], 
+        COMPANY_LIST: fetchedOptions.COMPANY_LIST || [],
         CAT_LARGE_OPTIONS: fetchedOptions.CAT_LARGE_OPTIONS || [],
         CAT_SMALL_OPTIONS: fetchedOptions.CAT_SMALL_OPTIONS || [],
         FUEL_OPTIONS: fetchedOptions.FUEL_OPTIONS || [],

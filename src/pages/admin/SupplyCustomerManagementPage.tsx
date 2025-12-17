@@ -8,7 +8,8 @@ const SupplyCustomerManagementPage: React.FC = () => {
       title="공급 고객 기준정보 관리"
       columns={PRODUCT_COLUMNS}
       // initialData={MOCK_PRODUCT_DATA}
-      apiEndpoint="/api/admin/product-class"
+      apiEndpoint="/api/admin/supply-customer"
+      disableDelete={true}
     />
   );
 };

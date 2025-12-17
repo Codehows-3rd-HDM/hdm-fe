@@ -68,6 +68,14 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
           endpoint = '/admin/car-model/search';
         } else if (endpoint.includes('companies')) {
           endpoint = '/admin/company/search';
+        } else if (endpoint.includes('vehicles')) {
+          endpoint = '/admin/vehicle/search';
+        } else if (endpoint.includes('supply-type')) {
+          endpoint = '/admin/supply-type/search';
+        } else if (endpoint.includes('purposes')) {
+          endpoint = '/admin/operation-purpose/search';
+        } else if (endpoint.includes('supply-customer-class')) {
+          endpoint = '/admin/supply-customer/search';
         }
         const response = await axiosInstance.get(endpoint);
         let rawData = response.data.content || response.data;
@@ -103,9 +111,43 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
               supplyCustomerId: item.supplyCustomerId
             };
           });
+        } else if (endpoint.includes('vehicles')) {
+          rawData = rawData.map((item: any) => ({
+            ...item,
+            carNumber: item.carNumber || '',
+            purpose: item.operationPurposeName || '',
+            vendorName: item.companyName || '',
+            employeeId: item.driverMemberId || '',
+            distance: item.operationDistance || '',
+            categoryLarge: item.parentCategoryName || '',
+            categorySmall: item.carCategoryName || '',
+            carModel: item.carModelName || '',
+            fuelType: item.fuelType || '',
+            note: item.remark || '',
+            // ID 값들 유지
+            purposeId: item.operationPurposeId,
+            companyId: item.companyId,
+            carCategoryId: item.carCategoryId,
+            carModelId: item.carModelId
+          }));
+        } else if (endpoint.includes('supply-type')) {
+          rawData = rawData.map((item: any) => ({
+            ...item,
+            supplyType: item.supplyTypeName || ''
+          }));
+        } else if (endpoint.includes('operation-purpose')) {
+          rawData = rawData.map((item: any) => ({
+            ...item,
+            purpose: item.purposeName || '',
+            scope: item.defaultScope || ''
+          }));
+        } else if (endpoint.includes('supply-customer')) {
+          rawData = rawData.map((item: any) => ({
+            ...item,
+            supplyCustomer: item.customerName || '',
+            note: item.remark || ''
+          }));
         }
-        
-        setData(rawData);
       } catch (error) {
         console.error("Failed to fetch data:", error);
       } finally {
@@ -208,6 +250,10 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
           address: `${rowData.region} ${rowData.addressDetail}`.trim(),
           remark: rowData.remark
         };
+      } else {
+        // 다른 엔티티들은 수정 API가 없음
+        alert("이 데이터는 수정할 수 없습니다.");
+        return;
       }
       
       await axiosInstance.put(endpoint, payload);
@@ -223,6 +269,10 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
             endpoint = `/admin/car-model/${rowId}`;
           } else if (endpoint.includes('companies')) {
             endpoint = `/admin/company/${rowId}`;
+          } else {
+            // 다른 엔티티들은 삭제 API가 없음
+            alert("이 데이터는 삭제할 수 없습니다.");
+            return;
           }
           await axiosInstance.delete(endpoint);
           setData(prev => prev.filter(row => row.id !== rowId));
@@ -253,6 +303,14 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
         alert("삭제할 행을 선택해주세요.");
         return;
     }
+    
+    // 삭제 가능한 엔티티인지 확인
+    const canDelete = apiEndpoint.includes('car-models') || apiEndpoint.includes('companies');
+    if (!canDelete) {
+        alert("이 데이터는 삭제할 수 없습니다.");
+        return;
+    }
+    
     if (window.confirm(`${selectedRows.length}개의 행을 정말 삭제하시겠습니까?`)) {
         try {
           for (const rowId of selectedRows) {
