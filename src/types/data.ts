@@ -101,7 +101,7 @@ export const VEHICLE_COLUMNS: ColumnDefinition<VehicleData>[] = [
   { id: 'defaultScope', header: 'Scope', searchable: false, sortable: true, editable: false, width: '8%' }, 
   { id: 'operationDistance', header: '편도거리(km)', searchable: false, sortable: true, editable: true, width: '8%', inputType: 'number' },
   { id: 'parentCategoryName', header: '대분류', searchable: false, sortable: true, editable: true, width: '8%', inputType: 'dynamic-select' },
-  { id: 'carCategoryName', header: '소분류', searchable: false, sortable: true, editable: false, width: '8%' },
+  { id: 'carCategoryName', header: '소분류', searchable: false, sortable: true, editable: true, width: '8%', inputType: 'dynamic-select' },
   { id: 'fuelType', header: '연료', searchable: false, sortable: true, editable: true, width: '8%', inputType: 'dynamic-select' },
   { id: 'remark', header: '비고', searchable: false, sortable: false, editable: true, width: '10%', inputType: 'text' },
   { id: 'actions', header: '액션', searchable: false, sortable: false, editable: false, width: '10%' },

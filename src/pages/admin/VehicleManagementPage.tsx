@@ -8,11 +8,13 @@ const VehicleManagementPage: React.FC = () => {
     operationPurposes: { id: number; name: string }[];
     companies: { id: number; name: string; oneWayDistance?: number }[];
     carCategories: { id: number; name: string }[];
+    carCategoryMap: Record<string, { id: number; name: string }[]>;
     fuelTypes: { id: number; name: string }[];
   }>({
     operationPurposes: [],
     companies: [],
     carCategories: [],
+    carCategoryMap: {},
     fuelTypes: []
   });
 
@@ -31,6 +33,7 @@ const VehicleManagementPage: React.FC = () => {
           operationPurposes: fetchedOptions.PURPOSE_OPTIONS || [],
           companies: fetchedOptions.COMPANY_LIST || fetchedOptions.COMPANY_OPTIONS || [],
           carCategories: fetchedOptions.CAT_LARGE_OPTIONS || [],
+          carCategoryMap: fetchedOptions.CAR_CATEGORY_MAP || {},
           fuelTypes: fetchedOptions.FUEL_OPTIONS || []
         });
         
@@ -38,6 +41,7 @@ const VehicleManagementPage: React.FC = () => {
           operationPurposes: fetchedOptions.PURPOSE_OPTIONS || [],
           companies: fetchedOptions.COMPANY_LIST || fetchedOptions.COMPANY_OPTIONS || [],
           carCategories: fetchedOptions.CAT_LARGE_OPTIONS || [],
+          carCategoryMap: fetchedOptions.CAR_CATEGORY_MAP || {},
           fuelTypes: fetchedOptions.FUEL_OPTIONS || []
         });
       } catch (error) {

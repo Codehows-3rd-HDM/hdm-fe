@@ -38,8 +38,9 @@ interface StandardDataManagementTableProps<T> {
     supplyTypes?: { id: number; name: string }[];
     supplyCustomers?: { id: number; name: string }[];
     operationPurposes?: { id: number; name: string }[];
-    companies?: { id: number; name: string }[];
+    companies?: { id: number; name: string; oneWayDistance?: number }[];
     carCategories?: { id: number; name: string }[];
+    carCategoryMap?: Record<string, { id: number; name: string }[]>;
     fuelTypes?: { id: number; name: string }[];
   };
 }
@@ -66,6 +67,9 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
   
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 15;
+
+  // 대분류 선택 상태 추적 (차량 관리에서 소분류 필터링용)
+  const [selectedParentCategories, setSelectedParentCategories] = useState<Record<number, string>>({});
 
   // --- [API] 데이터 로딩 (Mount 시점) ---
   useEffect(() => {
@@ -110,7 +114,9 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
             carCategoryId: item.carCategoryId
           }));
         } else if (endpoint.includes('companies')) {
+          console.log(`[${title}] 협력사 데이터 변환 시작 - 데이터 개수: ${rawData.length}`);
           rawData = rawData.map((item: any) => {
+            console.log(`[${title}] 주소 처리 전 데이터:`, item);
             // 주소 처리: 이미 region과 addressDetail이 분리되어 있으면 그대로 사용, 아니면 파싱
             let region = item.region || '';
             let addressDetail = item.addressDetail || '';
@@ -138,6 +144,7 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
               supplyCustomerId: item.supplyCustomerId
             };
           });
+          console.log(`[${title}] 협력사 데이터 변환 완료`);
         } else if (endpoint.includes('vehicles')) {
           rawData = rawData.map((item: any) => ({
             ...item,
@@ -377,6 +384,18 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
     setData(prev => prev.map(row => 
         row.id === rowId ? { ...row, [key]: value } : row
     ));
+    
+    // 대분류 선택 시 소분류 초기화 및 선택 상태 업데이트
+    if (String(key) === 'parentCategoryName' && apiEndpoint.includes('vehicles')) {
+      setSelectedParentCategories(prev => ({
+        ...prev,
+        [rowId]: value
+      }));
+      // 소분류도 초기화
+      setData(prev => prev.map(row => 
+        row.id === rowId ? { ...row, [key]: value, carCategoryName: '' } : row
+      ));
+    }
   };
 
   // --- 입력 필드 렌더링 ---
@@ -449,6 +468,27 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
               );
           }
 
+          // 소분류 필드의 경우 대분류에 따라 옵션 필터링 (차량 관리에서만)
+          if (String(fieldKey) === 'carCategoryName' && apiEndpoint.includes('vehicles')) {
+              const selectedParentCategory = selectedParentCategories[rowId] || row.parentCategoryName || '';
+              const filteredOptions = selectedParentCategory && options.carCategoryMap ? 
+                options.carCategoryMap[selectedParentCategory] || [] : [];
+              
+              return (
+                  <select
+                      value={String(value)}
+                      onChange={(e) => {
+                          handleDataChange(rowId, fieldKey, e.target.value);
+                      }}
+                      className={inputClass}
+                      disabled={!selectedParentCategory}
+                  >
+                      <option value="">{selectedParentCategory ? '선택' : '대분류를 먼저 선택하세요'}</option>
+                      {filteredOptions.map(opt => <option key={opt.id} value={opt.name}>{opt.name}</option>)}
+                  </select>
+              );
+          }
+
           return (
               <select
                   value={String(value)}
@@ -462,7 +502,7 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
                           handleDataChange(rowId, 'operationPurposeId' as keyof T, e.target.value);
                       } else if (String(fieldKey) === 'companyName') {
                           handleDataChange(rowId, 'companyId' as keyof T, e.target.value);
-                      } else if (String(fieldKey) === 'categoryLarge') {
+                      } else if (String(fieldKey) === 'parentCategoryName') {
                           handleDataChange(rowId, 'parentCategoryId' as keyof T, e.target.value);
                       } else if (String(fieldKey) === 'fuelType') {
                           handleDataChange(rowId, 'fuelTypeId' as keyof T, e.target.value);
@@ -472,7 +512,7 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
                   className={inputClass}
               >
                   <option value="">선택</option>
-                  {dynamicOptions.map(opt => <option key={opt.id} value={opt.id}>{opt.name}</option>)}
+                  {dynamicOptions.map(opt => <option key={opt.id} value={opt.name}>{opt.name}</option>)}
               </select>
           );
       }
