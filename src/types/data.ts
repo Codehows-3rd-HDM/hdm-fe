@@ -6,32 +6,25 @@ export interface ColumnDefinition<T> {
   sortable: boolean;
   editable: boolean;
   width?: string;
-  inputType?: 'text' | 'number' | 'select' | 'search-select'; 
-  selectOptions?: string[]; 
+  inputType?: 'text' | 'number' | 'select' | 'search-select' | 'dynamic-select';
+  selectOptions?: string[];
 }
 
 // ----------------------------------------------------------------------
 // [공통 옵션 상수]
 // ----------------------------------------------------------------------
 export const REGION_OPTIONS = [
-  '서울특별시', '부산광역시', '대구광역시', '인천광역시', '광주광역시', '대전광역시', '울산광역시', '세종특별자치시',
-  '경기도', '강원특별자치도', '충청북도', '충청남도', '전북특별자치도', '전라남도', '경상북도', '경상남도', '제주특별자치도'
+       "강원특별자치도", "경기도", "경상남도", "경상북도", "광주광역시", "대구광역시",
+                "대전광역시", "부산광역시", "서울특별시", "세종특별자치시", "울산광역시",
+                "인천광역시", "전라남도", "전북특별자치도", "제주특별자치도", "충청남도", "충청북도", "해외"
 ];
 
-const PURPOSE_OPTIONS = ['납품', '출퇴근', '고객', '기타'];
-const VENDOR_OPTIONS = ['Volvo KOREA', 'Volvo COE', 'Volvo CE', '현대제철', '삼성전자', 'LG화학'];
 const CAT_LARGE_OPTIONS = ['승용차', '상용트럭'];
 const CAT_SMALL_OPTIONS = ['대형', '중형', '소형', '경차'];
 const FUEL_OPTIONS = ['가솔린', '디젤', 'LPG','CNG', '전기', '수소','중유','등유','도시가스'];
-const PRODUCT_CLASS_OPTIONS = ['1000', '2000', '3000', 'clark', '기타']; 
 const SCOPE_OPTIONS = ['Scope1', 'Scope3', '기타'];
-const PROCESS_OPTIONS = ['가공', '단조', '주물', '소재', '조립', '구매', '열처리', '표면처리', '구매' , '폐기', 'IT','FA', '기타'];
 
-// ----------------------------------------------------------------------
-// [데이터 타입 인터페이스]
-// ----------------------------------------------------------------------
-
-// 1. 출입 차량 기준정보 데이터 타입
+// 1. 출입 차량 정보 데이터 타입
 export interface VehicleData {
   id: number;
   carNumber: string;      // 차량번호
@@ -100,25 +93,25 @@ export interface ProductData {
 
 // 1. 출입 차량 컬럼
 export const VEHICLE_COLUMNS: ColumnDefinition<VehicleData>[] = [
-  { id: 'carNumber', header: '차량번호', searchable: true, sortable: true, editable: false, width: '10%', inputType: 'text' },
-  { id: 'operationPurposeName', header: '운행목적', searchable: true, sortable: true, editable: false, width: '8%', inputType: 'select', selectOptions: PURPOSE_OPTIONS },
+  { id: 'carNumber', header: '차량번호', searchable: true, sortable: true, editable: true, width: '10%', inputType: 'text' },
+  { id: 'operationPurposeName', header: '운행목적', searchable: true, sortable: true, editable: true, width: '8%', inputType: 'dynamic-select' },
   { id: 'defaultScope', header: 'Scope', searchable: false, sortable: true, editable: false, width: '8%' }, 
-  { id: 'companyName', header: '협력사명', searchable: true, sortable: true, editable: false, width: '10%', inputType: 'search-select', selectOptions: VENDOR_OPTIONS },
-  { id: 'driverMemberId', header: '사원번호', searchable: true, sortable: true, editable: false, width: '8%', inputType: 'number' },
-  { id: 'operationDistance', header: '편도거리(km)', searchable: false, sortable: true, editable: false, width: '8%', inputType: 'number' },
-  { id: 'parentCategoryName', header: '대분류', searchable: false, sortable: true, editable: false, width: '8%', inputType: 'select', selectOptions: CAT_LARGE_OPTIONS },
-  { id: 'carCategoryName', header: '소분류', searchable: false, sortable: true, editable: false, width: '8%', inputType: 'select', selectOptions: CAT_SMALL_OPTIONS },
-  { id: 'carModelName', header: '모델명', searchable: true, sortable: true, editable: false, width: '10%', inputType: 'text' },
-  { id: 'fuelType', header: '연료', searchable: false, sortable: true, editable: false, width: '8%', inputType: 'select', selectOptions: FUEL_OPTIONS },
-  { id: 'remark', header: '비고', searchable: false, sortable: false, editable: false, width: '10%', inputType: 'text' },
+  { id: 'companyName', header: '협력사명', searchable: true, sortable: true, editable: true, width: '10%', inputType: 'dynamic-select' },
+  { id: 'driverMemberId', header: '사원번호', searchable: true, sortable: true, editable: true, width: '8%', inputType: 'number' },
+  { id: 'operationDistance', header: '편도거리(km)', searchable: false, sortable: true, editable: true, width: '8%', inputType: 'number' },
+  { id: 'parentCategoryName', header: '대분류', searchable: false, sortable: true, editable: true, width: '8%', inputType: 'dynamic-select' },
+  { id: 'carCategoryName', header: '소분류', searchable: false, sortable: true, editable: false, width: '8%' },
+  { id: 'carModelName', header: '모델명', searchable: true, sortable: true, editable: true, width: '10%', inputType: 'text' },
+  { id: 'fuelType', header: '연료', searchable: false, sortable: true, editable: true, width: '8%', inputType: 'dynamic-select' },
+  { id: 'remark', header: '비고', searchable: false, sortable: false, editable: true, width: '10%', inputType: 'text' },
   { id: 'actions', header: '액션', searchable: false, sortable: false, editable: false, width: '10%' },
 ];
 
 // 2. 협력사 및 주소지 컬럼
 export const COMPANY_COLUMNS: ColumnDefinition<CompanyData>[] = [
   { id: 'companyName', header: '협력사명', searchable: true, sortable: true, editable: true, width: '15%', inputType: 'text' },
-  { id: 'supplyTypeName', header: '공급 유형', searchable: true, sortable: true, editable: true, width: '12%', inputType: 'select', selectOptions: PROCESS_OPTIONS },
-  { id: 'supplyCustomerName', header: '공급 고객', searchable: true, sortable: true, editable: true, width: '12%', inputType: 'select', selectOptions: PRODUCT_CLASS_OPTIONS },
+  { id: 'supplyTypeName', header: '공급 유형', searchable: true, sortable: true, editable: true, width: '12%', inputType: 'dynamic-select' },
+  { id: 'supplyCustomerName', header: '공급 고객', searchable: true, sortable: true, editable: true, width: '12%', inputType: 'dynamic-select' },
   { id: 'oneWayDistance', header: '편도거리(km)', searchable: false, sortable: true, editable: true, width: '10%', inputType: 'number' },
   { id: 'region', header: '지역 (시/도)', searchable: true, sortable: true, editable: true, width: '12%', inputType: 'select', selectOptions: REGION_OPTIONS },
   { id: 'addressDetail', header: '상세주소', searchable: true, sortable: false, editable: true, width: '25%', inputType: 'text' },

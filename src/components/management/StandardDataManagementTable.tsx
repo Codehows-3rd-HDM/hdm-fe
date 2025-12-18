@@ -34,13 +34,22 @@ interface StandardDataManagementTableProps<T> {
   columns: ColumnDefinition<T>[];
   apiEndpoint: string; // [변경] initialData 대신 endpoint만 받음
   disableDelete?: boolean; // 차종 모델 페이지에서 삭제 비활성화
+  options?: {
+    supplyTypes?: { id: number; name: string }[];
+    supplyCustomers?: { id: number; name: string }[];
+    operationPurposes?: { id: number; name: string }[];
+    companies?: { id: number; name: string }[];
+    carCategories?: { id: number; name: string }[];
+    fuelTypes?: { id: number; name: string }[];
+  };
 }
 
 const StandardDataManagementTable = <T extends { id: number, [key: string]: any }>({ 
   title, 
   columns, 
   apiEndpoint,
-  disableDelete = false 
+  disableDelete = false,
+  options = {}
 }: StandardDataManagementTableProps<T>) => {
   
   // --- 상태 관리 ---
@@ -93,24 +102,33 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
         if (endpoint.includes('car-models')) {
           rawData = rawData.map((item: any) => ({
             ...item,
-            categoryLarge: item.parentCategoryName || '',
-            categorySmall: item.carCategoryName || '',
-            fuelEfficiency: item.customEfficiency || '',
+            parentCategoryName: item.parentCategoryName || '',
+            carCategoryName: item.carCategoryName || '',
+            customEfficiency: item.customEfficiency || '',
+            fuelType: item.fuelType || '',
             // ID 값 유지
             carCategoryId: item.carCategoryId
           }));
         } else if (endpoint.includes('companies')) {
           rawData = rawData.map((item: any) => {
-            // 주소 파싱: "서울특별시 강남구" -> region: "서울특별시", addressDetail: "강남구"
-            const addressParts = (item.address || '').split(' ');
-            const region = addressParts[0] || '';
-            const addressDetail = addressParts.slice(1).join(' ') || '';
+            // 주소 처리: 이미 region과 addressDetail이 분리되어 있으면 그대로 사용, 아니면 파싱
+            let region = item.region || '';
+            let addressDetail = item.addressDetail || '';
             
+            if (!region && !addressDetail && item.address) {
+              // 주소가 통합되어 있는 경우에만 파싱
+              const addressParts = (item.address || '').split(' ');
+              region = addressParts[0] || '';
+              addressDetail = addressParts.slice(1).join(' ') || '';
+            }
+            
+            console.log(`[${title}] 주소 처리 - 원본: ${item.address || 'N/A'}, region: ${region}, addressDetail: ${addressDetail}`);
+
             return {
               ...item,
               companyName: item.companyName || '',
-              supplyType: item.supplyTypeName || '',
-              supplyCustomer: item.supplyCustomerName || '',
+              supplyTypeName: item.supplyTypeName || '',
+              supplyCustomerName: item.supplyCustomerName || '',
               oneWayDistance: item.oneWayDistance || 0,
               region: region,
               addressDetail: addressDetail,
@@ -378,6 +396,83 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
               >
                   <option value="">선택</option>
                   {col.selectOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+              </select>
+          );
+      }
+
+      // 동적 드롭다운 (서버 데이터 기반)
+      if (col.inputType === 'dynamic-select') {
+          let dynamicOptions: { id: number; name: string; oneWayDistance?: number }[] = [];
+          
+          if (String(fieldKey) === 'supplyTypeName' || String(fieldKey) === 'supplyTypeId') {
+              dynamicOptions = options.supplyTypes || [];
+          } else if (String(fieldKey) === 'supplyCustomerName' || String(fieldKey) === 'supplyCustomerId') {
+              dynamicOptions = options.supplyCustomers || [];
+          } else if (String(fieldKey) === 'operationPurposeName' || String(fieldKey) === 'operationPurposeId') {
+              dynamicOptions = options.operationPurposes || [];
+          } else if (String(fieldKey) === 'companyName' || String(fieldKey) === 'companyId') {
+              dynamicOptions = options.companies || [];
+          } else if (String(fieldKey) === 'parentCategoryName' || String(fieldKey) === 'parentCategoryId') {
+              dynamicOptions = options.carCategories || [];
+          } else if (String(fieldKey) === 'fuelType' || String(fieldKey) === 'fuelTypeId') {
+              dynamicOptions = options.fuelTypes || [];
+          }
+
+          // 협력사명 필드의 경우 검색 가능한 드롭다운으로 렌더링 (차량 관리에서만)
+          if (String(fieldKey) === 'companyName' && apiEndpoint.includes('vehicles')) {
+              const listId = `company-list-${rowId}`;
+              return (
+                  <>
+                      <input
+                          list={listId}
+                          type="text"
+                          value={String(value)}
+                          onChange={(e) => {
+                              const selectedValue = e.target.value;
+                              handleDataChange(rowId, fieldKey, selectedValue);
+                              
+                              // 선택된 협력사 찾기
+                              const selectedCompany = dynamicOptions.find(opt => opt.name === selectedValue);
+                              if (selectedCompany && selectedCompany.oneWayDistance !== undefined) {
+                                  // 거리 자동 반영 (operationDistance 필드)
+                                  handleDataChange(rowId, 'operationDistance' as keyof T, selectedCompany.oneWayDistance);
+                                  console.log(`[${title}] 협력사 선택으로 거리 자동 설정: ${selectedCompany.oneWayDistance}km`);
+                              }
+                          }}
+                          className={inputClass}
+                          placeholder="협력사명 입력/선택"
+                      />
+                      <datalist id={listId}>
+                          {dynamicOptions.map(opt => <option key={opt.id} value={opt.name} />)}
+                      </datalist>
+                  </>
+              );
+          }
+
+          return (
+              <select
+                  value={String(value)}
+                  onChange={(e) => {
+                      // ID 값도 함께 업데이트
+                      if (String(fieldKey) === 'supplyType') {
+                          handleDataChange(rowId, 'supplyTypeId' as keyof T, e.target.value);
+                      } else if (String(fieldKey) === 'supplyCustomer') {
+                          handleDataChange(rowId, 'supplyCustomerId' as keyof T, e.target.value);
+                      } else if (String(fieldKey) === 'purpose') {
+                          handleDataChange(rowId, 'operationPurposeId' as keyof T, e.target.value);
+                      } else if (String(fieldKey) === 'companyName') {
+                          handleDataChange(rowId, 'companyId' as keyof T, e.target.value);
+                      } else if (String(fieldKey) === 'categoryLarge') {
+                          handleDataChange(rowId, 'parentCategoryId' as keyof T, e.target.value);
+                      } else if (String(fieldKey) === 'fuelType') {
+                          handleDataChange(rowId, 'fuelTypeId' as keyof T, e.target.value);
+                      }
+                      handleDataChange(rowId, fieldKey, e.target.value);
+                  }}
+                  className={inputClass}
+              >
+                  <option value="">선택</option>
+                  {dynamicOptions.map(opt => <option key={opt.id} value={opt.id}>{opt.name}</option>)}
               </select>
           );
       }

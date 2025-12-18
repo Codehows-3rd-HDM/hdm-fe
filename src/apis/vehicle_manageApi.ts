@@ -60,45 +60,45 @@ const MOCK_VEHICLE_DATA: VehicleData[] = [
   { 
     id: 1, 
     carNumber: '123가4567', 
-    purpose: '출퇴근', 
-    scope: 'Scope1',
-    vendorName: '현대정밀', 
-    employeeId: '30', 
-    distance: '4.7', 
-    categoryLarge: '승용차',
-    categorySmall: '중형',
-    carModel: '쏘나타',
+    operationPurposeName: '출퇴근', 
+    defaultScope: 'Scope1',
+    companyName: '현대정밀', 
+    driverMemberId: '30', 
+    operationDistance: '4.7', 
+    parentCategoryName: '승용차',
+    carCategoryName: '중형',
+    carModelName: '쏘나타',
     fuelType: '가솔린',
-    note: '기본 등록 데이터' 
+    remark: '기본 등록 데이터' 
   },
   { 
     id: 2, 
     carNumber: '58너1234', 
-    purpose: '납품', 
-    scope: 'Scope3',
-    vendorName: 'Volvo KOREA', 
-    employeeId: '102', 
-    distance: '15.2', 
-    categoryLarge: '상용트럭',
-    categorySmall: '대형',
-    carModel: '볼보트럭',
+    operationPurposeName: '납품', 
+    defaultScope: 'Scope3',
+    companyName: 'Volvo KOREA', 
+    driverMemberId: '102', 
+    operationDistance: '15.2', 
+    parentCategoryName: '상용트럭',
+    carCategoryName: '대형',
+    carModelName: '볼보트럭',
     fuelType: '디젤',
-    note: '장거리 운행' 
+    remark: '장거리 운행' 
   },
   // ... 추가 더미 데이터 생성
   ...Array.from({ length: 20 }, (_, i) => ({
     id: i + 3,
     carNumber: `${100 + i}허${9000 + i}`,
-    purpose: i % 2 === 0 ? '업무' : '방문',
-    scope: 'Scope3',
-    vendorName: i % 3 === 0 ? '삼성전자' : 'LG화학',
-    employeeId: String(200 + i),
-    distance: String(Math.floor(Math.random() * 50) + 5),
-    categoryLarge: '승용차',
-    categorySmall: '소형',
-    carModel: '아반떼',
+    operationPurposeName: i % 2 === 0 ? '업무' : '방문',
+    defaultScope: 'Scope3',
+    companyName: i % 3 === 0 ? '삼성전자' : 'LG화학',
+    driverMemberId: String(200 + i),
+    operationDistance: String(Math.floor(Math.random() * 50) + 5),
+    parentCategoryName: '승용차',
+    carCategoryName: '소형',
+    carModelName: '아반떼',
     fuelType: '가솔린',
-    note: '-'
+    remark: '-'
   }))
 ];
 
@@ -106,8 +106,8 @@ const MOCK_COMPANY_DATA: CompanyData[] = [
   { 
     id: 1, 
     companyName: '현대정밀', 
-    supplyType: '조립', 
-    supplyCustomer: '1000',
+    supplyTypeName: '조립', 
+    supplyCustomerName: '1000',
     oneWayDistance: 12.5,
     region: '경상남도',
     addressDetail: '창원시', 
@@ -116,8 +116,8 @@ const MOCK_COMPANY_DATA: CompanyData[] = [
   { 
     id: 2, 
     companyName: 'Volvo KOREA', 
-    supplyType: '도장', 
-    supplyCustomer: 'clark',
+    supplyTypeName: '도장', 
+    supplyCustomerName: 'clark',
     oneWayDistance: 45.0,
     region: '경상남도',
     addressDetail: '창원시 성산구',
@@ -127,8 +127,8 @@ const MOCK_COMPANY_DATA: CompanyData[] = [
   ...Array.from({ length: 15 }, (_, i) => ({
     id: i + 3,
     companyName: `협력사_${i + 1}`,
-    supplyType: i % 2 === 0 ? '프레스' : '차체',
-    supplyCustomer: i % 3 === 0 ? '2000' : '3000',
+    supplyTypeName: i % 2 === 0 ? '프레스' : '차체',
+    supplyCustomerName: i % 3 === 0 ? '2000' : '3000',
     oneWayDistance: Math.floor(Math.random() * 100),
     region: '경기도',
     addressDetail: `평택시 포승읍 ${i + 1}번길`,
@@ -138,17 +138,17 @@ const MOCK_COMPANY_DATA: CompanyData[] = [
 
 
 const MOCK_CAR_MODEL_DATA: CarModelData[] = [
-  { id: 1, categoryLarge: '승용차', categorySmall: '중형', fuelType: '가솔린', fuelEfficiency: '12.3' },
-  { id: 2, categoryLarge: '승용차', categorySmall: '소형', fuelType: '디젤', fuelEfficiency: '16.5' },
-  { id: 3, categoryLarge: '상용트럭', categorySmall: '대형', fuelType: '디젤', fuelEfficiency: '4.5' },
-  { id: 4, categoryLarge: '승용차', categorySmall: '경차', fuelType: 'LPG', fuelEfficiency: '10.2' },
+  { id: 1, parentCategoryName: '승용차', carCategoryName: '중형', fuelType: '가솔린', customEfficiency: '12.3' },
+  { id: 2, parentCategoryName: '승용차', carCategoryName: '소형', fuelType: '디젤', customEfficiency: '16.5' },
+  { id: 3, parentCategoryName: '상용트럭', carCategoryName: '대형', fuelType: '디젤', customEfficiency: '4.5' },
+  { id: 4, parentCategoryName: '승용차', carCategoryName: '경차', fuelType: 'LPG', customEfficiency: '10.2' },
   // 더미 데이터
   ...Array.from({ length: 10 }, (_, i) => ({
       id: i + 5,
-      categoryLarge: '승용차',
-      categorySmall: '대형',
+      parentCategoryName: '승용차',
+      carCategoryName: '대형',
       fuelType: '전기',
-      fuelEfficiency: '5.2' // km/kWh 등 단위 통일 필요할 수 있음
+      customEfficiency: '5.2' // km/kWh 등 단위 통일 필요할 수 있음
   }))
 ];
 
