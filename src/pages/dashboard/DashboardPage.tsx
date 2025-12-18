@@ -4,11 +4,14 @@ import { SummarySection, ScopeAnalysisSection, ComparisonSection, PurposePieSect
 import { getBusinessYear } from '../../utils/dateUtils';
 import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
+import { ArrowLeft } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const ResponsiveGridLayout = WidthProvider(Responsive);
 
 const DashboardPage: React.FC = () => {
   const currentYear = getBusinessYear();
+  const navigate = useNavigate();
 
   const initialLayouts = {
     lg: [
@@ -30,8 +33,14 @@ const DashboardPage: React.FC = () => {
   return (
     <div className="p-5 bg-gray-100 min-h-screen box-border">
       <div className="mb-5 flex justify-between items-center">
+        <button 
+                onClick={() => navigate('/main')} 
+                className="flex items-center px-3 py-2 bg-white text-gray-600 rounded-md shadow-sm hover:bg-gray-100 font-bold text-sm border border-gray-200"
+            >
+                <ArrowLeft size={16} className="mr-1" /> 메인으로
+            </button>
         <h2 className="text-2xl font-bold text-gray-800">
-          통합 대시보드 ({currentYear}년)
+          대시보드 ({currentYear}년)
         </h2>
       </div>
 

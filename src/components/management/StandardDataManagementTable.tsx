@@ -1,44 +1,56 @@
 import { useState, useMemo, useEffect } from 'react';
 import type { ColumnDefinition } from '../../types/data';
 import { 
-  ArrowUp, ArrowDown, ArrowUpDown, Search, Save, Trash2, X, CheckSquare, Edit2, Upload, Download, Loader2 
+  ArrowUp, ArrowDown, ArrowUpDown, Search, Save, Trash2, X, CheckSquare, Edit2, Loader2 
 } from 'lucide-react'; 
-import ExcelUploadModal from '../common/ExcelUploadModal';
+// import ExcelUploadModal from '../common/ExcelUploadModal';
 //API 모듈 임포트
-import { fetchManagementData, deleteManagementItem, updateManagementItem, deleteBatchManagementItems } from '../../apis/vehicle_manage';
+import axiosInstance from '../../apis/axiosInstance';
 
 // --- 엑셀 다운로드 함수 (프론트 구현만) ---
-const downloadExcel = (data: any[], filename: string) => {
-  if (data.length === 0) {
-    alert('다운로드할 데이터가 없습니다.');
-    return;
-  }
-  const headers = Object.keys(data[0]).filter(key => key !== 'isEditing' && key !== 'id');
-  const csvContent = [
-    headers.join(','),
-    ...data.map(row => headers.map(header => row[header]).join(','))
-  ].join('\n');
+// const downloadExcel = (data: any[], filename: string) => {
+//   if (data.length === 0) {
+//     alert('다운로드할 데이터가 없습니다.');
+//     return;
+//   }
+//   const headers = Object.keys(data[0]).filter(key => key !== 'isEditing' && key !== 'id');
+//   const csvContent = [
+//     headers.join(','),
+//     ...data.map(row => headers.map(header => row[header]).join(','))
+//   ].join('\n');
   
-  const blob = new Blob(["\ufeff", csvContent], { type: 'text/csv;charset=utf-8;' });
-  const link = document.createElement('a');
-  link.href = URL.createObjectURL(blob);
-  link.download = `${filename}_${new Date().toISOString().slice(0,10)}.csv`;
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-};
+//   const blob = new Blob(["\ufeff", csvContent], { type: 'text/csv;charset=utf-8;' });
+//   const link = document.createElement('a');
+//   link.href = URL.createObjectURL(blob);
+//   link.download = `${filename}_${new Date().toISOString().slice(0,10)}.csv`;
+//   document.body.appendChild(link);
+//   link.click();
+//   document.body.removeChild(link);
+// };
 
 // --- Props 정의 ---
 interface StandardDataManagementTableProps<T> {
   title: string;
   columns: ColumnDefinition<T>[];
   apiEndpoint: string; // [변경] initialData 대신 endpoint만 받음
+  disableDelete?: boolean; // 차종 모델 페이지에서 삭제 비활성화
+  options?: {
+    supplyTypes?: { id: number; name: string }[];
+    supplyCustomers?: { id: number; name: string }[];
+    operationPurposes?: { id: number; name: string }[];
+    companies?: { id: number; name: string; oneWayDistance?: number }[];
+    carCategories?: { id: number; name: string }[];
+    carCategoryMap?: Record<string, { id: number; name: string }[]>;
+    fuelTypes?: { id: number; name: string }[];
+  };
 }
 
 const StandardDataManagementTable = <T extends { id: number, [key: string]: any }>({ 
   title, 
   columns, 
-  apiEndpoint 
+  apiEndpoint,
+  disableDelete = false,
+  options = {}
 }: StandardDataManagementTableProps<T>) => {
   
   // --- 상태 관리 ---
@@ -49,22 +61,137 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
   const [searchQuery, setSearchQuery] = useState('');
   const [searchColumn, setSearchColumn] = useState<'all' | keyof T>('all');
   
-  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+  // const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [isBatchEditing, setIsBatchEditing] = useState(false);
   const [selectedRows, setSelectedRows] = useState<number[]>([]);
+  const [originalData, setOriginalData] = useState<T[]>([]); // 전체 수정 취소용 백업 데이터
   
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 15;
+
+  // 대분류 선택 상태 추적 (차량 관리에서 소분류 필터링용)
+  const [selectedParentCategories, setSelectedParentCategories] = useState<Record<number, string>>({});
 
   // --- [API] 데이터 로딩 (Mount 시점) ---
   useEffect(() => {
     const loadData = async () => {
       setLoading(true);
       try {
-        const result = await fetchManagementData(apiEndpoint);
-        setData(result as T[]);
+        let endpoint = apiEndpoint;
+        console.log(`[${title}] 데이터 로딩 시작 - 원본 엔드포인트: ${apiEndpoint}`);
+
+        if (endpoint.includes('car-models')) {
+          endpoint = '/admin/car-model/search';
+        } else if (endpoint.includes('companies')) {
+          endpoint = '/admin/company/search';
+        } else if (endpoint.includes('vehicles')) {
+          endpoint = '/admin/vehicle/search';
+        } else if (endpoint.includes('supply-type')) {
+          endpoint = '/admin/supply-type/search';
+        } else if (endpoint.includes('operation-purpose')) {
+          endpoint = '/admin/operation-purpose/search';
+        } else if (endpoint.includes('supply-customer')) {
+          endpoint = '/admin/supply-customer/search';
+        }
+
+        console.log(`[${title}] 최종 API 엔드포인트: ${endpoint}`);
+        const response = await axiosInstance.get(endpoint);
+        console.log(`[${title}] API 응답 상태: ${response.status}`);
+        console.log(`[${title}] API 응답 데이터:`, response.data);
+
+        let rawData = response.data.content || response.data;
+        console.log(`[${title}] 추출된 데이터 개수: ${Array.isArray(rawData) ? rawData.length : 'N/A'}`);
+        console.log(`[${title}] 추출된 데이터 샘플:`, Array.isArray(rawData) && rawData.length > 0 ? rawData[0] : '데이터 없음');
+        
+        // 데이터 변환
+        if (endpoint.includes('car-models')) {
+          rawData = rawData.map((item: any) => ({
+            ...item,
+            parentCategoryName: item.parentCategoryName || '',
+            carCategoryName: item.carCategoryName || '',
+            customEfficiency: item.customEfficiency || '',
+            fuelType: item.fuelType || '',
+            // ID 값 유지
+            carCategoryId: item.carCategoryId
+          }));
+        } else if (endpoint.includes('companies')) {
+          console.log(`[${title}] 협력사 데이터 변환 시작 - 데이터 개수: ${rawData.length}`);
+          rawData = rawData.map((item: any) => {
+            console.log(`[${title}] 주소 처리 전 데이터:`, item);
+            // 주소 처리: 이미 region과 addressDetail이 분리되어 있으면 그대로 사용, 아니면 파싱
+            let region = item.region || '';
+            let addressDetail = item.addressDetail || '';
+            
+            if (!region && !addressDetail && item.address) {
+              // 주소가 통합되어 있는 경우에만 파싱
+              const addressParts = (item.address || '').split(' ');
+              region = addressParts[0] || '';
+              addressDetail = addressParts.slice(1).join(' ') || '';
+            }
+            
+            console.log(`[${title}] 주소 처리 - 원본: ${item.address || 'N/A'}, region: ${region}, addressDetail: ${addressDetail}`);
+
+            return {
+              ...item,
+              companyName: item.companyName || '',
+              supplyTypeName: item.supplyTypeName || '',
+              supplyCustomerName: item.supplyCustomerName || '',
+              oneWayDistance: item.oneWayDistance || 0,
+              region: region,
+              addressDetail: addressDetail,
+              remark: item.remark || '',
+              // ID 값들 유지
+              supplyTypeId: item.supplyTypeId,
+              supplyCustomerId: item.supplyCustomerId
+            };
+          });
+          console.log(`[${title}] 협력사 데이터 변환 완료`);
+        } else if (endpoint.includes('vehicles')) {
+          rawData = rawData.map((item: any) => ({
+            ...item,
+            carNumber: item.carNumber || '',
+            purpose: item.operationPurposeName || '',
+            vendorName: item.companyName || '',
+            employeeId: item.driverMemberId || '',
+            distance: item.operationDistance || '',
+            categoryLarge: item.parentCategoryName || '',
+            categorySmall: item.carCategoryName || '',
+            carModel: item.carModelName || '',
+            fuelType: item.fuelType || '',
+            note: item.remark || '',
+            // ID 값들 유지
+            purposeId: item.operationPurposeId,
+            companyId: item.companyId,
+            carCategoryId: item.carCategoryId,
+            carModelId: item.carModelId
+          }));
+        } else if (endpoint.includes('supply-type')) {
+          rawData = rawData.map((item: any) => ({
+            ...item,
+            supplyType: item.supplyTypeName || ''
+          }));
+        } else if (endpoint.includes('operation-purpose')) {
+          rawData = rawData.map((item: any) => ({
+            ...item,
+            purpose: item.purposeName || '',
+            scope: item.defaultScope || ''
+          }));
+        } else if (endpoint.includes('supply-customer')) {
+          rawData = rawData.map((item: any) => ({
+            ...item,
+            supplyCustomer: item.customerName || '',
+            note: item.remark || ''
+          }));
+        }
+
+        console.log(`[${title}] 데이터 변환 완료. 최종 데이터 개수: ${Array.isArray(rawData) ? rawData.length : 'N/A'}`);
+        console.log(`[${title}] 변환된 데이터 샘플:`, Array.isArray(rawData) && rawData.length > 0 ? rawData[0] : '데이터 없음');
+
+        setData(rawData);
+        console.log(`[${title}] 데이터 상태에 설정됨. 현재 데이터 개수: ${Array.isArray(rawData) ? rawData.length : 'N/A'}`);
+
       } catch (error) {
-        console.error("Failed to fetch data:", error);
+        console.error(`[${title}] 데이터 로딩 중 오류 발생:`, error);
       } finally {
         setLoading(false);
       }
@@ -137,37 +264,119 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
     ));
   };
   
+  // [API] 개별 삭제
+  const handleSingleDelete = async (rowId: number) => {
+      if (window.confirm(`ID ${rowId} 행을 정말 삭제하시겠습니까?`)) {
+          let endpoint = apiEndpoint;
+          if (endpoint.includes('car-models')) {
+            endpoint = `/admin/car-model/${rowId}`;
+          } else if (endpoint.includes('companies')) {
+            endpoint = `/admin/company/${rowId}`;
+          } else if (endpoint.includes('vehicles')) {
+            endpoint = `/admin/vehicle/${rowId}`;
+          } else if (endpoint.includes('supply-type')) {
+            endpoint = `/admin/supply-type/${rowId}`;
+          } else if (endpoint.includes('supply-customer')) {
+            endpoint = `/admin/supply-customer/${rowId}`;
+          } else if (endpoint.includes('operation-purpose')) {
+            endpoint = `/admin/operation-purpose/${rowId}`;
+          } else {
+            // 다른 엔티티들은 삭제 API가 없음
+            alert("이 데이터는 삭제할 수 없습니다.");
+            return;
+          }
+          await axiosInstance.delete(endpoint);
+          setData(prev => prev.filter(row => row.id !== rowId));
+          alert("삭제되었습니다.");
+      }
+  };
   // [API] 개별 저장
   const handleSingleSave = async (rowId: number) => {
       const rowData = data.find(row => row.id === rowId);
       if (!rowData) return;
 
       // API 호출
-      const success = await updateManagementItem(apiEndpoint, rowId, rowData);
-      if (success) {
-          alert("저장되었습니다.");
-          toggleEditMode(rowId); 
+      let endpoint = apiEndpoint;
+      let payload: any = rowData;
+      
+      if (endpoint.includes('car-models')) {
+        endpoint = `/admin/car-model/${rowId}`;
+        // 프론트 데이터 -> 백엔드 데이터 변환
+        payload = {
+          carCategoryId: rowData.carCategoryId,
+          fuelType: rowData.fuelType,
+          customEfficiency: parseFloat(rowData.customEfficiency || '0')
+        };
+      } else if (endpoint.includes('companies')) {
+        endpoint = `/admin/company/${rowId}`;
+        // 프론트 데이터 -> 백엔드 데이터 변환
+        payload = {
+          companyName: rowData.companyName,
+          supplyTypeId: rowData.supplyTypeId,
+          customerId: rowData.supplyCustomerId,
+          oneWayDistance: rowData.oneWayDistance,
+          region: rowData.region,
+          detailAddress: rowData.addressDetail,
+          address: `${rowData.region} ${rowData.addressDetail}`.trim(),
+          remark: rowData.remark
+        };
+      } else if (endpoint.includes('vehicles')) {
+        endpoint = `/admin/vehicle/${rowId}`;
+        // 프론트 데이터 -> 백엔드 데이터 변환
+        payload = {
+          carNumber: rowData.carNumber,
+          operationPurposeId: rowData.operationPurposeId,
+          companyId: rowData.companyId,
+          driverMemberId: rowData.driverMemberId,
+          // parentCategoryId: rowData.parentCategoryId,
+          carCategoryId: rowData.carCategoryId,
+          carModelId: rowData.carModelId,
+          carName: rowData.carModelName,
+          fuelType: rowData.fuelType,
+          operationDistance: parseFloat(rowData.operationDistance || '0'),
+          remark: rowData.remark
+        };
+      } else if (endpoint.includes('supply-type')) {
+        endpoint = `/admin/supply-type/${rowId}`;
+        // 프론트 데이터 -> 백엔드 데이터 변환
+        payload = {
+          supplyTypeName: rowData.supplyType
+        };
+      } else if (endpoint.includes('supply-customer')) {
+        endpoint = `/admin/supply-customer/${rowId}`;
+        // 프론트 데이터 -> 백엔드 데이터 변환
+        payload = {
+          customerName: rowData.supplyCustomer,
+          remark: rowData.note
+        };
+      } else if (endpoint.includes('operation-purpose')) {
+        endpoint = `/admin/operation-purpose/${rowId}`;
+        // 프론트 데이터 -> 백엔드 데이터 변환
+        payload = {
+          purposeName: rowData.purpose,
+          defaultScope: rowData.defaultScope
+        };
+      } else {
+        // 다른 엔티티들은 수정 API가 없음
+        alert("이 데이터는 수정할 수 없습니다.");
+        return;
       }
-  };
-
-  // [API] 개별 삭제
-  const handleSingleDelete = async (rowId: number) => {
-      if (window.confirm(`ID ${rowId} 행을 정말 삭제하시겠습니까?`)) {
-          const success = await deleteManagementItem(apiEndpoint, rowId);
-          if (success) {
-              setData(prev => prev.filter(row => row.id !== rowId));
-          }
-      }
+      
+      await axiosInstance.put(endpoint, payload);
+      alert("저장되었습니다.");
+      toggleEditMode(rowId);
   };
 
   // [일괄 수정]
   const handleCancelBatchEdit = () => {
+      setData(originalData); // 백업 데이터로 복원
       setIsBatchEditing(false);
       setSelectedRows([]);
-      // 취소 시 데이터를 원복하려면 별도의 백업 state가 필요할 수 있음
+      setOriginalData([]); // 백업 데이터 초기화
   };
 
   const toggleBatchEdit = () => {
+      setOriginalData([...data]); // 전체 수정 시작 시 데이터 백업
       setIsBatchEditing(true);
       setSelectedRows([]); 
   };
@@ -184,26 +393,142 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
         alert("삭제할 행을 선택해주세요.");
         return;
     }
+    
+    // 삭제 가능한 엔티티인지 확인
+    const canDelete = apiEndpoint.includes('companies') || apiEndpoint.includes('vehicles') || apiEndpoint.includes('supply-type') || apiEndpoint.includes('supply-customer') || apiEndpoint.includes('operation-purpose');
+    if (!canDelete) {
+        alert("이 데이터는 삭제할 수 없습니다.");
+        return;
+    }
+    
     if (window.confirm(`${selectedRows.length}개의 행을 정말 삭제하시겠습니까?`)) {
-        const success = await deleteBatchManagementItems(apiEndpoint, selectedRows);
-        if (success) {
-            setData(prev => prev.filter(row => !selectedRows.includes(row.id)));
-            setSelectedRows([]);
+        try {
+          console.log(`[${title}] 일괄 삭제 요청 - 선택된 ID들: ${selectedRows}`);
+          
+          // 백엔드의 deleteMultiple API 사용
+          await axiosInstance.delete(apiEndpoint, { data: selectedRows });
+          
+          setData(prev => prev.filter(row => !selectedRows.includes(row.id)));
+          setSelectedRows([]);
+          alert("일괄 삭제가 완료되었습니다.");
+        } catch (error) {
+          console.error(`[${title}] 일괄 삭제 실패:`, error);
+          alert("일괄 삭제 중 오류가 발생했습니다.");
         }
     }
   };
 
-  const handleBatchSave = () => {
-    // 실제로는 변경된 row만 추려서 API를 보내야 함. 여기선 전체 저장 시늉만.
-    alert("일괄 저장되었습니다. (API 연동 필요)");
-    setIsBatchEditing(false);
-    setSelectedRows([]);
+  // [API] 일괄 저장
+  const handleBatchSave = async () => {
+    try {
+      // 변경된 데이터만 추출 (실제로는 변경 감지 로직 필요)
+      const changedData = data.filter(row => {
+        const originalRow = originalData.find(orig => orig.id === row.id);
+        return originalRow && JSON.stringify(originalRow) !== JSON.stringify(row);
+      });
+
+      if (changedData.length === 0) {
+        alert("변경된 데이터가 없습니다.");
+        return;
+      }
+
+      // API 엔드포인트 결정
+      let endpoint = `${apiEndpoint}/bulk`;
+      let payload: any[] = [];
+
+      if (apiEndpoint.includes('car-models')) {
+        // 차종 데이터 변환
+        payload = changedData.map(row => ({
+          carCategoryId: row.carCategoryId,
+          fuelType: row.fuelType,
+          customEfficiency: parseFloat(row.customEfficiency || '0')
+        }));
+      } else if (apiEndpoint.includes('companies')) {
+        // 회사 데이터 변환
+        payload = changedData.map(row => ({
+          id: row.id,
+          companyName: row.companyName,
+          supplyTypeId: row.supplyTypeId,
+          customerId: row.supplyCustomerId,
+          oneWayDistance: row.oneWayDistance,
+          region: row.region,
+          detailAddress: row.addressDetail,
+          address: `${row.region} ${row.addressDetail}`.trim(),
+          remark: row.remark
+        }));
+      } else if (apiEndpoint.includes('vehicles')) {
+        // 차량 데이터 변환
+        payload = changedData.map(row => ({
+          id: row.id,
+          carNumber: row.carNumber,
+          operationPurposeId: row.operationPurposeId,
+          companyId: row.companyId,
+          driverMemberId: row.driverMemberId,
+          parentCategoryId: row.parentCategoryId,
+          carCategoryId: row.carCategoryId,
+          carModelId: row.carModelId,
+          carName: row.carModelName,
+          fuelType: row.fuelType,
+          operationDistance: parseFloat(row.operationDistance || '0'),
+          remark: row.remark
+        }));
+      } else if (apiEndpoint.includes('supply-type')) {
+        // 공급유형 데이터 변환
+        payload = changedData.map(row => ({
+          id: row.id,
+          supplyTypeName: row.supplyType
+        }));
+      } else if (apiEndpoint.includes('supply-customer')) {
+        // 공급고객 데이터 변환
+        payload = changedData.map(row => ({
+          id: row.id,
+          customerName: row.supplyCustomer,
+          remark: row.note
+        }));
+      } else if (apiEndpoint.includes('operation-purpose')) {
+        // 운행목적 데이터 변환
+        payload = changedData.map(row => ({
+          id: row.id,
+          purposeName: row.purpose,
+          defaultScope: row.defaultScopeId
+        }));
+      }
+
+      console.log(`[${title}] 일괄 저장 요청 - 엔드포인트: ${endpoint}, 데이터 개수: ${payload.length}`);
+      console.log(`[${title}] 일괄 저장 페이로드:`, payload);
+
+      await axiosInstance.patch(endpoint, payload);
+      
+      alert("일괄 저장이 완료되었습니다.");
+      setIsBatchEditing(false);
+      setSelectedRows([]);
+      setOriginalData([]);
+      
+      // 데이터 새로고침
+      window.location.reload();
+      
+    } catch (error) {
+      console.error(`[${title}] 일괄 저장 실패:`, error);
+      alert("일괄 저장 중 오류가 발생했습니다.");
+    }
   };
   
   const handleDataChange = (rowId: number, key: keyof T, value: any) => {
     setData(prev => prev.map(row => 
         row.id === rowId ? { ...row, [key]: value } : row
     ));
+    
+    // 대분류 선택 시 소분류 초기화 및 선택 상태 업데이트
+    if (String(key) === 'parentCategoryName' && apiEndpoint.includes('vehicles')) {
+      setSelectedParentCategories(prev => ({
+        ...prev,
+        [rowId]: value
+      }));
+      // 소분류도 초기화
+      setData(prev => prev.map(row => 
+        row.id === rowId ? { ...row, [key]: value, carCategoryName: '' } : row
+      ));
+    }
   };
 
   // --- 입력 필드 렌더링 ---
@@ -223,6 +548,104 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
               >
                   <option value="">선택</option>
                   {col.selectOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+              </select>
+          );
+      }
+
+      // 동적 드롭다운 (서버 데이터 기반)
+      if (col.inputType === 'dynamic-select') {
+          let dynamicOptions: { id: number; name: string; oneWayDistance?: number }[] = [];
+          
+          if (String(fieldKey) === 'supplyTypeName' || String(fieldKey) === 'supplyTypeId') {
+              dynamicOptions = options.supplyTypes || [];
+          } else if (String(fieldKey) === 'supplyCustomerName' || String(fieldKey) === 'supplyCustomerId') {
+              dynamicOptions = options.supplyCustomers || [];
+          } else if (String(fieldKey) === 'operationPurposeName' || String(fieldKey) === 'operationPurposeId') {
+              dynamicOptions = options.operationPurposes || [];
+          } else if (String(fieldKey) === 'companyName' || String(fieldKey) === 'companyId') {
+              dynamicOptions = options.companies || [];
+          } else if (String(fieldKey) === 'parentCategoryName' || String(fieldKey) === 'parentCategoryId') {
+              dynamicOptions = options.carCategories || [];
+          } else if (String(fieldKey) === 'fuelType' || String(fieldKey) === 'fuelTypeId') {
+              dynamicOptions = options.fuelTypes || [];
+          }
+
+          // 협력사명 필드의 경우 검색 가능한 드롭다운으로 렌더링 (차량 관리에서만)
+          if (String(fieldKey) === 'companyName' && apiEndpoint.includes('vehicles')) {
+              const listId = `company-list-${rowId}`;
+              return (
+                  <>
+                      <input
+                          list={listId}
+                          type="text"
+                          value={String(value)}
+                          onChange={(e) => {
+                              const selectedValue = e.target.value;
+                              handleDataChange(rowId, fieldKey, selectedValue);
+                              
+                              // 선택된 협력사 찾기
+                              const selectedCompany = dynamicOptions.find(opt => opt.name === selectedValue);
+                              if (selectedCompany && selectedCompany.oneWayDistance !== undefined) {
+                                  // 거리 자동 반영 (operationDistance 필드)
+                                  handleDataChange(rowId, 'operationDistance' as keyof T, selectedCompany.oneWayDistance);
+                                  console.log(`[${title}] 협력사 선택으로 거리 자동 설정: ${selectedCompany.oneWayDistance}km`);
+                              }
+                          }}
+                          className={inputClass}
+                          placeholder="협력사명 입력/선택"
+                      />
+                      <datalist id={listId}>
+                          {dynamicOptions.map(opt => <option key={opt.id} value={opt.name} />)}
+                      </datalist>
+                  </>
+              );
+          }
+
+          // 소분류 필드의 경우 대분류에 따라 옵션 필터링 (차량 관리에서만)
+          if (String(fieldKey) === 'carCategoryName' && apiEndpoint.includes('vehicles')) {
+              const selectedParentCategory = selectedParentCategories[rowId] || row.parentCategoryName || '';
+              const filteredOptions = selectedParentCategory && options.carCategoryMap ? 
+                options.carCategoryMap[selectedParentCategory] || [] : [];
+              
+              return (
+                  <select
+                      value={String(value)}
+                      onChange={(e) => {
+                          handleDataChange(rowId, fieldKey, e.target.value);
+                      }}
+                      className={inputClass}
+                      disabled={!selectedParentCategory}
+                  >
+                      <option value="">{selectedParentCategory ? '선택' : '대분류를 먼저 선택하세요'}</option>
+                      {filteredOptions.map(opt => <option key={opt.id} value={opt.name}>{opt.name}</option>)}
+                  </select>
+              );
+          }
+
+          return (
+              <select
+                  value={String(value)}
+                  onChange={(e) => {
+                      // ID 값도 함께 업데이트
+                      if (String(fieldKey) === 'supplyType') {
+                          handleDataChange(rowId, 'supplyTypeId' as keyof T, e.target.value);
+                      } else if (String(fieldKey) === 'supplyCustomer') {
+                          handleDataChange(rowId, 'supplyCustomerId' as keyof T, e.target.value);
+                      } else if (String(fieldKey) === 'purpose') {
+                          handleDataChange(rowId, 'operationPurposeId' as keyof T, e.target.value);
+                      } else if (String(fieldKey) === 'companyName') {
+                          handleDataChange(rowId, 'companyId' as keyof T, e.target.value);
+                      } else if (String(fieldKey) === 'parentCategoryName') {
+                          handleDataChange(rowId, 'parentCategoryId' as keyof T, e.target.value);
+                      } else if (String(fieldKey) === 'fuelType') {
+                          handleDataChange(rowId, 'fuelTypeId' as keyof T, e.target.value);
+                      }
+                      handleDataChange(rowId, fieldKey, e.target.value);
+                  }}
+                  className={inputClass}
+              >
+                  <option value="">선택</option>
+                  {dynamicOptions.map(opt => <option key={opt.id} value={opt.name}>{opt.name}</option>)}
               </select>
           );
       }
@@ -295,7 +718,7 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
         </div>
 
         {/* 엑셀 버튼 영역 */}
-        <div className="flex gap-2">
+        {/* <div className="flex gap-2">
           <button 
             onClick={() => setIsUploadModalOpen(true)} 
             className="flex items-center px-4 py-2 bg-green-600 text-white rounded-md text-sm font-bold hover:bg-green-700 transition-colors shadow-sm"
@@ -308,7 +731,7 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
           >
             <Download size={16} className="mr-2" /> Excel 다운로드
           </button>
-        </div>
+        </div> */}
       </div>
       
       {/* 3. 테이블 영역 */}
@@ -405,22 +828,22 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
                             <td key={String(col.id)} className="px-6 py-4">
                             {col.id === 'actions' ? (
                                 <div className="flex gap-2">
-                                    {isRowEditing ? (
+                                    {isRowEditing && !isBatchEditing ? (
                                         <button 
                                             onClick={() => handleSingleSave(rowId)} 
                                             className="p-1.5 bg-green-100 text-green-700 rounded hover:bg-green-200" title="저장"
                                         >
                                             <Save size={16} />
                                         </button>
-                                    ) : (
+                                    ) : !isBatchEditing ? (
                                         <button 
                                             onClick={() => toggleEditMode(rowId)} 
                                             className="p-1.5 bg-yellow-100 text-yellow-700 rounded hover:bg-yellow-200" title="수정"
                                         >
                                             <Edit2 size={16} />
                                         </button>
-                                    )}
-                                    {!isRowEditing && (
+                                    ) : null}
+                                    {!isRowEditing && !disableDelete && !isBatchEditing && (
                                         <button 
                                             onClick={() => handleSingleDelete(rowId)} 
                                             className="p-1.5 bg-red-100 text-red-700 rounded hover:bg-red-200" title="삭제"
@@ -483,9 +906,11 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
                     <button onClick={handleBatchSave} className="flex items-center px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 shadow-sm font-bold text-sm">
                         <Save size={16} className="mr-2" /> 전체 저장
                     </button>
-                    <button onClick={handleBatchDelete} className="flex items-center px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 shadow-sm font-bold text-sm">
-                        <Trash2 size={16} className="mr-2" /> 선택 삭제 ({selectedRows.length})
-                    </button>
+                    {!disableDelete && (
+                        <button onClick={handleBatchDelete} className="flex items-center px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 shadow-sm font-bold text-sm">
+                            <Trash2 size={16} className="mr-2" /> 선택 삭제 ({selectedRows.length})
+                        </button>
+                    )}
                     <button onClick={handleCancelBatchEdit} className="flex items-center px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 shadow-sm font-bold text-sm">
                         <X size={16} className="mr-2" /> 취소
                     </button>
@@ -501,17 +926,7 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
         </div>
       </div>
 
-      {/* 엑셀 업로드 모달 연결 */}
-      <ExcelUploadModal 
-        isOpen={isUploadModalOpen}
-        onClose={() => setIsUploadModalOpen(false)}
-        title={title}
-        onUpload={(data) => {
-            console.log("Uploaded Data:", data);
-            alert("업로드 로직 구현 필요");
-            setIsUploadModalOpen(false);
-        }}
-      />
+      {/* 엑셀 업로드 모달 연결 - 추후 구현 예정 */}
     </div>
   );
 };

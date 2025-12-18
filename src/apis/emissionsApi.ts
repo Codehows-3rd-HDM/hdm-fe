@@ -7,15 +7,15 @@ import type { AnalysisData } from '../types/analysis';
 // 1. 운행 목적별 데이터
 const getPurposeData = (): AnalysisData[] => [
   { id: 1, name: '출퇴근', totalEmission: 20000, ratio: 50, distance: 15000, count: 125, avgEmission: 160, monthlyTrend: [1500, 1600, 1550, 1700, 1800, 1750, 1600, 1500, 1650, 1700, 1800, 1850] },
-  { id: 2, name: '납품', totalEmission: 10000, ratio: 25, distance: 20000, count: 150, avgEmission: 66, monthlyTrend: [800, 850, 900, 800, 750, 800, 850, 900, 950, 900, 850, 800] },
-  { id: 3, name: '기타', totalEmission: 10000, ratio: 25, distance: 5000, count: 50, avgEmission: 200, monthlyTrend: [500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500] },
-  { id: 4, name: '자재운송', totalEmission: 5000, ratio: 12.5, distance: 3000, count: 30, avgEmission: 166, monthlyTrend: [400, 420, 410, 430, 400, 420, 410, 430, 400, 420, 410, 430] },
+  { id: 2, name: '납품3', totalEmission: 10000, ratio: 25, distance: 20000, count: 150, avgEmission: 66, monthlyTrend: [800, 850, 900, 800, 750, 800, 850, 900, 950, 900, 850, 800] },
+  { id: 3, name: '납품1', totalEmission: 5000, ratio: 12.5, distance: 5000, count: 30, avgEmission: 200, monthlyTrend: [500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500] },
+  { id: 4, name: '기타', totalEmission: 5000, ratio: 12.5, distance: 3000, count: 50, avgEmission: 166, monthlyTrend: [400, 420, 410, 430, 400, 420, 410, 430, 400, 420, 410, 430] },
 ];
 
 // 2. 연료별 데이터
 const getFuelData = (): AnalysisData[] => [
-  { id: 1, name: '휘발유', totalEmission: 15000, ratio: 40, monthlyTrend: Array(12).fill(1250) },
-  { id: 2, name: '경유', totalEmission: 18000, ratio: 50, monthlyTrend: Array(12).fill(1500) },
+  { id: 1, name: '가솔린', totalEmission: 15000, ratio: 40, monthlyTrend: Array(12).fill(1250) },
+  { id: 2, name: '디젤', totalEmission: 18000, ratio: 50, monthlyTrend: Array(12).fill(1500) },
   { id: 3, name: 'LPG', totalEmission: 3000, ratio: 8, monthlyTrend: Array(12).fill(250) },
   { id: 4, name: '전기', totalEmission: 750, ratio: 2, monthlyTrend: Array(12).fill(62.5) },
 ];
@@ -23,7 +23,7 @@ const getFuelData = (): AnalysisData[] => [
 // 3. 업체별 데이터 (랜덤 생성)
 const getVendorData = (): AnalysisData[] => Array.from({ length: 10 }, (_, i) => ({
     id: i + 1,
-    name: `협력업체 ${String.fromCharCode(65 + i)}`,
+    name: `협력사 ${String.fromCharCode(65 + i)}`,
     totalEmission: Math.floor(Math.random() * 10000) + 1000,
     ratio: 10,
     distance: Math.floor(Math.random() * 5000) + 500,
@@ -34,10 +34,10 @@ const getVendorData = (): AnalysisData[] => Array.from({ length: 10 }, (_, i) =>
 
 // 4. 공정별 데이터
 const getProcessData = (): AnalysisData[] => [
-    { id: 1, name: '프레스', totalEmission: 5000, ratio: 20, distance: 1000, count: 50, avgEmission: 100, monthlyTrend: Array(12).fill(416) },
-    { id: 2, name: '도장', totalEmission: 8000, ratio: 32, distance: 2000, count: 80, avgEmission: 100, monthlyTrend: Array(12).fill(666) },
-    { id: 3, name: '조립', totalEmission: 7000, ratio: 28, distance: 1500, count: 70, avgEmission: 100, monthlyTrend: Array(12).fill(583) },
-    { id: 4, name: '검수', totalEmission: 5000, ratio: 20, distance: 1000, count: 50, avgEmission: 100, monthlyTrend: Array(12).fill(416) },
+    { id: 1, name: '가공', totalEmission: 5000, ratio: 20, distance: 1000, count: 50, avgEmission: 100, monthlyTrend: Array(12).fill(400) },
+    { id: 2, name: '단조', totalEmission: 8000, ratio: 32, distance: 2000, count: 80, avgEmission: 100, monthlyTrend: Array(12).fill(666) },
+    { id: 3, name: '주물', totalEmission: 7000, ratio: 28, distance: 1500, count: 70, avgEmission: 100, monthlyTrend: Array(12).fill(583) },
+    { id: 4, name: '소재', totalEmission: 5000, ratio: 20, distance: 1000, count: 50, avgEmission: 100, monthlyTrend: Array(12).fill(450) },
 ];
 
 // 5. 품목별 데이터

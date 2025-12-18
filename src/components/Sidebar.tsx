@@ -1,16 +1,40 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { ChevronDown, Hexagon } from 'lucide-react';
+import { ChevronDown, Hexagon, Menu } from 'lucide-react'; // Menu 아이콘 추가
 import { menuItems } from '../data/MenuData';
+import { useAuth } from '../hooks/useAuth';
 
-const Sidebar: React.FC = () => {
+// Props 타입 정의 (부모 컴포넌트에서 상태를 제어하기 위함)
+interface SidebarProps {
+  isOpen: boolean;
+  toggleSidebar: () => void;
+}
+
+const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggleSidebar }) => {
   const navigate = useNavigate();
   const location = useLocation();
 
+  // 초기 닫힘 상태 설정
   const [closedDepth1, setClosedDepth1] = useState<Set<string>>(() => new Set(['관리자 설정']));
   const [closedDepth2, setClosedDepth2] = useState<Set<string>>(new Set(['출입 차량의 기본 데이터 관리']));
 
+  // 권한 훅
+  const { hasRole } = useAuth();
+
   const handleToggleDepth1 = (title: string, hasSubItems: boolean, path?: string) => {
+    // 사이드바가 접혀있을 때 (isOpen: false) 하위 메뉴가 있는 항목을 클릭하면
+    if (!isOpen && hasSubItems) {
+        // 1. 사이드바를 펼치고
+        toggleSidebar();
+        // 2. 해당 뎁스 메뉴를 펼침 (closedDepth1에서 title을 제거)
+        setClosedDepth1(prev => {
+            const newSet = new Set(prev);
+            newSet.delete(title);
+            return newSet;
+        });
+        return; // 일반 뎁스 토글 로직이 실행되는 것을 방지
+    }
+
     if (!hasSubItems && path) {
       navigate(path);
       return;
@@ -37,113 +61,163 @@ const Sidebar: React.FC = () => {
   };
 
   return (
-    <div className="fixed left-0 top-0 w-[300px] h-screen bg-white border-r border-[#e0e0e0] 
-                    font-[Malgun_Gothic,'Apple_SD_Gothic_Neo',sans-serif] flex flex-col overflow-y-auto pb-10">
-      {/* 로고 영역 */}
-      <div className="px-5 pt-[25px] pb-[15px] border-b border-[#f0f0f0] mb-[10px]">
-        <img src="/rogo.png" alt="HDM Logo" className="max-w-[220px] block h-auto" />
+    // 너비를 isOpen 상태에 따라 동적으로 변경 (w-[260px] <-> w-[80px])
+    <div 
+      className={`
+        fixed left-0 top-0 h-screen bg-white border-r border-gray-200 flex flex-col font-sans z-50 transition-all duration-300 ease-in-out
+        ${isOpen ? 'w-[260px]' : 'w-[80px]'}
+      `}
+    >
+      
+      {/* 헤더 영역: 로고 및 토글 버튼 */}
+      <div className={`flex items-center ${isOpen ? 'justify-between px-5' : 'justify-center'} pt-6 pb-4 border-b border-gray-100 mb-2 transition-all`}>
+        {/* 로고: 펼쳐졌을 때만 표시 */}
+        {isOpen && (
+          <img 
+            src="/rogo.png" 
+            alt="HDM Logo" 
+            className="max-w-[140px] block h-auto cursor-pointer" 
+            onClick={() => navigate('/main')}
+          />
+        )}
+        
+        {/* 햄버거 버튼: 항상 표시 */}
+        <button 
+          onClick={toggleSidebar}
+          className="p-2 rounded hover:bg-gray-100 text-gray-500 transition-colors"
+          title={isOpen ? "메뉴 접기" : "메뉴 펼치기"}
+        >
+          <Menu size={24} />
+        </button>
       </div>
 
-      {menuItems.map((depth1) => {
-        const isClosed1 = closedDepth1.has(depth1.title);
-        const hasSub1 = !!(depth1.items && depth1.items.length > 0);
-        const isActive1 = depth1.path === location.pathname;
-        const Icon = depth1.icon;
+      {/* 메뉴 리스트 영역 */}
+      <div className="flex-1 overflow-y-auto pb-10 custom-scrollbar overflow-x-hidden">
+        {menuItems.map((depth1) => {
+          if (depth1.requiredRoles && !hasRole(depth1.requiredRoles)) {
+            return null; 
+          }
 
-        return (
-          <div key={depth1.title}>
-            {/* --- Level 1 --- */}
-            <div
-              className={`flex items-center justify-between pl-6 pr-6 mb-3 cursor-pointer text-base transition-all
-                ${isActive1 ? 'text-[#007bff] font-bold bg-[#eef6ff]' : 'text-[#333] font-semibold'}
-                hover:bg-[#f5f9ff] active:bg-[#eef6ff]
-              `}
-              style={{ height: '50px' }}
-              onClick={() => handleToggleDepth1(depth1.title, hasSub1, depth1.path)}
-            >
-              <div className="flex items-center gap-x-4">
-                {Icon && <Icon size={20} strokeWidth={1.5} />}
-                <span className="block leading-[2.2rem]">{depth1.title}</span>
-              </div>
-              {hasSub1 && (
-                isClosed1
-                  ? <ChevronDown size={16} className="text-[#999] rotate-180" />
-                  : <ChevronDown size={16} className="text-[#999]" />
-              )}
-            </div>
+          const isClosed1 = closedDepth1.has(depth1.title);
+          const hasSub1 = !!(depth1.items && depth1.items.length > 0);
+          const isActive1 = depth1.path === location.pathname;
+          const Icon = depth1.icon;
 
-            {/* --- Level 1 Content --- */}
-            {hasSub1 && (
+          return (
+            <div key={depth1.title}>
+              {/* --- Level 1 --- */}
               <div
-                className="overflow-hidden transition-[max-height] duration-300 ease-in-out bg-white"
-                style={{ maxHeight: isClosed1 ? '0' : '800px' }}
+                className={`
+                  flex items-center px-4 py-3 mb-1 cursor-pointer transition-all duration-200
+                  ${isOpen ? 'justify-between mx-2 rounded-lg' : 'justify-center mx-1 rounded-md'}
+                  ${isActive1 
+                    ? 'text-blue-600 font-bold bg-blue-50' 
+                    : 'text-gray-700 font-semibold hover:bg-gray-50'
+                  }
+                `}
+                onClick={() => handleToggleDepth1(depth1.title, hasSub1, depth1.path)}
+                title={!isOpen ? depth1.title : undefined} // 접혔을 때 툴팁 효과
               >
-                {depth1.items!.map((depth2) => {
-                  const depth2Key = `${depth1.title}-${depth2.title}`;
-                  const isClosed2 = closedDepth2.has(depth2Key);
-                  const hasSub2 = !!(depth2.items && depth2.items.length > 0);
+                <div className={`flex items-center ${isOpen ? 'gap-x-3' : ''}`}>
+                  {Icon && <Icon size={22} strokeWidth={1.5} className="flex-shrink-0" />}
+                  
+                  {/* 텍스트: 펼쳐졌을 때만 표시 */}
+                  <span className={`whitespace-nowrap overflow-hidden transition-all duration-300 ${isOpen ? 'w-auto opacity-100' : 'w-0 opacity-0 hidden'}`}>
+                    {depth1.title}
+                  </span>
+                </div>
+                
+                {/* 화살표: 펼쳐졌을 때만 표시 */}
+                {isOpen && hasSub1 && (
+                  <ChevronDown 
+                    size={16}
+                    className={`text-gray-400 transition-transform duration-200 ${isClosed1 ? 'rotate-180' : 'rotate-0'}`} 
+                  />
+                )}
+              </div>
 
-                  const isActive2 = depth2.path === location.pathname;
-                  const isChildActive = depth2.items?.some(child => child.path === location.pathname);
-                  const isHighlight2 = isActive2 || isChildActive;
+              {/* --- Level 1 Content (Submenus) --- */}
+              {/* 사이드바가 접혀있을 때는 하위 메뉴를 숨김 (복잡도 방지) */}
+              {isOpen && hasSub1 && (
+                <div
+                  className={`overflow-hidden transition-all duration-300 ease-in-out bg-white ${isClosed1 ? 'max-h-0 opacity-0' : 'max-h-[1000px] opacity-100'}`}
+                >
+                  {depth1.items!.map((depth2) => {
+                    if (depth2.requiredRoles && !hasRole(depth2.requiredRoles)) return null;
 
-                  return (
-                    <div key={depth2Key}>
-                      {/* --- Level 2 --- */}
-                      <div
-                        className={`flex items-center justify-between pr-6 mb-2 cursor-pointer text-sm transition-colors
-                          ${isHighlight2 ? 'text-[#007bff] font-semibold bg-[#eef6ff]' : 'text-[#555] font-normal'}
-                          hover:bg-[#f5f9ff] active:bg-[#eef6ff]
-                        `}
-                        style={{ paddingLeft: '40px', height: '45px' }}
-                        onClick={() => handleToggleDepth2(depth2Key, hasSub2, depth2.path)}
-                      >
-                        <div className="flex items-center gap-x-3">
-                          <span className={`text-[18px] ${isHighlight2 ? 'text-[#007bff]' : 'text-[#b0b0b0]'}`}>~</span>
-                          <span className="block leading-[2rem]">{depth2.title}</span>
+                    const depth2Key = `${depth1.title}-${depth2.title}`;
+                    const isClosed2 = closedDepth2.has(depth2Key);
+                    const hasSub2 = !!(depth2.items && depth2.items.length > 0);
+
+                    const isActive2 = depth2.path === location.pathname;
+                    const isChildActive = depth2.items?.some(child => child.path === location.pathname);
+                    const isHighlight2 = isActive2 || isChildActive;
+
+                    return (
+                      <div key={depth2Key}>
+                        {/* --- Level 2 --- */}
+                        <div
+                          className={`
+                            flex items-center justify-between pr-6 mb-1 cursor-pointer text-sm transition-colors duration-200 pl-12 py-2.5
+                            ${isHighlight2 
+                              ? 'text-blue-600 font-semibold bg-blue-50' 
+                              : 'text-gray-600 font-normal hover:bg-gray-50 hover:text-blue-600'
+                            }
+                          `}
+                          onClick={() => handleToggleDepth2(depth2Key, hasSub2, depth2.path)}
+                        >
+                          <div className="flex items-center gap-x-2">
+                            <span className={`text-lg leading-none ${isHighlight2 ? 'text-blue-600' : 'text-gray-300'}`}>~</span>
+                            <span>{depth2.title}</span>
+                          </div>
+                          {hasSub2 && (
+                            <ChevronDown 
+                              size={14} 
+                              className={`ml-auto text-gray-300 transition-transform duration-200 ${isClosed2 ? 'rotate-180' : 'rotate-0'}`}
+                            />
+                          )}
                         </div>
+
+                        {/* --- Level 2 Content (Level 3) --- */}
                         {hasSub2 && (
-                          isClosed2
-                            ? <ChevronDown size={14} className="text-[#bbb] rotate-180" />
-                            : <ChevronDown size={14} className="text-[#bbb]" />
+                          <div
+                            className={`overflow-hidden transition-all duration-300 ease-in-out bg-gray-50 ${isClosed2 ? 'max-h-0' : 'max-h-[500px]'}`}
+                          >
+                            {depth2.items!.map((depth3) => {
+                              if (depth3.requiredRoles && !hasRole(depth3.requiredRoles)) return null;
+
+                              const isActive3 = depth3.path === location.pathname;
+                              return (
+                                <div
+                                  key={depth3.title}
+                                  className={`
+                                    flex items-center pr-6 mb-1 cursor-pointer text-[13px] transition-colors duration-200 pl-[74px] py-2
+                                    ${isActive3 
+                                      ? 'text-blue-600 font-semibold bg-blue-50' 
+                                      : 'text-gray-500 font-normal hover:bg-white hover:text-blue-600'
+                                    }
+                                  `}
+                                  onClick={() => navigate(depth3.path!)}
+                                >
+                                  <Hexagon 
+                                    size={10} 
+                                    className={`mr-2 ${isActive3 ? 'fill-blue-600 text-blue-600' : 'fill-gray-300 text-transparent'} stroke-none`} 
+                                  />
+                                  <span>{depth3.title}</span>
+                                </div>
+                              );
+                            })}
+                          </div>
                         )}
                       </div>
-
-                      {/* --- Level 2 Content (Level 3) --- */}
-                      {hasSub2 && (
-                        <div
-                          className="overflow-hidden transition-[max-height] duration-300 ease-in-out bg-[#f9f9f9]"
-                          style={{ maxHeight: isClosed2 ? '0' : '500px' }}
-                        >
-                          {depth2.items!.map((depth3) => {
-                            const isActive3 = depth3.path === location.pathname;
-                            return (
-                              <div
-                                key={depth3.title}
-                                className={`flex items-center justify-between pr-6 mb-2 cursor-pointer text-[13px]
-                                  ${isActive3 ? 'text-[#007bff] font-semibold bg-[#eef6ff]' : 'text-[#666] font-normal'}
-                                  hover:bg-[#f5f9ff] active:bg-[#eef6ff]
-                                `}
-                                style={{ paddingLeft: '68px', height: '40px' }}
-                                onClick={() => navigate(depth3.path!)}
-                              >
-                                <div className="flex items-center gap-x-3">
-                                  <Hexagon size={12} className={`${isActive3 ? 'fill-[#007bff]' : 'fill-[#ddd]'} stroke-none`} />
-                                  <span className="block leading-[1.8rem]">{depth3.title}</span>
-                                </div>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-        );
-      })}
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 };
