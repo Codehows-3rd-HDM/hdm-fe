@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useRef, useEffect } from "react";
-import { Upload, AlertCircle, Save } from "lucide-react";
+import { Upload, AlertCircle, Save, X, Search } from "lucide-react";
 import * as XLSX from "xlsx";
 import axios from "axios";
 import AlertModal from "../../components/Modal";
@@ -60,6 +60,9 @@ const DataUploadPage: React.FC = () => {
     return years;
   }, []);
 
+  const [niceSearchTerm, setNiceSearchTerm] = useState(""); // 왼쪽(나이스) 검색어
+  const [s1SearchTerm, setS1SearchTerm] = useState(""); // 오른쪽(S1) 검색어
+
   // 1. [S1용] 날짜만 필요할 때 (시간 버림, 날짜 밀림 방지)
   const formatDate = (val: any) => {
     if (!val) return "";
@@ -100,27 +103,28 @@ const DataUploadPage: React.FC = () => {
     return String(val).trim();
   };
 
-  // useEffect(() => {
-  //   if (selectedYear === "2025" && selectedMonth === "7") {
-  //     setIsDataExisting(true);
-  //     setNiceParkData([
-  //       { carNumber: "178구5586", entryDate: "2025-07-29", entryTime: "17:26:20" },
-  //       { carNumber: "96구3789", entryDate: "2025-07-29", entryTime: "16:45:04" },
-  //       { carNumber: "31조8043", entryDate: "2025-07-29", entryTime: "16:14:33" },
-  //       { carNumber: "825너3484", entryDate: "2025-07-29", entryTime: "16:00:00" },
-  //     ]);
+  // ✅ [수정] 연도/월 변경 시, 업로드된 데이터가 있다면 무조건 초기화
+  useEffect(() => {
+    // 데이터가 있을 때만 동작 (없으면 신경 안 씀)
+    if (niceParkData.length > 0 || s1Data.length > 0) {
+      // 1. 사용자에게 알림 (선택 사항: 너무 귀찮으면 alert 빼도 됨)
+      alert(
+        "기준 날짜가 변경되어 미리보기 데이터가 초기화됩니다.\n파일을 다시 업로드해주세요."
+      );
 
-  //     setS1Data([
-  //       { workDate: "2025-07-01", employeeId: "1000", employeeName: "홍길동" },
-  //       { workDate: "2025-07-02", employeeId: "1000", employeeName: "홍길동" },
-  //       { workDate: "2025-07-03", employeeId: "1000", employeeName: "홍길동" },
-  //     ]);
-  //   } else {
-  //     setIsDataExisting(false);
-  //     setNiceParkData([]);
-  //     setS1Data([]);
-  //   }
-  // }, [selectedYear, selectedMonth]);
+      // 2. 데이터 싹 비우기
+      setNiceParkData([]);
+      setS1Data([]);
+
+      // [추가] 검색어 비우기
+      setNiceSearchTerm("");
+      setS1SearchTerm("");
+
+      // 3. 파일 input 초기화 (같은 파일 다시 선택 가능하도록)
+      if (niceFileInputRef.current) niceFileInputRef.current.value = "";
+      if (s1FileInputRef.current) s1FileInputRef.current.value = "";
+    }
+  }, [selectedYear, selectedMonth]); // 연도나 월이 바뀔 때마다 실행됨
 
   // ✅ [추가] 연도/월 변경 시 데이터 존재 여부 체크 (백엔드 연동)
   useEffect(() => {
@@ -304,10 +308,13 @@ const DataUploadPage: React.FC = () => {
       // 첫 행을 헤더로 인식해서 JSON 변환
       const jsonData = XLSX.utils.sheet_to_json(worksheet, { defval: "" });
 
+      // [수정] 변수를 미리 선언, if문 밖에서도 살리기
+      let mappedData: any[] = [];
+
       let idxCnt = 1;
       // 타입별 데이터 매핑 (한글->영어)
       if (type === "nice") {
-        const mappedData: NiceParkRow[] = jsonData
+        mappedData = jsonData
           .map((row: any) => ({
             idx: idxCnt++,
             carNumber: row["차량번호"] || row["차량 번호"],
@@ -317,12 +324,12 @@ const DataUploadPage: React.FC = () => {
           }))
           .filter((item) => item.carNumber && item.accessDate); // 빈 데이터 필터링
 
-        const invalidCnt = await checkAndSetNiceparkState(mappedData);
-        alert(
-          `[NicePark] ${file.name} 파싱 완료 (${mappedData.length}건) 기준정보 미등록(${invalidCnt}건 업로드 불가)`
-        );
+        // const invalidCnt = await checkAndSetNiceparkState(mappedData);
+        // alert(
+        //   `[NicePark] ${file.name} 파싱 완료 (${mappedData.length}건) 기준정보 미등록(${invalidCnt}건 업로드 불가)`
+        // );
       } else if (type === "s1") {
-        const mappedData: S1Row[] = jsonData
+        mappedData = jsonData
           .map((row: any) => ({
             idx: idxCnt++,
             memberId: row["사원번호"],
@@ -333,13 +340,89 @@ const DataUploadPage: React.FC = () => {
             isInvalid: false,
           }))
           .filter((item) => item.memberId && item.accessDate); // 빈 데이터 필터링
+      }
 
-        const invalidCnt = await checkAndSetS1State(mappedData);
+      // ---------------------------------------------------------
+      // [추가] 2. 연도/월 일치 여부 검사 (핵심 로직)
+      // ---------------------------------------------------------
+
+      if (mappedData.length > 0) {
+        const invalidRow = mappedData.find((row) => {
+          // row.accessDate는 "YYYY-MM-DD" 형태임 (formatDate 함수 거침)
+          if (!row.accessDate) return false;
+
+          const [rowYear, rowMonth] = row.accessDate.split("-"); // ["2025", "07", "29"]
+
+          // 1) 연도 체크
+          if (rowYear !== selectedYear) {
+            return true; // 불일치 발견!
+          }
+
+          // 2) 월 체크 (selectedMonth가 "0"(전체)이 아닐 때만 검사)
+          if (selectedMonth !== "0") {
+            // rowMonth는 "07", selectedMonth는 "7" 일 수 있으므로 정수로 변환해서 비교
+            if (parseInt(rowMonth) !== parseInt(selectedMonth)) {
+              return true; // 불일치 발견!
+            }
+          }
+          return false; // 통과
+        });
+
+        // 불일치 데이터가 발견되었다면?
+        if (invalidRow) {
+          const [rowYear, rowMonth] = invalidRow.accessDate.split("-");
+
+          let errorMsg = `🚨 날짜 불일치!\n\n선택하신 날짜: [${selectedYear}년`;
+          if (selectedMonth !== "0") errorMsg += ` ${selectedMonth}월`;
+          errorMsg += `]\n파일 내 날짜: [${rowYear}년 ${rowMonth}월 데이터 포함]`;
+
+          errorMsg += `\n\n선택한 연도/월과 일치하는 엑셀 파일만 업로드해주세요.`;
+
+          alert(errorMsg);
+
+          // input 초기화 (같은 파일 다시 올릴 수 있게)
+          if (type === "nice" && niceFileInputRef.current)
+            niceFileInputRef.current.value = "";
+          if (type === "s1" && s1FileInputRef.current)
+            s1FileInputRef.current.value = "";
+
+          return; // 여기서 함수 즉시 종료 (화면에 데이터 안 보여줌)
+        }
+      }
+
+      // ---------------------------------------------------------
+      // 3. 검증 통과 시 로직 진행 (기존 코드)
+      // ---------------------------------------------------------
+      if (type === "nice") {
+        // 타입 단언 (any -> NiceParkRow[])
+        const niceRows = mappedData as NiceParkRow[];
+
+        // [추가] 검색어 초기화
+        setNiceSearchTerm("");
+
+        const invalidCnt = await checkAndSetNiceparkState(niceRows);
         alert(
-          `[에스원] ${file.name} 파싱 완료 (${mappedData.length}건) 기준정보 미등록(${invalidCnt}건 업로드 불가)`
+          `[NicePark] ${file.name} 파싱 완료 (${niceRows.length}건)\n(기준정보 미등록: ${invalidCnt}건 업로드 불가)`
+        );
+      } else if (type === "s1") {
+        // 타입 단언 (any -> S1Row[])
+        const s1Rows = mappedData as S1Row[];
+
+        // [추가] 검색어 초기화
+        setS1SearchTerm("");
+
+        const invalidCnt = await checkAndSetS1State(s1Rows);
+        alert(
+          `[에스원] ${file.name} 파싱 완료 (${s1Rows.length}건)\n(기준정보 미등록: ${invalidCnt}건 업로드 불가)`
         );
       }
     };
+    //     const invalidCnt = await checkAndSetS1State(mappedData);
+    //     alert(
+    //       `[에스원] ${file.name} 파싱 완료 (${mappedData.length}건) 기준정보 미등록(${invalidCnt}건 업로드 불가)`
+    //     );
+    //   }
+    // };
     reader.readAsArrayBuffer(file);
   };
 
@@ -482,6 +565,34 @@ const DataUploadPage: React.FC = () => {
     }
   };
 
+  // 2. [나이스파크] 필터링 로직 (차량번호 검색)
+  // niceData는 현재 나이스파크 테이블에 뿌려주고 있는 원본 데이터 배열 변수명입니다.
+  const filteredNiceData = niceParkData.filter((row: any) => {
+    if (!niceSearchTerm) return true; // 검색어 없으면 다 보여줌
+    const lowerTerm = niceSearchTerm.toLowerCase();
+    // 안전하게 옵셔널 체이닝(?.) 사용
+    return row.carNumber?.toLowerCase().includes(lowerTerm);
+  });
+
+  // 3. [에스원] 필터링 로직 (이름 or 사번 검색)
+  // s1Data는 현재 에스원 테이블에 뿌려주고 있는 원본 데이터 배열 변수명입니다.
+  const filteredS1Data = s1Data.filter((row: any) => {
+    if (!s1SearchTerm) return true;
+    const lowerTerm = s1SearchTerm.toLowerCase();
+
+    // 이름 검색 (변수명 driverName 확인 필요)
+    const nameMatch = row.employeeName?.toLowerCase().includes(lowerTerm);
+    // 사번 검색 (변수명 driverId 확인 필요)
+    const idMatch = row.memberId?.toString().toLowerCase().includes(lowerTerm);
+
+    return nameMatch || idMatch;
+  });
+
+  // [추가] 렌더링 직전에 '등록 불가 데이터'만 싹 긁어모으기
+  const invalidNiceRows = niceParkData.filter((row) => row.isInvalid);
+  const invalidS1Rows = s1Data.filter((row) => row.isInvalid);
+  const totalInvalidCount = invalidNiceRows.length + invalidS1Rows.length;
+
   return (
     <div className="p-8 bg-white font-sans">
       {/* Header */}
@@ -545,7 +656,7 @@ const DataUploadPage: React.FC = () => {
         {/* LEFT - NicePark */}
         <div className="flex-1 flex flex-col">
           <h3 className="text-sm font-bold text-gray-600 mb-3">
-            나이스파크 데이터
+            나이스파크 출입차량 데이터
           </h3>
 
           {/* Drop Zone */}
@@ -595,9 +706,45 @@ const DataUploadPage: React.FC = () => {
             </div>
           )}
 
-          <h4 className="text-xs font-bold text-gray-600 mt-3 mb-2">
-            나이스파크 출입차량 데이터
-          </h4>
+          {/* 🟢 나이스파크 헤더 (제목 + 검색창 + 범례) */}
+          <div className="flex justify-between items-end mb-2">
+            <h4 className="text-xs font-bold text-gray-600">
+              나이스파크 출입차량 데이터
+            </h4>
+
+            <div className="flex items-center gap-2">
+              {/* 검색창 */}
+              <div className="relative">
+                <input
+                  type="text"
+                  placeholder="차량번호 검색"
+                  value={niceSearchTerm}
+                  onChange={(e) => setNiceSearchTerm(e.target.value)}
+                  className="pl-7 pr-2 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:border-blue-500 w-32 transition-all"
+                />
+                <Search
+                  className="absolute left-2 top-1.5 text-gray-400"
+                  size={12}
+                />
+                {niceSearchTerm && (
+                  <button
+                    onClick={() => setNiceSearchTerm("")}
+                    className="absolute right-2 top-1.5 text-gray-400 hover:text-gray-600"
+                  >
+                    <X size={12} />
+                  </button>
+                )}
+              </div>
+
+              {/* 범례 */}
+              <div className="flex items-center gap-1 text-xs ml-2">
+                <span className="w-3 h-3 bg-red-50 border border-red-200 rounded-sm"></span>
+                <span className="text-gray-400 text-[10px]">
+                  : 기준정보 미등록 (저장 불가)
+                </span>
+              </div>
+            </div>
+          </div>
           <div className="border border-gray-200 rounded-md h-96 overflow-y-auto">
             <table className="w-full text-sm">
               <thead className="bg-gray-100">
@@ -621,7 +768,7 @@ const DataUploadPage: React.FC = () => {
                     </td>
                   </tr>
                 ) : (
-                  niceParkData.map((row, i) => (
+                  filteredNiceData.map((row, i) => (
                     <tr
                       key={i}
                       className={`
@@ -647,7 +794,7 @@ const DataUploadPage: React.FC = () => {
         {/* RIGHT - S1 */}
         <div className="flex-1 flex flex-col">
           <h3 className="text-sm font-bold text-gray-600 mb-3">
-            에스원 데이터
+            에스원 출퇴근 데이터
           </h3>
 
           <div
@@ -694,9 +841,45 @@ const DataUploadPage: React.FC = () => {
             </div>
           )}
 
-          <h4 className="text-xs font-bold text-gray-600 mt-3 mb-2">
-            에스원 출입차량 데이터
-          </h4>
+          {/* 🔵 에스원 헤더 (제목 + 검색창 + 범례) */}
+          <div className="flex justify-between items-end mb-2">
+            <h4 className="text-xs font-bold text-gray-600">
+              에스원 출퇴근 데이터
+            </h4>
+
+            <div className="flex items-center gap-2">
+              {/* 검색창 */}
+              <div className="relative">
+                <input
+                  type="text"
+                  placeholder="이름/사번 검색"
+                  value={s1SearchTerm}
+                  onChange={(e) => setS1SearchTerm(e.target.value)}
+                  className="pl-7 pr-2 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:border-blue-500 w-32 transition-all"
+                />
+                <Search
+                  className="absolute left-2 top-1.5 text-gray-400"
+                  size={12}
+                />
+                {s1SearchTerm && (
+                  <button
+                    onClick={() => setS1SearchTerm("")}
+                    className="absolute right-2 top-1.5 text-gray-400 hover:text-gray-600"
+                  >
+                    <X size={12} />
+                  </button>
+                )}
+              </div>
+
+              {/* 범례 */}
+              <div className="flex items-center gap-1 text-xs ml-2">
+                <span className="w-3 h-3 bg-red-50 border border-red-200 rounded-sm"></span>
+                <span className="text-gray-400 text-[10px]">
+                  : 기준정보 미등록(저장 불가)
+                </span>
+              </div>
+            </div>
+          </div>
           <div className="border border-gray-200 rounded-md h-96 overflow-y-auto">
             <table className="w-full text-sm">
               <thead className="bg-gray-100">
@@ -720,7 +903,7 @@ const DataUploadPage: React.FC = () => {
                     </td>
                   </tr>
                 ) : (
-                  s1Data.map((row, i) => (
+                  filteredS1Data.map((row, i) => (
                     <tr
                       key={i}
                       className={`
@@ -732,9 +915,9 @@ const DataUploadPage: React.FC = () => {
                         }
                       `}
                     >
-                      <td className="p-2 text-gray-800">{row.accessDate}</td>
                       <td className="p-2 text-gray-800">{row.memberId}</td>
                       <td className="p-2 text-gray-800">{row.employeeName}</td>
+                      <td className="p-2 text-gray-800">{row.accessDate}</td>
                     </tr>
                   ))
                 )}
@@ -758,11 +941,84 @@ const DataUploadPage: React.FC = () => {
       <ConfirmModal
         isOpen={isConfirmModalOpen}
         onClose={() => setIsConfirmModalOpen(false)}
-        onConfirm={handleSubmit} // 등록 버튼 누르면 실행될 함수
+        onConfirm={handleSubmit}
         title="등록 확인"
         message={confirmMessage}
-        isWarning={confirmMessage.includes("오류")} // "오류" 글자가 있으면 빨간색 테마로
-      />
+        isWarning={confirmMessage.includes("오류")}
+        size={totalInvalidCount > 0 ? "lg" : "sm"}
+      >
+        {/* 등록 제외 데이터가 하나라도 있을 때만 표시 */}
+        {totalInvalidCount > 0 && (
+          <div className="mt-4 border rounded-lg bg-red-50 p-3 text-left">
+            <h4 className="text-sm font-bold text-red-600 mb-3 flex items-center gap-2">
+              ⚠️ 등록 제외 리스트 ({totalInvalidCount}건)
+              <span className="text-xs font-normal text-gray-500">
+                (기준정보 미등록 데이터)
+              </span>
+            </h4>
+
+            <div className="space-y-4">
+              {/* ================= 나이스파크 ================= */}
+              {invalidNiceRows.length > 0 && (
+                <div className="border rounded-lg bg-white p-3">
+                  <h5 className="text-sm font-bold text-red-600 mb-2">
+                    🚗 나이스파크 등록 제외 차량 ({invalidNiceRows.length}건)
+                  </h5>
+
+                  <div className="max-h-48 overflow-y-auto border border-red-200 rounded">
+                    <table className="w-full text-xs border-collapse">
+                      <thead className="bg-red-100 sticky top-0">
+                        <tr>
+                          <th className="p-2 text-left">차량번호</th>
+                          <th className="p-2 text-left">입차일시</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {invalidNiceRows.map((row, idx) => (
+                          <tr key={idx} className="border-t">
+                            <td className="p-2 font-bold">{row.carNumber}</td>
+                            <td className="p-2">
+                              {row.accessDate} {row.accessTime}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+
+              {/* ================= 에스원 ================= */}
+              {invalidS1Rows.length > 0 && (
+                <div className="border rounded-lg bg-white p-3">
+                  <h5 className="text-sm font-bold text-red-600 mb-2">
+                    🏭 에스원 등록 제외 이력 ({invalidS1Rows.length}건)
+                  </h5>
+
+                  <div className="max-h-48 overflow-y-auto border border-red-200 rounded">
+                    <table className="w-full text-xs border-collapse">
+                      <thead className="bg-red-100 sticky top-0">
+                        <tr>
+                          <th className="p-2 text-left">사원번호</th>
+                          <th className="p-2 text-left">출입일자</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {invalidS1Rows.map((row, idx) => (
+                          <tr key={idx} className="border-t">
+                            <td className="p-2 font-bold">{row.memberId}</td>
+                            <td className="p-2">{row.accessDate}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+      </ConfirmModal>
 
       <Modal
         isOpen={alertModalOpen}

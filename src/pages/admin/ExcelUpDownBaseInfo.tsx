@@ -183,6 +183,29 @@ const ExcelManagementPage: React.FC = () => {
     }
   };
 
+  const handleExcelDownload = async () => {
+    const token =
+      sessionStorage.getItem("token") || localStorage.getItem("token");
+
+    const res = await axios.get(`${BASE_URL}/admin/excel/download/base-info`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      responseType: "blob",
+    });
+
+    const blob = new Blob([res.data], {
+      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    });
+
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "기준정보_전체.xlsx";
+    a.click();
+    window.URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="p-8 bg-gray-50 min-h-screen font-sans">
       {/* 1. Header Area */}
@@ -199,11 +222,11 @@ const ExcelManagementPage: React.FC = () => {
 
         {/* 우측 상단 다운로드 버튼 (기존 유지) */}
         <button
-          onClick={() => alert("양식 다운로드 준비 중입니다.")}
+          onClick={handleExcelDownload}
           className="flex items-center px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg text-sm font-bold hover:bg-gray-50 transition-colors shadow-sm"
         >
           <FileSpreadsheet size={16} className="mr-2 text-green-600" />
-          양식 다운로드
+          기준정보 엑셀 다운로드
         </button>
       </div>
 
@@ -268,8 +291,8 @@ const ExcelManagementPage: React.FC = () => {
           </div>
 
           {/* 테이블 본문 */}
-          <div className="overflow-x-auto max-h-[500px]">
-            <table className="w-full text-sm text-left">
+          <div className="overflow-x-auto max-h-[800px] block w-full max-w-[calc(100vw-150px)]">
+            <table className="w-full text-sm text-left border-collapse whitespace-nowrap min-w-max">
               <thead className="text-xs text-gray-700 uppercase bg-gray-100 sticky top-0">
                 <tr>
                   {headers.map((header) => (
