@@ -350,7 +350,8 @@ const VehicleBasicRegisterPage: React.FC = () => {
         return (
           <>
             <div className="flex flex-col gap-1"><RequiredLabel isRequired>차량번호</RequiredLabel><input name="carNumber" value={formData.carNumber} onChange={handleChange} className={twInput} /></div>
-            <SelectField name="purposeName" idName="purposeId" label="운행목적" options={options.PURPOSE_OPTIONS} isRequired value={formData.purposeName} />
+            <div className="flex flex-col gap-1"><RequiredLabel isRequired>모델명</RequiredLabel><input name="carModel" value={formData.carModel} onChange={handleChange} className={twInput} /></div>
+            <div className="flex flex-col gap-1"><RequiredLabel>사원번호</RequiredLabel><input type="number" name="employeeId" value={formData.employeeId} onChange={handleChange} className={twInput} /></div>
             <div className="flex flex-col gap-1"><RequiredLabel isRequired>협력사명</RequiredLabel><input list="company-list" name="companyName" value={formData.companyName} onChange={(e) => {
               const company = options.COMPANY_LIST?.find(c => c.name === e.target.value);
               if (company) {
@@ -359,11 +360,10 @@ const VehicleBasicRegisterPage: React.FC = () => {
                 handleChange(e);
               }
             }} className={twInput} /><datalist id="company-list">{options.COMPANY_LIST?.map(c => <option key={c.id} value={c.name}/>)}</datalist></div>
-            <div className="flex flex-col gap-1"><RequiredLabel>사원번호</RequiredLabel><input type="number" name="employeeId" value={formData.employeeId} onChange={handleChange} className={twInput} /></div>
+            <SelectField name="purposeName" idName="purposeId" label="운행목적" options={options.PURPOSE_OPTIONS} isRequired value={formData.purposeName} />
             <div className="flex flex-col gap-1"><RequiredLabel isRequired>편도거리(km)</RequiredLabel><input type="number" name="distance" value={formData.distance} onChange={handleChange} className={twInput} /></div>
             <SelectField name="categoryLarge" idName="categoryLargeId" label="차종 대분류" options={options.CAT_LARGE_OPTIONS} isRequired value={formData.categoryLarge} />
             <SelectField name="categorySmall" idName="categorySmallId" label="차종 소분류" options={options.CAR_CATEGORY_MAP?.[formData.categoryLarge] ?? options.CAT_SMALL_OPTIONS} isRequired value={formData.categorySmall} />
-            <div className="flex flex-col gap-1"><RequiredLabel isRequired>모델명</RequiredLabel><input name="carModel" value={formData.carModel} onChange={handleChange} className={twInput} /></div>
             <SelectField name="fuelType" idName="fuelTypeId" label="연료종류" options={options.FUEL_OPTIONS} isRequired value={formData.fuelType} />
             <div className="col-span-3 flex flex-col gap-1"><RequiredLabel>비고</RequiredLabel><textarea name="remark" value={formData.remark} onChange={handleChange} className="w-full h-28 p-3 border border-gray-300 bg-gray-100 rounded text-sm outline-none" /></div>
           </>

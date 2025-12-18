@@ -94,14 +94,14 @@ export interface ProductData {
 // 1. 출입 차량 컬럼
 export const VEHICLE_COLUMNS: ColumnDefinition<VehicleData>[] = [
   { id: 'carNumber', header: '차량번호', searchable: true, sortable: true, editable: true, width: '10%', inputType: 'text' },
+  { id: 'carModelName', header: '모델명', searchable: true, sortable: true, editable: true, width: '10%', inputType: 'text' },
+  { id: 'driverMemberId', header: '사원번호', searchable: true, sortable: true, editable: true, width: '8%', inputType: 'number' },
+  { id: 'companyName', header: '협력사명', searchable: true, sortable: true, editable: true, width: '10%', inputType: 'dynamic-select' },
   { id: 'operationPurposeName', header: '운행목적', searchable: true, sortable: true, editable: true, width: '8%', inputType: 'dynamic-select' },
   { id: 'defaultScope', header: 'Scope', searchable: false, sortable: true, editable: false, width: '8%' }, 
-  { id: 'companyName', header: '협력사명', searchable: true, sortable: true, editable: true, width: '10%', inputType: 'dynamic-select' },
-  { id: 'driverMemberId', header: '사원번호', searchable: true, sortable: true, editable: true, width: '8%', inputType: 'number' },
   { id: 'operationDistance', header: '편도거리(km)', searchable: false, sortable: true, editable: true, width: '8%', inputType: 'number' },
   { id: 'parentCategoryName', header: '대분류', searchable: false, sortable: true, editable: true, width: '8%', inputType: 'dynamic-select' },
   { id: 'carCategoryName', header: '소분류', searchable: false, sortable: true, editable: false, width: '8%' },
-  { id: 'carModelName', header: '모델명', searchable: true, sortable: true, editable: true, width: '10%', inputType: 'text' },
   { id: 'fuelType', header: '연료', searchable: false, sortable: true, editable: true, width: '8%', inputType: 'dynamic-select' },
   { id: 'remark', header: '비고', searchable: false, sortable: false, editable: true, width: '10%', inputType: 'text' },
   { id: 'actions', header: '액션', searchable: false, sortable: false, editable: false, width: '10%' },
