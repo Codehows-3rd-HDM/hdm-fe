@@ -263,6 +263,26 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
     ));
   };
   
+  // [API] 개별 삭제
+  const handleSingleDelete = async (rowId: number) => {
+      if (window.confirm(`ID ${rowId} 행을 정말 삭제하시겠습니까?`)) {
+          let endpoint = apiEndpoint;
+          if (endpoint.includes('car-models')) {
+            endpoint = `/admin/car-model/${rowId}`;
+          } else if (endpoint.includes('companies')) {
+            endpoint = `/admin/company/${rowId}`;
+          } else if (endpoint.includes('vehicles')) {
+            endpoint = `/admin/vehicle/${rowId}`;
+          } else {
+            // 다른 엔티티들은 삭제 API가 없음
+            alert("이 데이터는 삭제할 수 없습니다.");
+            return;
+          }
+          await axiosInstance.delete(endpoint);
+          setData(prev => prev.filter(row => row.id !== rowId));
+          alert("삭제되었습니다.");
+      }
+  };
   // [API] 개별 저장
   const handleSingleSave = async (rowId: number) => {
       const rowData = data.find(row => row.id === rowId);
@@ -276,19 +296,37 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
         endpoint = `/admin/car-model/${rowId}`;
         // 프론트 데이터 -> 백엔드 데이터 변환
         payload = {
-          carCategoryId: rowData.carCategoryId || rowData.id, // 기존 ID 유지
+          carCategoryId: rowData.carCategoryId,
           fuelType: rowData.fuelType,
-          customEfficiency: parseFloat(rowData.fuelEfficiency)
+          customEfficiency: parseFloat(rowData.customEfficiency || '0')
         };
       } else if (endpoint.includes('companies')) {
         endpoint = `/admin/company/${rowId}`;
         // 프론트 데이터 -> 백엔드 데이터 변환
         payload = {
           companyName: rowData.companyName,
-          supplyTypeId: rowData.supplyTypeId, // 기존 ID 유지
-          supplyCustomerId: rowData.supplyCustomerId, // 기존 ID 유지
+          supplyTypeId: rowData.supplyTypeId,
+          customerId: rowData.supplyCustomerId,
           oneWayDistance: rowData.oneWayDistance,
+          region: rowData.region,
+          detailAddress: rowData.addressDetail,
           address: `${rowData.region} ${rowData.addressDetail}`.trim(),
+          remark: rowData.remark
+        };
+      } else if (endpoint.includes('vehicles')) {
+        endpoint = `/admin/vehicle/${rowId}`;
+        // 프론트 데이터 -> 백엔드 데이터 변환
+        payload = {
+          carNumber: rowData.carNumber,
+          operationPurposeId: rowData.operationPurposeId,
+          companyId: rowData.companyId,
+          driverMemberId: rowData.driverMemberId,
+          // parentCategoryId: rowData.parentCategoryId,
+          carCategoryId: rowData.carCategoryId,
+          carModelId: rowData.carModelId,
+          carName: rowData.carModelName,
+          fuelType: rowData.fuelType,
+          operationDistance: parseFloat(rowData.operationDistance || '0'),
           remark: rowData.remark
         };
       } else {
@@ -300,24 +338,6 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
       await axiosInstance.put(endpoint, payload);
       alert("저장되었습니다.");
       toggleEditMode(rowId);
-  };
-
-  // [API] 개별 삭제
-  const handleSingleDelete = async (rowId: number) => {
-      if (window.confirm(`ID ${rowId} 행을 정말 삭제하시겠습니까?`)) {
-          let endpoint = apiEndpoint;
-          if (endpoint.includes('car-models')) {
-            endpoint = `/admin/car-model/${rowId}`;
-          } else if (endpoint.includes('companies')) {
-            endpoint = `/admin/company/${rowId}`;
-          } else {
-            // 다른 엔티티들은 삭제 API가 없음
-            alert("이 데이터는 삭제할 수 없습니다.");
-            return;
-          }
-          await axiosInstance.delete(endpoint);
-          setData(prev => prev.filter(row => row.id !== rowId));
-      }
   };
 
   // [일괄 수정]
@@ -346,7 +366,7 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
     }
     
     // 삭제 가능한 엔티티인지 확인
-    const canDelete = apiEndpoint.includes('car-models') || apiEndpoint.includes('companies');
+    const canDelete = apiEndpoint.includes('car-models') || apiEndpoint.includes('companies') || apiEndpoint.includes('vehicles');
     if (!canDelete) {
         alert("이 데이터는 삭제할 수 없습니다.");
         return;
@@ -360,6 +380,8 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
               endpoint = `/admin/car-model/${rowId}`;
             } else if (endpoint.includes('companies')) {
               endpoint = `/admin/company/${rowId}`;
+            } else if (endpoint.includes('vehicles')) {
+              endpoint = `/admin/vehicle/${rowId}`;
             }
             await axiosInstance.delete(endpoint);
           }
@@ -793,17 +815,7 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
         </div>
       </div>
 
-      {/* 엑셀 업로드 모달 연결
-      <ExcelUploadModal 
-        isOpen={isUploadModalOpen}
-        onClose={() => setIsUploadModalOpen(false)}
-        title={title}
-        onUpload={(data) => {
-            console.log("Uploaded Data:", data);
-            alert("업로드 로직 구현 필요");
-            setIsUploadModalOpen(false);
-        }}
-      /> */}
+      {/* 엑셀 업로드 모달 연결 - 추후 구현 예정 */}
     </div>
   );
 };

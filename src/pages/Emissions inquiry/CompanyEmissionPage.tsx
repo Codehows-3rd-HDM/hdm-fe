@@ -10,13 +10,17 @@ import KoreaMapChart from '../../components/analysis/KoreaMapChart';
 const MOCK_MAP_DATA = [
   { region: '경기', value: 25400 },
   { region: '울산', value: 18000 },
-  { region: '경남', value: 15000 },
-  { region: '충남', value: 9200 },
+  { region: '경상남도', value: 20000 },
+  { region: '충청남도', value: 9200 },
   { region: '부산', value: 8100 },
   { region: '서울', value: 5000 },
   { region: '인천', value: 6500 },
   { region: '대구', value: 4200 },
-  { region: '경북', value: 7800 },
+  { region: '경상북도', value: 7800 },
+  { region: '전라남도', value: 6300 },
+  { region: '전라북도', value: 5100 },
+  { region: '충청북도', value: 4800 },
+  { region: '강원도', value: 3900 },
 ];
 
 // 2. 협력사 데이터 (수십 개 시뮬레이션)

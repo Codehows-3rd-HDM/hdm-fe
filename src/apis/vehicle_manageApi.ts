@@ -110,7 +110,7 @@ const MOCK_COMPANY_DATA: CompanyData[] = [
     supplyCustomerName: '1000',
     oneWayDistance: 12.5,
     region: '경상남도',
-    addressDetail: '창원시', 
+    detailAddress: '창원시', 
     remark: '' 
   },
   { 
@@ -120,7 +120,7 @@ const MOCK_COMPANY_DATA: CompanyData[] = [
     supplyCustomerName: 'clark',
     oneWayDistance: 45.0,
     region: '경상남도',
-    addressDetail: '창원시 성산구',
+    detailAddress: '창원시 성산구',
     remark: '메인 협력사' 
   },
   // 더미 데이터
@@ -131,7 +131,7 @@ const MOCK_COMPANY_DATA: CompanyData[] = [
     supplyCustomerName: i % 3 === 0 ? '2000' : '3000',
     oneWayDistance: Math.floor(Math.random() * 100),
     region: '경기도',
-    addressDetail: `평택시 포승읍 ${i + 1}번길`,
+    detailAddress: `평택시 포승읍 ${i + 1}번길`,
     remark: '-'
   }))
 ];
