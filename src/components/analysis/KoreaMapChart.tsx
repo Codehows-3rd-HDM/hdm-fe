@@ -1,0 +1,181 @@
+import React, { useMemo, useState, useEffect } from "react";
+import {
+  ComposableMap,
+  Geographies,
+  Geography,
+  ZoomableGroup,
+} from "react-simple-maps";
+import { scaleLinear } from "d3-scale";
+import { Tooltip } from "react-tooltip";
+import { fetchRegionalEmissionData } from "../../apis/mapApi";
+
+// 대한민국 TopoJSON
+const KOREA_TOPO_JSON =
+  "https://raw.githubusercontent.com/southkorea/southkorea-maps/master/kostat/2018/json/skorea-provinces-2018-topo.json";
+
+interface KoreaMapChartProps {
+  data?: { region: string; value: number }[];
+  large?: boolean; // CompanyEmissionPage passes `large` prop
+}
+
+// TopoJSON 영문명 → 실제 지역 한글명 매핑
+const REGION_MAPPING: Record<string, string> = {
+  Seoul: "서울",
+  Busan: "부산",
+  Daegu: "대구",
+  Incheon: "인천",
+  Gwangju: "광주",
+  Daejeon: "대전",
+  Ulsan: "울산",
+  "Sejong-si": "세종",
+  "Gyeonggi-do": "경기",
+  "Gangwon-do": "강원",
+  "Chungcheongbuk-do": "충북",
+  "Chungcheongnam-do": "충남",
+  "Jeollabuk-do": "전북",
+  "Jeollanam-do": "전남",
+  "Gyeongsangbuk-do": "경북",
+  "Gyeongsangnam-do": "경남",
+  "Jeju-do": "제주",
+};
+
+const KoreaMapChart: React.FC<KoreaMapChartProps> = ({ data: propData, large = false }) => {
+  const [localData, setLocalData] = useState<{ region: string; value: number }[]>(propData ?? []);
+
+  // api 전 더미데이터 반환
+  useEffect(() => {
+    let mounted = true;
+    const load = async () => {
+      if (propData && propData.length > 0) {
+        setLocalData(propData);
+        return;
+      }
+      try {
+        const d = await fetchRegionalEmissionData();
+        if (mounted) setLocalData(d);
+      } catch (e) {
+        console.error('Failed to fetch regional data', e);
+      } finally {
+        // finished
+      }
+    };
+    load();
+    return () => { mounted = false; };
+  }, [propData]);
+
+  const data = localData;
+
+  const maxValue = Math.max(...(data.length > 0 ? data.map((d) => d.value) : [1]), 1);
+  const minValue = Math.min(...(data.length > 0 ? data.map((d) => d.value) : [0]), 0);
+
+  
+
+  // Normalize region names for more robust matching (remove suffixes, spaces)
+  const normalize = (name: string) => {
+    if (!name) return '';
+    return name
+      .replace(/\s+/g, '')
+      .replace(/(특별자치도|특별자치시|광역시|특별시|도|시)$/g, '');
+  };
+
+  const normalizedDataMap = useMemo(() => {
+    return data.reduce((acc, curr) => {
+      acc[normalize(curr.region)] = curr.value;
+      return acc;
+    }, {} as Record<string, number>);
+  }, [data]);
+
+  const colorScale = useMemo(() => {
+    return scaleLinear<string>()
+      .domain([0, maxValue])
+      .range(["#E0F2FE", "#1E3A8A"]);
+  }, [maxValue]);
+
+  const containerHeight = large ? 'h-[1100px]' : 'h-[700px]';
+  const projectionScale = large ? 7000 : 6200;
+
+  return (
+    <div className={`w-full ${containerHeight} relative bg-white rounded-xl shadow-md overflow-hidden`}>
+      <h3 className="absolute top-4 left-1/2 -translate-x-1/2 text-lg font-bold z-10 text-gray-700">
+        지역별 배출량 분포
+      </h3>
+
+      <ComposableMap
+        projection="geoMercator"
+        projectionConfig={{
+          scale: projectionScale,
+          center: [127.8, 36],
+        }}
+        width={1000}
+        height={900}
+        style={{ width: "100%", height: "100%" }}
+      >
+        <ZoomableGroup zoom={1}>
+          <Geographies geography={KOREA_TOPO_JSON}>
+              {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+              {({ geographies }: { geographies: any[] }) =>
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                geographies.map((geo: any) => {
+                const engName = geo.properties.name;
+                const regionName = REGION_MAPPING[engName] || engName;
+                const norm = normalize(String(regionName));
+                const value = normalizedDataMap[norm] ?? 0;
+
+                return (
+                  <Geography
+                    key={geo.rsmKey}
+                    geography={geo}
+                    data-tooltip-id="map-tooltip"
+                    data-tooltip-content={`${regionName}: ${value.toLocaleString()} tCO₂eq`}
+                    style={{
+                      default: {
+                        fill: value > 0 ? colorScale(value) : "#F3F4F6",
+                        stroke: "#fff",
+                        strokeWidth: 0.7,
+                        outline: "none",
+                      },
+                      hover: {
+                        fill: "#F59E0B", // hover color (orange)
+                        cursor: "pointer",
+                      },
+                      pressed: {
+                        fill: "#D97706",
+                      },
+                    }}
+                  />
+                );
+              })
+            }
+          </Geographies>
+        </ZoomableGroup>
+      </ComposableMap>
+
+      <Tooltip
+        id="map-tooltip"
+        place="top"
+        style={{
+          backgroundColor: "rgba(30, 41, 59, 0.9)",
+          color: "#fff",
+          borderRadius: "8px",
+          fontSize: "12px",
+          zIndex: 50,
+          padding: "8px 12px",
+        }}
+      />
+
+      <div className="absolute bottom-4 right-4 flex flex-col gap-1 bg-white/90 p-2 rounded-md shadow-sm text-xs border border-gray-100">
+        <div className="flex items-center gap-2">
+          <span className="w-3 h-3 rounded-sm" style={{ backgroundColor: colorScale(maxValue) }}></span> High
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="w-3 h-3 rounded-sm" style={{ backgroundColor: colorScale(minValue) }}></span> Low
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="w-3 h-3 bg-[#F3F4F6] rounded-sm border border-gray-200"></span>No Data
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default KoreaMapChart;

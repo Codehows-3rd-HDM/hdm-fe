@@ -4,3 +4,8 @@ npm install --save-dev @types/react-grid-layout @types/lodash
 npm install -D tailwindcss postcss autoprefixer
 npm install -D @tailwindcss/postcss
 npm install tailwindcss @tailwindcss/vite
+npm install react@18 react-dom@18
+npm install xlsx --legacy-peer-deps
+npm install react-is --legacy-peer-deps
+npm install react-simple-maps@3 d3-scale topojson-client
+npm install axios

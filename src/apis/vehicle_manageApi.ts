@@ -60,105 +60,108 @@ const MOCK_VEHICLE_DATA: VehicleData[] = [
   { 
     id: 1, 
     carNumber: '123가4567', 
-    purpose: '출퇴근', 
-    scope: 'Scope1',
-    vendorName: '현대정밀', 
-    employeeId: '30', 
-    distance: '4.7', 
-    categoryLarge: '승용차',
-    categorySmall: '중형',
-    carModel: '쏘나타',
+    operationPurposeName: '출퇴근', 
+    defaultScope: 'Scope1',
+    companyName: '현대정밀', 
+    driverMemberId: '30', 
+    operationDistance: '4.7', 
+    parentCategoryName: '승용차',
+    carCategoryName: '중형',
+    carModelName: '쏘나타',
     fuelType: '가솔린',
-    note: '기본 등록 데이터' 
+    remark: '기본 등록 데이터' 
   },
   { 
     id: 2, 
     carNumber: '58너1234', 
-    purpose: '납품', 
-    scope: 'Scope3',
-    vendorName: 'Volvo KOREA', 
-    employeeId: '102', 
-    distance: '15.2', 
-    categoryLarge: '상용트럭',
-    categorySmall: '대형',
-    carModel: '볼보트럭',
+    operationPurposeName: '납품', 
+    defaultScope: 'Scope3',
+    companyName: 'Volvo KOREA', 
+    driverMemberId: '102', 
+    operationDistance: '15.2', 
+    parentCategoryName: '상용트럭',
+    carCategoryName: '대형',
+    carModelName: '볼보트럭',
     fuelType: '디젤',
-    note: '장거리 운행' 
+    remark: '장거리 운행' 
   },
   // ... 추가 더미 데이터 생성
   ...Array.from({ length: 20 }, (_, i) => ({
     id: i + 3,
     carNumber: `${100 + i}허${9000 + i}`,
-    purpose: i % 2 === 0 ? '업무' : '방문',
-    scope: 'Scope3',
-    vendorName: i % 3 === 0 ? '삼성전자' : 'LG화학',
-    employeeId: String(200 + i),
-    distance: String(Math.floor(Math.random() * 50) + 5),
-    categoryLarge: '승용차',
-    categorySmall: '소형',
-    carModel: '아반떼',
+    operationPurposeName: i % 2 === 0 ? '업무' : '방문',
+    defaultScope: 'Scope3',
+    companyName: i % 3 === 0 ? '삼성전자' : 'LG화학',
+    driverMemberId: String(200 + i),
+    operationDistance: String(Math.floor(Math.random() * 50) + 5),
+    parentCategoryName: '승용차',
+    carCategoryName: '소형',
+    carModelName: '아반떼',
     fuelType: '가솔린',
-    note: '-'
+    remark: '-'
   }))
 ];
 
 const MOCK_COMPANY_DATA: CompanyData[] = [
   { 
     id: 1, 
-    vendorName: '현대정밀', 
-    processName: '조립', 
-    distance: '12.5', 
-    productClass: '1000', 
-    address: '경상남도 창원시', 
-    note: '' 
+    companyName: '현대정밀', 
+    supplyTypeName: '조립', 
+    supplyCustomerName: '1000',
+    oneWayDistance: 12.5,
+    region: '경상남도',
+    detailAddress: '창원시', 
+    remark: '' 
   },
   { 
     id: 2, 
-    vendorName: 'Volvo KOREA', 
-    processName: '도장', 
-    distance: '45.0', 
-    productClass: 'clark', 
-    address: '경상남도 창원시 성산구', 
-    note: '메인 협력사' 
+    companyName: 'Volvo KOREA', 
+    supplyTypeName: '도장', 
+    supplyCustomerName: 'clark',
+    oneWayDistance: 45.0,
+    region: '경상남도',
+    detailAddress: '창원시 성산구',
+    remark: '메인 협력사' 
   },
   // 더미 데이터
   ...Array.from({ length: 15 }, (_, i) => ({
     id: i + 3,
-    vendorName: `협력업체_${i + 1}`,
-    processName: i % 2 === 0 ? '프레스' : '차체',
-    distance: String(Math.floor(Math.random() * 100)),
-    productClass: i % 3 === 0 ? '2000' : '3000',
-    address: `경기도 평택시 포승읍 ${i + 1}번길`,
-    note: '-'
+    companyName: `협력사_${i + 1}`,
+    supplyTypeName: i % 2 === 0 ? '프레스' : '차체',
+    supplyCustomerName: i % 3 === 0 ? '2000' : '3000',
+    oneWayDistance: Math.floor(Math.random() * 100),
+    region: '경기도',
+    detailAddress: `평택시 포승읍 ${i + 1}번길`,
+    remark: '-'
   }))
 ];
 
 
 const MOCK_CAR_MODEL_DATA: CarModelData[] = [
-  { id: 1, categoryLarge: '승용차', categorySmall: '중형', fuelType: '가솔린', fuelEfficiency: '12.3' },
-  { id: 2, categoryLarge: '승용차', categorySmall: '소형', fuelType: '디젤', fuelEfficiency: '16.5' },
-  { id: 3, categoryLarge: '상용트럭', categorySmall: '대형', fuelType: '디젤', fuelEfficiency: '4.5' },
-  { id: 4, categoryLarge: '승용차', categorySmall: '경차', fuelType: 'LPG', fuelEfficiency: '10.2' },
+  { id: 1, parentCategoryName: '승용차', carCategoryName: '중형', fuelType: '가솔린', customEfficiency: '12.3' },
+  { id: 2, parentCategoryName: '승용차', carCategoryName: '소형', fuelType: '디젤', customEfficiency: '16.5' },
+  { id: 3, parentCategoryName: '상용트럭', carCategoryName: '대형', fuelType: '디젤', customEfficiency: '4.5' },
+  { id: 4, parentCategoryName: '승용차', carCategoryName: '경차', fuelType: 'LPG', customEfficiency: '10.2' },
   // 더미 데이터
   ...Array.from({ length: 10 }, (_, i) => ({
       id: i + 5,
-      categoryLarge: '승용차',
-      categorySmall: '대형',
+      parentCategoryName: '승용차',
+      carCategoryName: '대형',
       fuelType: '전기',
-      fuelEfficiency: '5.2' // km/kWh 등 단위 통일 필요할 수 있음
+      customEfficiency: '5.2' // km/kWh 등 단위 통일 필요할 수 있음
   }))
 ];
 
 
 const MOCK_PROCESS_DATA: ProcessData[] = [
-  { id: 1, processName: '프레스' },
-  { id: 2, processName: '차체' },
-  { id: 3, processName: '도장' },
-  { id: 4, processName: '조립' },
-  { id: 5, processName: '엔진' },
-  { id: 6, processName: '변속기' },
-  { id: 7, processName: '시트' },
-  { id: 8, processName: '기타' },
+  { id: 1, supplyType: '프레스' },
+  { id: 2, supplyType: '차체' },
+  { id: 3, supplyType: '도장' },
+  { id: 4, supplyType: '조립' },
+  { id: 5, supplyType: '엔진' },
+  { id: 6, supplyType: '변속기' },
+  { id: 7, supplyType: '시트' },
+  { id: 8, supplyType: '기타' },
 ];
 
 const MOCK_PURPOSE_DATA: PurposeData[] = [
@@ -171,9 +174,9 @@ const MOCK_PURPOSE_DATA: PurposeData[] = [
 
 
 const MOCK_PRODUCT_DATA: ProductData[] = [
-  { id: 1, productClass: '1000', note: '기본 부품류' },
-  { id: 2, productClass: '2000', note: '전자 장비' },
-  { id: 3, productClass: '3000', note: '내장재' },
-  { id: 4, productClass: 'clark', note: '지게차 부품' },
-  { id: 5, productClass: '기타', note: '소모품 등' },
+  { id: 1, supplyCustomer: '1000', note: '기본 부품류' },
+  { id: 2, supplyCustomer: '2000', note: '전자 장비' },
+  { id: 3, supplyCustomer: '3000', note: '내장재' },
+  { id: 4, supplyCustomer: 'clark', note: '지게차 부품' },
+  { id: 5, supplyCustomer: '기타', note: '소모품 등' },
 ];

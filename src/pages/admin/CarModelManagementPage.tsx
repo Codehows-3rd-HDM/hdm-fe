@@ -7,8 +7,8 @@ const CarModelManagementPage: React.FC = () => {
     <StandardDataManagementTable<CarModelData>
       title="차종 및 연비 기준정보 관리"
       columns={CAR_MODEL_COLUMNS}
-      // initialData={MOCK_CAR_MODEL_DATA}
-      apiEndpoint="/api/admin/car-models"
+      apiEndpoint="/admin/car-models"
+      disableDelete={true}
     />
   );
 };
