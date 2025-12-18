@@ -1,16 +1,8 @@
 import React, { useState, useRef } from "react";
-import {
-  Download,
-  Upload,
-  FileSpreadsheet,
-  Save,
-  AlertCircle,
-  X,
-} from "lucide-react";
+import { Upload, FileSpreadsheet, Save, AlertCircle, X } from "lucide-react";
 import * as XLSX from "xlsx";
 import axios from "axios";
 import Modal from "../../components/Modal";
-import ConfirmModal from "../../components/ConfirmModal"; // (선택) 확인 모달 있으면 사용
 
 const BASE_URL = import.meta.env.VITE_API_URL || "/api";
 
@@ -207,11 +199,11 @@ const ExcelManagementPage: React.FC = () => {
   };
 
   return (
-    <div className="p-8 bg-gray-50 min-h-screen font-sans">
+    <div className="min-h-screen p-8 font-sans max-w-5/6 bg-gray-50">
       {/* 1. Header Area */}
-      <div className="mb-6 flex justify-between items-end">
+      <div className="flex items-end justify-between mb-6">
         <div>
-          <h2 className="text-2xl font-bold text-gray-800 mb-2">
+          <h2 className="mb-2 text-2xl font-bold text-gray-800">
             통합 기준정보 관리
           </h2>
           <p className="text-gray-500">
@@ -223,7 +215,7 @@ const ExcelManagementPage: React.FC = () => {
         {/* 우측 상단 다운로드 버튼 (기존 유지) */}
         <button
           onClick={handleExcelDownload}
-          className="flex items-center px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg text-sm font-bold hover:bg-gray-50 transition-colors shadow-sm"
+          className="flex items-center px-4 py-2 text-sm font-bold text-gray-700 transition-colors bg-white border border-gray-300 rounded-lg shadow-sm hover:bg-gray-50"
         >
           <FileSpreadsheet size={16} className="mr-2 text-green-600" />
           기준정보 엑셀 다운로드
@@ -231,7 +223,7 @@ const ExcelManagementPage: React.FC = () => {
       </div>
 
       {/* 2. Upload Area (드래그 앤 드롭) */}
-      <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200 mb-6">
+      <div className="p-6 mb-6 bg-white border border-gray-200 shadow-sm rounded-xl">
         <div
           className={`border-2 border-dashed rounded-lg h-32 flex flex-col items-center justify-center cursor-pointer transition-all ${
             isDragOver
@@ -247,8 +239,8 @@ const ExcelManagementPage: React.FC = () => {
             size={40}
             className={`mb-2 ${isDragOver ? "text-blue-500" : "text-gray-400"}`}
           />
-          <span className="font-bold text-lg">클릭하여 엑셀 파일 업로드</span>
-          <span className="text-sm mt-1 text-gray-500">
+          <span className="text-lg font-bold">클릭하여 엑셀 파일 업로드</span>
+          <span className="mt-1 text-sm text-gray-500">
             또는 파일을 여기로 드래그하세요
           </span>
           <input
@@ -265,11 +257,11 @@ const ExcelManagementPage: React.FC = () => {
 
       {/* 3. Preview & Action Area */}
       {excelData.length > 0 ? (
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+        <div className="overflow-hidden bg-white border border-gray-200 shadow-sm rounded-xl">
           {/* 테이블 헤더 & 버튼 */}
-          <div className="p-4 border-b border-gray-200 flex justify-between items-center bg-gray-50">
-            <h3 className="font-bold text-gray-700 flex items-center">
-              <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full mr-2">
+          <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-gray-50">
+            <h3 className="flex items-center font-bold text-gray-700">
+              <span className="px-2 py-1 mr-2 text-xs text-green-800 bg-green-100 rounded-full">
                 {excelData.length}건
               </span>
               데이터 미리보기
@@ -293,7 +285,7 @@ const ExcelManagementPage: React.FC = () => {
           {/* 테이블 본문 */}
           <div className="overflow-x-auto max-h-[800px] block w-full max-w-[calc(100vw-150px)]">
             <table className="w-full text-sm text-left border-collapse whitespace-nowrap min-w-max">
-              <thead className="text-xs text-gray-700 uppercase bg-gray-100 sticky top-0">
+              <thead className="sticky top-0 text-xs text-gray-700 uppercase bg-gray-100">
                 <tr>
                   {headers.map((header) => (
                     <th
@@ -311,7 +303,7 @@ const ExcelManagementPage: React.FC = () => {
                     {headers.map((header) => (
                       <td
                         key={header}
-                        className="px-6 py-3 whitespace-nowrap text-gray-700"
+                        className="px-6 py-3 text-gray-700 whitespace-nowrap"
                       >
                         {row[header]}
                       </td>
@@ -324,7 +316,7 @@ const ExcelManagementPage: React.FC = () => {
         </div>
       ) : (
         // 데이터 없을 때 안내 메시지
-        <div className="text-center p-12 text-gray-400 bg-white rounded-xl border border-dashed border-gray-200">
+        <div className="p-12 text-center text-gray-400 bg-white border border-gray-200 border-dashed rounded-xl">
           <AlertCircle size={48} className="mx-auto mb-4 opacity-20" />
           <p className="text-lg font-medium text-gray-300">
             업로드된 데이터가 없습니다.

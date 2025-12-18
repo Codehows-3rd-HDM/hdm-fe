@@ -2,7 +2,6 @@ import React, { useState, useMemo, useRef, useEffect } from "react";
 import { Upload, AlertCircle, Save, X, Search } from "lucide-react";
 import * as XLSX from "xlsx";
 import axios from "axios";
-import AlertModal from "../../components/Modal";
 import Modal from "../../components/Modal";
 import ConfirmModal from "../../components/ConfirmModal";
 
@@ -180,7 +179,9 @@ const DataUploadPage: React.FC = () => {
         }
       );
       const response = res.data;
-      const invalidIdxSet = new Set(response.map((data) => data.idx));
+      const invalidIdxSet = new Set(
+        response.map((data: { idx: any }) => data.idx)
+      );
       const checkedNiceParkData = rows.map((row) => {
         if (invalidIdxSet.has(row.idx)) {
           return {
@@ -214,7 +215,9 @@ const DataUploadPage: React.FC = () => {
         }
       );
       const response = res.data;
-      const invalidIdxSet = new Set(response.map((data) => data.idx));
+      const invalidIdxSet = new Set(
+        response.map((data: { idx: any }) => data.idx)
+      );
       const checkedS1Data = rows.map((row) => {
         if (invalidIdxSet.has(row.idx)) {
           return {
@@ -594,21 +597,21 @@ const DataUploadPage: React.FC = () => {
   const totalInvalidCount = invalidNiceRows.length + invalidS1Rows.length;
 
   return (
-    <div className="p-8 bg-white font-sans">
+    <div className="p-8 font-sans bg-white">
       {/* Header */}
       <div className="mb-6">
-        <h2 className="text-xl font-bold text-gray-800 mb-4">
+        <h2 className="mb-4 text-xl font-bold text-gray-800">
           출입 데이터 업로드
         </h2>
 
         {/* Filters */}
         <div className="flex items-center gap-6 mb-2">
           <div className="flex flex-col">
-            <span className="text-xs font-semibold text-gray-600 mb-1">
+            <span className="mb-1 text-xs font-semibold text-gray-600">
               연도 선택
             </span>
             <select
-              className="w-28 h-9 border border-gray-300 rounded-md px-2 bg-gray-50"
+              className="px-2 border border-gray-300 rounded-md w-28 h-9 bg-gray-50"
               value={selectedYear}
               onChange={(e) => setSelectedYear(e.target.value)}
             >
@@ -621,11 +624,11 @@ const DataUploadPage: React.FC = () => {
           </div>
 
           <div className="flex flex-col">
-            <span className="text-xs font-semibold text-gray-600 mb-1">
+            <span className="mb-1 text-xs font-semibold text-gray-600">
               월 선택
             </span>
             <select
-              className="w-28 h-9 border border-gray-300 rounded-md px-2 bg-gray-50"
+              className="px-2 border border-gray-300 rounded-md w-28 h-9 bg-gray-50"
               value={selectedMonth}
               onChange={(e) => setSelectedMonth(e.target.value)}
             >
@@ -639,7 +642,7 @@ const DataUploadPage: React.FC = () => {
           </div>
 
           {isDataExisting && (
-            <div className="flex items-center text-red-600 text-sm font-bold gap-2 mt-2 p-3 border border-red-200 rounded">
+            <div className="flex items-center gap-2 p-3 mt-2 text-sm font-bold text-red-600 border border-red-200 rounded">
               <AlertCircle size={20} />
               <span>
                 {selectedMonth === "0"
@@ -654,8 +657,8 @@ const DataUploadPage: React.FC = () => {
       {/* Content Grid */}
       <div className="flex gap-8 mt-4">
         {/* LEFT - NicePark */}
-        <div className="flex-1 flex flex-col">
-          <h3 className="text-sm font-bold text-gray-600 mb-3">
+        <div className="flex flex-col flex-1">
+          <h3 className="mb-3 text-sm font-bold text-gray-600">
             나이스파크 출입차량 데이터
           </h3>
 
@@ -701,13 +704,13 @@ const DataUploadPage: React.FC = () => {
           </div>
 
           {niceParkData.length > 0 && (
-            <div className="text-xs text-green-600 font-semibold mb-2">
+            <div className="mb-2 text-xs font-semibold text-green-600">
               {niceParkData.length}개 데이터 로드됨
             </div>
           )}
 
           {/* 🟢 나이스파크 헤더 (제목 + 검색창 + 범례) */}
-          <div className="flex justify-between items-end mb-2">
+          <div className="flex items-end justify-between mb-2">
             <h4 className="text-xs font-bold text-gray-600">
               나이스파크 출입차량 데이터
             </h4>
@@ -720,7 +723,7 @@ const DataUploadPage: React.FC = () => {
                   placeholder="차량번호 검색"
                   value={niceSearchTerm}
                   onChange={(e) => setNiceSearchTerm(e.target.value)}
-                  className="pl-7 pr-2 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:border-blue-500 w-32 transition-all"
+                  className="w-32 py-1 pr-2 text-xs transition-all border border-gray-300 rounded pl-7 focus:outline-none focus:border-blue-500"
                 />
                 <Search
                   className="absolute left-2 top-1.5 text-gray-400"
@@ -737,25 +740,25 @@ const DataUploadPage: React.FC = () => {
               </div>
 
               {/* 범례 */}
-              <div className="flex items-center gap-1 text-xs ml-2">
-                <span className="w-3 h-3 bg-red-50 border border-red-200 rounded-sm"></span>
+              <div className="flex items-center gap-1 ml-2 text-xs">
+                <span className="w-3 h-3 border border-red-200 rounded-sm bg-red-50"></span>
                 <span className="text-gray-400 text-[10px]">
                   : 기준정보 미등록 (저장 불가)
                 </span>
               </div>
             </div>
           </div>
-          <div className="border border-gray-200 rounded-md h-96 overflow-y-auto">
+          <div className="overflow-y-auto border border-gray-200 rounded-md h-96">
             <table className="w-full text-sm">
               <thead className="bg-gray-100">
                 <tr>
-                  <th className="p-2 text-left text-gray-700 font-semibold">
+                  <th className="p-2 font-semibold text-left text-gray-700">
                     차량 번호
                   </th>
-                  <th className="p-2 text-left text-gray-700 font-semibold">
+                  <th className="p-2 font-semibold text-left text-gray-700">
                     입차 일자
                   </th>
-                  <th className="p-2 text-left text-gray-700 font-semibold">
+                  <th className="p-2 font-semibold text-left text-gray-700">
                     입차 시간
                   </th>
                 </tr>
@@ -763,7 +766,7 @@ const DataUploadPage: React.FC = () => {
               <tbody>
                 {niceParkData.length === 0 ? (
                   <tr>
-                    <td colSpan={3} className="text-center text-gray-400 p-6">
+                    <td colSpan={3} className="p-6 text-center text-gray-400">
                       데이터가 없습니다. 파일을 업로드해주세요.
                     </td>
                   </tr>
@@ -792,8 +795,8 @@ const DataUploadPage: React.FC = () => {
         </div>
 
         {/* RIGHT - S1 */}
-        <div className="flex-1 flex flex-col">
-          <h3 className="text-sm font-bold text-gray-600 mb-3">
+        <div className="flex flex-col flex-1">
+          <h3 className="mb-3 text-sm font-bold text-gray-600">
             에스원 출퇴근 데이터
           </h3>
 
@@ -836,13 +839,13 @@ const DataUploadPage: React.FC = () => {
           </div>
 
           {s1Data.length > 0 && (
-            <div className="text-xs text-green-600 font-semibold mb-2">
+            <div className="mb-2 text-xs font-semibold text-green-600">
               {s1Data.length}개 데이터 로드됨
             </div>
           )}
 
           {/* 🔵 에스원 헤더 (제목 + 검색창 + 범례) */}
-          <div className="flex justify-between items-end mb-2">
+          <div className="flex items-end justify-between mb-2">
             <h4 className="text-xs font-bold text-gray-600">
               에스원 출퇴근 데이터
             </h4>
@@ -855,7 +858,7 @@ const DataUploadPage: React.FC = () => {
                   placeholder="이름/사번 검색"
                   value={s1SearchTerm}
                   onChange={(e) => setS1SearchTerm(e.target.value)}
-                  className="pl-7 pr-2 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:border-blue-500 w-32 transition-all"
+                  className="w-32 py-1 pr-2 text-xs transition-all border border-gray-300 rounded pl-7 focus:outline-none focus:border-blue-500"
                 />
                 <Search
                   className="absolute left-2 top-1.5 text-gray-400"
@@ -872,25 +875,25 @@ const DataUploadPage: React.FC = () => {
               </div>
 
               {/* 범례 */}
-              <div className="flex items-center gap-1 text-xs ml-2">
-                <span className="w-3 h-3 bg-red-50 border border-red-200 rounded-sm"></span>
+              <div className="flex items-center gap-1 ml-2 text-xs">
+                <span className="w-3 h-3 border border-red-200 rounded-sm bg-red-50"></span>
                 <span className="text-gray-400 text-[10px]">
                   : 기준정보 미등록(저장 불가)
                 </span>
               </div>
             </div>
           </div>
-          <div className="border border-gray-200 rounded-md h-96 overflow-y-auto">
+          <div className="overflow-y-auto border border-gray-200 rounded-md h-96">
             <table className="w-full text-sm">
               <thead className="bg-gray-100">
                 <tr>
-                  <th className="p-2 text-left text-gray-700 font-semibold">
+                  <th className="p-2 font-semibold text-left text-gray-700">
                     사원번호
                   </th>
-                  <th className="p-2 text-left text-gray-700 font-semibold">
+                  <th className="p-2 font-semibold text-left text-gray-700">
                     사원명
                   </th>
-                  <th className="p-2 text-left text-gray-700 font-semibold">
+                  <th className="p-2 font-semibold text-left text-gray-700">
                     근무일자
                   </th>
                 </tr>
@@ -898,7 +901,7 @@ const DataUploadPage: React.FC = () => {
               <tbody>
                 {s1Data.length === 0 ? (
                   <tr>
-                    <td colSpan={3} className="text-center text-gray-400 p-6">
+                    <td colSpan={3} className="p-6 text-center text-gray-400">
                       데이터가 없습니다. 파일을 업로드해주세요.
                     </td>
                   </tr>
@@ -928,9 +931,9 @@ const DataUploadPage: React.FC = () => {
       </div>
 
       {/* Footer */}
-      <div className="flex justify-end mt-8 border-t pt-4 border-gray-200">
+      <div className="flex justify-end pt-4 mt-8 border-t border-gray-200">
         <button
-          className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-2 rounded-lg shadow-sm"
+          className="flex items-center gap-2 px-6 py-2 font-semibold text-white bg-blue-600 rounded-lg shadow-sm hover:bg-blue-700"
           onClick={handleCheckBeforeUpload}
         >
           <Save size={18} /> 등록 ({niceParkData.length + s1Data.length})
@@ -949,8 +952,8 @@ const DataUploadPage: React.FC = () => {
       >
         {/* 등록 제외 데이터가 하나라도 있을 때만 표시 */}
         {totalInvalidCount > 0 && (
-          <div className="mt-4 border rounded-lg bg-red-50 p-3 text-left">
-            <h4 className="text-sm font-bold text-red-600 mb-3 flex items-center gap-2">
+          <div className="p-3 mt-4 text-left border rounded-lg bg-red-50">
+            <h4 className="flex items-center gap-2 mb-3 text-sm font-bold text-red-600">
               ⚠️ 등록 제외 리스트 ({totalInvalidCount}건)
               <span className="text-xs font-normal text-gray-500">
                 (기준정보 미등록 데이터)
@@ -960,14 +963,14 @@ const DataUploadPage: React.FC = () => {
             <div className="space-y-4">
               {/* ================= 나이스파크 ================= */}
               {invalidNiceRows.length > 0 && (
-                <div className="border rounded-lg bg-white p-3">
-                  <h5 className="text-sm font-bold text-red-600 mb-2">
+                <div className="p-3 bg-white border rounded-lg">
+                  <h5 className="mb-2 text-sm font-bold text-red-600">
                     🚗 나이스파크 등록 제외 차량 ({invalidNiceRows.length}건)
                   </h5>
 
-                  <div className="max-h-48 overflow-y-auto border border-red-200 rounded">
+                  <div className="overflow-y-auto border border-red-200 rounded max-h-48">
                     <table className="w-full text-xs border-collapse">
-                      <thead className="bg-red-100 sticky top-0">
+                      <thead className="sticky top-0 bg-red-100">
                         <tr>
                           <th className="p-2 text-left">차량번호</th>
                           <th className="p-2 text-left">입차일시</th>
@@ -990,14 +993,14 @@ const DataUploadPage: React.FC = () => {
 
               {/* ================= 에스원 ================= */}
               {invalidS1Rows.length > 0 && (
-                <div className="border rounded-lg bg-white p-3">
-                  <h5 className="text-sm font-bold text-red-600 mb-2">
+                <div className="p-3 bg-white border rounded-lg">
+                  <h5 className="mb-2 text-sm font-bold text-red-600">
                     🏭 에스원 등록 제외 이력 ({invalidS1Rows.length}건)
                   </h5>
 
-                  <div className="max-h-48 overflow-y-auto border border-red-200 rounded">
+                  <div className="overflow-y-auto border border-red-200 rounded max-h-48">
                     <table className="w-full text-xs border-collapse">
-                      <thead className="bg-red-100 sticky top-0">
+                      <thead className="sticky top-0 bg-red-100">
                         <tr>
                           <th className="p-2 text-left">사원번호</th>
                           <th className="p-2 text-left">출입일자</th>
