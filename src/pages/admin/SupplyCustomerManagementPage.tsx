@@ -9,7 +9,7 @@ const SupplyCustomerManagementPage: React.FC = () => {
       columns={PRODUCT_COLUMNS}
       // initialData={MOCK_PRODUCT_DATA}
       apiEndpoint="/admin/supply-customer"
-      disableDelete={true}
+      disableDelete={false}
     />
   );
 };

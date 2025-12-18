@@ -274,6 +274,12 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
             endpoint = `/admin/company/${rowId}`;
           } else if (endpoint.includes('vehicles')) {
             endpoint = `/admin/vehicle/${rowId}`;
+          } else if (endpoint.includes('supply-type')) {
+            endpoint = `/admin/supply-type/${rowId}`;
+          } else if (endpoint.includes('supply-customer')) {
+            endpoint = `/admin/supply-customer/${rowId}`;
+          } else if (endpoint.includes('operation-purpose')) {
+            endpoint = `/admin/operation-purpose/${rowId}`;
           } else {
             // 다른 엔티티들은 삭제 API가 없음
             alert("이 데이터는 삭제할 수 없습니다.");
@@ -433,7 +439,6 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
       if (apiEndpoint.includes('car-models')) {
         // 차종 데이터 변환
         payload = changedData.map(row => ({
-          id: row.id,
           carCategoryId: row.carCategoryId,
           fuelType: row.fuelType,
           customEfficiency: parseFloat(row.customEfficiency || '0')
@@ -492,7 +497,7 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
       console.log(`[${title}] 일괄 저장 요청 - 엔드포인트: ${endpoint}, 데이터 개수: ${payload.length}`);
       console.log(`[${title}] 일괄 저장 페이로드:`, payload);
 
-      await axiosInstance.put(endpoint, payload);
+      await axiosInstance.patch(endpoint, payload);
       
       alert("일괄 저장이 완료되었습니다.");
       setIsBatchEditing(false);

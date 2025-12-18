@@ -9,7 +9,7 @@ const SupplyTypeManagementPage: React.FC = () => {
       columns={PROCESS_COLUMNS}
       // initialData={MOCK_PROCESS_DATA}
       apiEndpoint="/admin/supply-type"
-      disableDelete={true}
+      disableDelete={false}
     />
   );
 };
