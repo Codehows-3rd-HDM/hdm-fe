@@ -64,6 +64,7 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
   // const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [isBatchEditing, setIsBatchEditing] = useState(false);
   const [selectedRows, setSelectedRows] = useState<number[]>([]);
+  const [originalData, setOriginalData] = useState<T[]>([]); // 전체 수정 취소용 백업 데이터
   
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 15;
@@ -342,12 +343,14 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
 
   // [일괄 수정]
   const handleCancelBatchEdit = () => {
+      setData(originalData); // 백업 데이터로 복원
       setIsBatchEditing(false);
       setSelectedRows([]);
-      // 취소 시 데이터를 원복하려면 별도의 백업 state가 필요할 수 있음
+      setOriginalData([]); // 백업 데이터 초기화
   };
 
   const toggleBatchEdit = () => {
+      setOriginalData([...data]); // 전체 수정 시작 시 데이터 백업
       setIsBatchEditing(true);
       setSelectedRows([]); 
   };
@@ -366,7 +369,7 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
     }
     
     // 삭제 가능한 엔티티인지 확인
-    const canDelete = apiEndpoint.includes('car-models') || apiEndpoint.includes('companies') || apiEndpoint.includes('vehicles');
+    const canDelete = apiEndpoint.includes('companies') || apiEndpoint.includes('vehicles') || apiEndpoint.includes('supply-type') || apiEndpoint.includes('supply-customer') || apiEndpoint.includes('operation-purpose');
     if (!canDelete) {
         alert("이 데이터는 삭제할 수 없습니다.");
         return;
@@ -374,32 +377,115 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
     
     if (window.confirm(`${selectedRows.length}개의 행을 정말 삭제하시겠습니까?`)) {
         try {
-          for (const rowId of selectedRows) {
-            let endpoint = apiEndpoint;
-            if (endpoint.includes('car-models')) {
-              endpoint = `/admin/car-model/${rowId}`;
-            } else if (endpoint.includes('companies')) {
-              endpoint = `/admin/company/${rowId}`;
-            } else if (endpoint.includes('vehicles')) {
-              endpoint = `/admin/vehicle/${rowId}`;
-            }
-            await axiosInstance.delete(endpoint);
-          }
+          console.log(`[${title}] 일괄 삭제 요청 - 선택된 ID들: ${selectedRows}`);
+          
+          // 백엔드의 deleteMultiple API 사용
+          await axiosInstance.delete(apiEndpoint, { data: selectedRows });
+          
           setData(prev => prev.filter(row => !selectedRows.includes(row.id)));
           setSelectedRows([]);
           alert("일괄 삭제가 완료되었습니다.");
         } catch (error) {
-          console.error("일괄 삭제 실패:", error);
+          console.error(`[${title}] 일괄 삭제 실패:`, error);
           alert("일괄 삭제 중 오류가 발생했습니다.");
         }
     }
   };
 
-  const handleBatchSave = () => {
-    // 실제로는 변경된 row만 추려서 API를 보내야 함. 여기선 전체 저장 시늉만.
-    alert("일괄 저장되었습니다. (API 연동 필요)");
-    setIsBatchEditing(false);
-    setSelectedRows([]);
+  // [API] 일괄 저장
+  const handleBatchSave = async () => {
+    try {
+      // 변경된 데이터만 추출 (실제로는 변경 감지 로직 필요)
+      const changedData = data.filter(row => {
+        const originalRow = originalData.find(orig => orig.id === row.id);
+        return originalRow && JSON.stringify(originalRow) !== JSON.stringify(row);
+      });
+
+      if (changedData.length === 0) {
+        alert("변경된 데이터가 없습니다.");
+        return;
+      }
+
+      // API 엔드포인트 결정
+      let endpoint = `${apiEndpoint}/bulk`;
+      let payload: any[] = [];
+
+      if (apiEndpoint.includes('car-models')) {
+        // 차종 데이터 변환
+        payload = changedData.map(row => ({
+          id: row.id,
+          carCategoryId: row.carCategoryId,
+          fuelType: row.fuelType,
+          customEfficiency: parseFloat(row.customEfficiency || '0')
+        }));
+      } else if (apiEndpoint.includes('companies')) {
+        // 회사 데이터 변환
+        payload = changedData.map(row => ({
+          id: row.id,
+          companyName: row.companyName,
+          supplyTypeId: row.supplyTypeId,
+          customerId: row.supplyCustomerId,
+          oneWayDistance: row.oneWayDistance,
+          region: row.region,
+          detailAddress: row.addressDetail,
+          address: `${row.region} ${row.addressDetail}`.trim(),
+          remark: row.remark
+        }));
+      } else if (apiEndpoint.includes('vehicles')) {
+        // 차량 데이터 변환
+        payload = changedData.map(row => ({
+          id: row.id,
+          carNumber: row.carNumber,
+          operationPurposeId: row.operationPurposeId,
+          companyId: row.companyId,
+          driverMemberId: row.driverMemberId,
+          parentCategoryId: row.parentCategoryId,
+          carCategoryId: row.carCategoryId,
+          carModelId: row.carModelId,
+          carName: row.carModelName,
+          fuelType: row.fuelType,
+          operationDistance: parseFloat(row.operationDistance || '0'),
+          remark: row.remark
+        }));
+      } else if (apiEndpoint.includes('supply-type')) {
+        // 공급유형 데이터 변환
+        payload = changedData.map(row => ({
+          id: row.id,
+          supplyTypeName: row.supplyType
+        }));
+      } else if (apiEndpoint.includes('supply-customer')) {
+        // 공급고객 데이터 변환
+        payload = changedData.map(row => ({
+          id: row.id,
+          customerName: row.supplyCustomer,
+          remark: row.note
+        }));
+      } else if (apiEndpoint.includes('operation-purpose')) {
+        // 운행목적 데이터 변환
+        payload = changedData.map(row => ({
+          id: row.id,
+          purposeName: row.purpose,
+          defaultScope: row.scope
+        }));
+      }
+
+      console.log(`[${title}] 일괄 저장 요청 - 엔드포인트: ${endpoint}, 데이터 개수: ${payload.length}`);
+      console.log(`[${title}] 일괄 저장 페이로드:`, payload);
+
+      await axiosInstance.patch(endpoint, payload);
+      
+      alert("일괄 저장이 완료되었습니다.");
+      setIsBatchEditing(false);
+      setSelectedRows([]);
+      setOriginalData([]);
+      
+      // 데이터 새로고침
+      window.location.reload();
+      
+    } catch (error) {
+      console.error(`[${title}] 일괄 저장 실패:`, error);
+      alert("일괄 저장 중 오류가 발생했습니다.");
+    }
   };
   
   const handleDataChange = (rowId: number, key: keyof T, value: any) => {
