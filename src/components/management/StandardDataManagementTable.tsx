@@ -330,6 +330,26 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
           operationDistance: parseFloat(rowData.operationDistance || '0'),
           remark: rowData.remark
         };
+      } else if (endpoint.includes('supply-type')) {
+        endpoint = `/admin/supply-type/${rowId}`;
+        // 프론트 데이터 -> 백엔드 데이터 변환
+        payload = {
+          supplyTypeName: rowData.supplyType
+        };
+      } else if (endpoint.includes('supply-customer')) {
+        endpoint = `/admin/supply-customer/${rowId}`;
+        // 프론트 데이터 -> 백엔드 데이터 변환
+        payload = {
+          customerName: rowData.supplyCustomer,
+          remark: rowData.note
+        };
+      } else if (endpoint.includes('operation-purpose')) {
+        endpoint = `/admin/operation-purpose/${rowId}`;
+        // 프론트 데이터 -> 백엔드 데이터 변환
+        payload = {
+          purposeName: rowData.purpose,
+          defaultScope: rowData.scope
+        };
       } else {
         // 다른 엔티티들은 수정 API가 없음
         alert("이 데이터는 수정할 수 없습니다.");
@@ -472,7 +492,7 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
       console.log(`[${title}] 일괄 저장 요청 - 엔드포인트: ${endpoint}, 데이터 개수: ${payload.length}`);
       console.log(`[${title}] 일괄 저장 페이로드:`, payload);
 
-      await axiosInstance.patch(endpoint, payload);
+      await axiosInstance.put(endpoint, payload);
       
       alert("일괄 저장이 완료되었습니다.");
       setIsBatchEditing(false);
@@ -803,22 +823,22 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
                             <td key={String(col.id)} className="px-6 py-4">
                             {col.id === 'actions' ? (
                                 <div className="flex gap-2">
-                                    {isRowEditing ? (
+                                    {isRowEditing && !isBatchEditing ? (
                                         <button 
                                             onClick={() => handleSingleSave(rowId)} 
                                             className="p-1.5 bg-green-100 text-green-700 rounded hover:bg-green-200" title="저장"
                                         >
                                             <Save size={16} />
                                         </button>
-                                    ) : (
+                                    ) : !isBatchEditing ? (
                                         <button 
                                             onClick={() => toggleEditMode(rowId)} 
                                             className="p-1.5 bg-yellow-100 text-yellow-700 rounded hover:bg-yellow-200" title="수정"
                                         >
                                             <Edit2 size={16} />
                                         </button>
-                                    )}
-                                    {!isRowEditing && !disableDelete && (
+                                    ) : null}
+                                    {!isRowEditing && !disableDelete && !isBatchEditing && (
                                         <button 
                                             onClick={() => handleSingleDelete(rowId)} 
                                             className="p-1.5 bg-red-100 text-red-700 rounded hover:bg-red-200" title="삭제"

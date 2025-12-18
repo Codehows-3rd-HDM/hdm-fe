@@ -8,7 +8,7 @@ const PurposeManagementPage: React.FC = () => {
       title="운행 목적 기준정보 관리"
       columns={PURPOSE_COLUMNS}
       // initialData={MOCK_PURPOSE_DATA}
-      apiEndpoint="/api/admin/purposes"
+      apiEndpoint="/admin/operation-purpose"
       disableDelete={true}
     />
   );

@@ -8,7 +8,7 @@ const SupplyTypeManagementPage: React.FC = () => {
       title="공급 유형 기준정보 관리"
       columns={PROCESS_COLUMNS}
       // initialData={MOCK_PROCESS_DATA}
-      apiEndpoint="/api/admin/supply-type"
+      apiEndpoint="/admin/supply-type"
       disableDelete={true}
     />
   );
