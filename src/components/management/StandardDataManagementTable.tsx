@@ -88,7 +88,7 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
           endpoint = '/admin/vehicle/search';
         } else if (endpoint.includes('supply-type')) {
           endpoint = '/admin/supply-type/search';
-        } else if (endpoint.includes('purposes')) {
+        } else if (endpoint.includes('operation-purpose')) {
           endpoint = '/admin/operation-purpose/search';
         } else if (endpoint.includes('supply-customer')) {
           endpoint = '/admin/supply-customer/search';
@@ -348,7 +348,7 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
         // 프론트 데이터 -> 백엔드 데이터 변환
         payload = {
           purposeName: rowData.purpose,
-          defaultScope: rowData.scope
+          defaultScope: rowData.defaultScope
         };
       } else {
         // 다른 엔티티들은 수정 API가 없음
@@ -485,7 +485,7 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
         payload = changedData.map(row => ({
           id: row.id,
           purposeName: row.purpose,
-          defaultScope: row.scope
+          defaultScope: row.defaultScopeId
         }));
       }
 
