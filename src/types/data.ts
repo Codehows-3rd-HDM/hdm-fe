@@ -49,7 +49,7 @@ export interface CompanyData {
   supplyCustomerName: string; // 공급 고객
   oneWayDistance: number; // 편도거리
   region: string;       // 지역 (시/도)
-  addressDetail: string; // 상세주소
+  detailAddress: string; // 상세주소
   remark: string;       // 비고
   isEditing?: boolean;
 }
@@ -114,7 +114,7 @@ export const COMPANY_COLUMNS: ColumnDefinition<CompanyData>[] = [
   { id: 'supplyCustomerName', header: '공급 고객', searchable: true, sortable: true, editable: true, width: '12%', inputType: 'dynamic-select' },
   { id: 'oneWayDistance', header: '편도거리(km)', searchable: false, sortable: true, editable: true, width: '10%', inputType: 'number' },
   { id: 'region', header: '지역 (시/도)', searchable: true, sortable: true, editable: true, width: '12%', inputType: 'select', selectOptions: REGION_OPTIONS },
-  { id: 'addressDetail', header: '상세주소', searchable: true, sortable: false, editable: true, width: '25%', inputType: 'text' },
+  { id: 'detailAddress', header: '상세주소', searchable: true, sortable: false, editable: true, width: '25%', inputType: 'text' },
   { id: 'remark', header: '비고', searchable: false, sortable: false, editable: true, width: '14%', inputType: 'text' },
   { id: 'actions', header: '액션', searchable: false, sortable: false, editable: false, width: '10%' },
 ];
