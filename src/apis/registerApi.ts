@@ -164,7 +164,7 @@ export const registerVehicle = async (data: IntegratedFormData) => {
       carName: data.carModel,
       childCategoryId: data.categorySmallId,
       fuelType: data.fuelType,
-      purposeName: data.purposeName,
+      purposeId: data.purposeId,
       companyNameForCreation: data.companyName,
       driverMemberId: data.employeeId,
       operationDistance: data.distance,

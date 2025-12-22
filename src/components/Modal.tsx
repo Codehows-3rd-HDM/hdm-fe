@@ -32,7 +32,7 @@ const Modal: React.FC<ModalProps> = ({
 
   return (
     // 배경 오버레이
-    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
+    <div className="fixed inset-0 bg-opacity-50 z-50 flex items-center justify-center">
       {/* 모달 본체 */}
       <div className="bg-white ml-[300px] rounded-lg shadow-xl p-6 w-11/12 max-w-sm transform transition-all duration-300 scale-100">
         {/* 헤더 및 닫기 버튼 */}

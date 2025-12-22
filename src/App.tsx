@@ -87,7 +87,7 @@ const MainLayout = () => {
           isDashboard ? "ml-[0px]" : isSidebarOpen ? "ml-[260px]" : "ml-[80px]"
         }`}
       >
-        <div className={`${!isDashboard ? 'p-6' : ''}`}>
+        <div className={`${!isDashboard ? '' : ''}`}>
           <Outlet />
         </div>
       </main>

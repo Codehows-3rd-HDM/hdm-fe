@@ -228,7 +228,7 @@ const VehicleBasicRegisterPage: React.FC = () => {
           categorySmallId: formData.categorySmallId,
           fuelType: formData.fuelType,
           companyName: formData.companyName,
-          purposeName: formData.purposeName,
+          purposeId: formData.purposeId,
           distance: formData.distance,
           employeeId: formData.employeeId,
           remark: formData.remark,
