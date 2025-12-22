@@ -33,6 +33,7 @@ import SupplyCustomerEmissionPage from "./pages/Emissions inquiry/SupplyCustomer
 import MainPage from "./pages/MainPage";
 import ExcelManagementPage from "./pages/admin/ExcelUpDownBaseInfo";
 import EmissionFactorPage from "./pages/admin/EmissionFactorPage";
+import CarbonTargetApp from "./pages/admin/CarbonTargetManagement";
 
 // [임시] 페이지가 없을 때 보여줄 플레이스홀더 컴포넌트
 const PagePlaceholder = ({ title }: { title: string }) => {
@@ -86,7 +87,7 @@ const MainLayout = () => {
           isDashboard ? "ml-[0px]" : isSidebarOpen ? "ml-[260px]" : "ml-[80px]"
         }`}
       >
-        <div>
+        <div className={`${!isDashboard ? 'p-6' : ''}`}>
           <Outlet />
         </div>
       </main>
@@ -186,10 +187,11 @@ const App: React.FC = () => {
                   <PagePlaceholder title="탄소 배출량 계산 설정 (HDM-028)" />
                 }
               />
+              //  목표 관리
               <Route
                 path="target-view"
                 element={
-                  <PagePlaceholder title="탄소 배출 목표 관리 (HDM-029)" />
+                  <CarbonTargetApp />
                 }
               />
 

@@ -32,16 +32,23 @@ const DashboardPage: React.FC = () => {
 
   return (
     <div className="p-5 bg-gray-100 min-h-screen box-border">
-      <div className="mb-5 flex justify-between items-center">
+      {/* 메인 페이지 스타일의 큰 타이틀 */}
+      <div className="text-center mb-8">
+        <h1 className="text-5xl font-extrabold mb-2 text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-teal-600">
+          HDM Carbon Monitor
+        </h1>
+        <p className="text-lg text-gray-600">
+          실시간 탄소 배출량 현황 및 분석 데이터 ({currentYear}년)
+        </p>
+      </div>
+
+      <div className="mb-5 flex justify-start">
         <button 
                 onClick={() => navigate('/main')} 
                 className="flex items-center px-3 py-2 bg-white text-gray-600 rounded-md shadow-sm hover:bg-gray-100 font-bold text-sm border border-gray-200"
             >
                 <ArrowLeft size={16} className="mr-1" /> 메인으로
             </button>
-        <h2 className="text-2xl font-bold text-gray-800">
-          대시보드 ({currentYear}년)
-        </h2>
       </div>
 
       <ResponsiveGridLayout

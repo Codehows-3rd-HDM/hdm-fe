@@ -91,23 +91,23 @@ const KoreaMapChart: React.FC<KoreaMapChartProps> = ({ data: propData, large = f
       .range(["#E0F2FE", "#1E3A8A"]);
   }, [maxValue]);
 
-  const containerHeight = large ? 'h-[1100px]' : 'h-[700px]';
+  const containerHeight = large ? 'h-[1100px]' : 'h-[500px]';
   const projectionScale = large ? 7000 : 6200;
 
   return (
     <div className={`w-full ${containerHeight} relative bg-white rounded-xl shadow-md overflow-hidden`}>
-      <h3 className="absolute top-4 left-1/2 -translate-x-1/2 text-lg font-bold z-10 text-gray-700">
+      {/* <h3 className="absolute top-4 left-1/2 -translate-x-1/2 text-lg font-bold z-10 text-gray-700">
         지역별 배출량 분포
-      </h3>
+      </h3> */}
 
       <ComposableMap
         projection="geoMercator"
         projectionConfig={{
           scale: projectionScale,
-          center: [127.8, 36],
+          center: [127.8, 36.5],
         }}
-        width={1000}
-        height={900}
+        width={600}
+        height={500}
         style={{ width: "100%", height: "100%" }}
       >
         <ZoomableGroup zoom={1}>

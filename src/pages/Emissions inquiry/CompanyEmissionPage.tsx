@@ -30,7 +30,7 @@ const MOCK_MAP_DATA = [
   { region: "강원도", value: 3900 },
 ];
 
-// 2. 협력사 데이터 (수십 개 시뮬레이션)
+// 2. 협력사 데이터 (전체 데이터)
 const MOCK_COMPANY_DATA = Array.from({ length: 30 }, (_, i) => ({
   id: i + 1,
   name: `협력사 ${String.fromCharCode(65 + (i % 26))}${i}`,
@@ -38,6 +38,9 @@ const MOCK_COMPANY_DATA = Array.from({ length: 30 }, (_, i) => ({
   address: i % 2 === 0 ? "경기도 성남시" : "울산광역시 북구",
   ratio: 0,
 })).sort((a, b) => b.value - a.value);
+
+// 3. 그래프용 Top5 데이터
+const TOP5_COMPANY_DATA = MOCK_COMPANY_DATA.slice(0, 5);
 
 // 총합 → 비율 계산
 const totalEmission = MOCK_COMPANY_DATA.reduce(
@@ -115,8 +118,8 @@ const CompanyEmissionPage: React.FC = () => {
     return processed;
   }, [searchQuery, searchColumn, sortConfig]);
 
-  // 가로 스크롤 차트 width 계산
-  const chartWidth = Math.max(filteredData.length * 60, 900);
+  // 가로 스크롤 차트 width 계산 (사용하지 않음)
+  // const chartWidth = Math.max(filteredData.length * 60, 900);
 
   // 정렬 핸들러
   const handleSort = (key: string) => {
@@ -227,49 +230,48 @@ const CompanyEmissionPage: React.FC = () => {
       </div>
 
       {/* ========================== */}
-      {/* 1. 상단 지도 (전체폭 + 크게) */}
+      {/* 좌우 배치: 왼쪽 지도, 오른쪽 Top5 차트 */}
       {/* ========================== */}
-      <div className="w-full bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-10 h-[1200px]">
-        <h3 className="mb-4 text-lg font-bold text-gray-800">
-          지역별 탄소 배출량
-        </h3>
-        <KoreaMapChart data={MOCK_MAP_DATA} large />
-      </div>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-10">
+        {/* 왼쪽: 지역별 탄소 배출량 지도 */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 h-[600px]">
+          <h3 className="mb-4 text-lg font-bold text-gray-800">
+            지역별 탄소 배출량
+          </h3>
+          <div className="h-[500px]">
+            <KoreaMapChart data={MOCK_MAP_DATA} />
+          </div>
+        </div>
 
-      {/* ========================== */}
-      {/* 2. 가로 스크롤 막대 차트 */}
-      {/* ========================== */}
-      <div className="w-full p-6 mb-10 bg-white border border-gray-200 shadow-sm rounded-xl">
-        <h3 className="mb-4 text-lg font-bold text-gray-800">
-          협력사별 탄소 배출량 순위
-        </h3>
-
-        <div className="pb-4 overflow-x-auto overflow-y-hidden custom-scrollbar">
-          <div style={{ width: `${chartWidth}px`, height: "400px" }}>
+        {/* 오른쪽: 협력사별 탄소 배출량 Top5 */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 h-[600px]">
+          <h3 className="mb-4 text-lg font-bold text-gray-800">
+            협력사별 탄소 배출량 Top5
+          </h3>
+          <div className="h-[500px]">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart
-                data={filteredData}
-                margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+                data={TOP5_COMPANY_DATA}
+                margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
+                layout="vertical"
               >
-                <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                <XAxis
+                <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} />
+                <XAxis type="number" />
+                <YAxis
                   dataKey="name"
+                  type="category"
                   tick={{ fontSize: 12 }}
-                  interval={0}
-                  angle={-45}
-                  textAnchor="end"
-                  height={60}
+                  width={80}
                 />
-                <YAxis />
                 <Tooltip
-                  formatter={(val: number | undefined) => val?.toLocaleString()}
+                  formatter={(val: string | number) => val?.toLocaleString()}
                 />
-
-                <Bar dataKey="value" radius={[4, 4, 0, 0]}>
-                  {filteredData.map((_, index) => (
+                <Bar dataKey="value" radius={[0, 4, 4, 0]}>
+                  {TOP5_COMPANY_DATA.map((_, index) => (
                     <Cell
                       key={index}
-                      fill={index < 5 ? "#1d4ed8" : "#60a5fa"}
+                      // fill={index === 0 ? "#1E3A8A" : index === 1 ? "#ea580c" : index === 2 ? "#ca8a04" : ""}
+                      fill={"#1E3A8A"}
                     />
                   ))}
                 </Bar>
