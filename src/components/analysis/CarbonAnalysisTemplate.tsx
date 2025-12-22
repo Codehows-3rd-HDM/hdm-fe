@@ -406,8 +406,8 @@ const CarbonAnalysisTemplate: React.FC<CarbonAnalysisTemplateProps> = ({
                   content={<CustomLegend />}
                 />
                 <RechartsTooltip
-                  formatter={(value: number | undefined) =>
-                    `${value?.toLocaleString()} tCO2eq`
+                  formatter={(value: any) =>
+                    [`${value?.toLocaleString()} tCO2eq`, '']
                   }
                   contentStyle={{
                     borderRadius: "8px",

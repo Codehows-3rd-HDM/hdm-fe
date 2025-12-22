@@ -1,27 +1,7 @@
 
 // [타입 정의]
 
-import axios from 'axios';
-
-// axios 인스턴스 (인증용)
-const axiosInstance = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || '/api',
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
-
-// 요청 인터셉터: 토큰이 있으면 자동 추가
-axiosInstance.interceptors.request.use(
-  (config) => {
-    const token = sessionStorage.getItem('token');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => Promise.reject(error)
-);
+import axiosInstance from './axiosInstance';
 
 // 로그인 요청 데이터
 export interface LoginRequest {

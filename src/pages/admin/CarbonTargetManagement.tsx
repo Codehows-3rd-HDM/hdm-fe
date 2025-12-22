@@ -1,39 +1,9 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { 
-  LayoutGrid, PlusCircle, Save, Edit3, ArrowLeft, CheckCircle, 
-  AlertCircle, TrendingDown, Calendar, BarChart3, ChevronRight,
+  PlusCircle, Save, Edit3, ArrowLeft, CheckCircle, 
+  AlertCircle, BarChart3,
   Database, Target
 } from 'lucide-react';
-import axios from 'axios';
-
-// =============================================================================
-// [1] Axios Instance Configuration
-// =============================================================================
-
-const BASE_URL = '/api'; // 실제 환경: import.meta.env.VITE_API_URL || '/api'
-
-const axiosInstance = axios.create({
-  baseURL: BASE_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
-
-axiosInstance.interceptors.request.use(
-  (config) => {
-    const token = sessionStorage.getItem('token');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => Promise.reject(error)
-);
-
-axiosInstance.interceptors.response.use(
-  (response) => response,
-  (error) => Promise.reject(error)
-);
 
 // =============================================================================
 // [2] API Layer with Mock Data
@@ -41,7 +11,7 @@ axiosInstance.interceptors.response.use(
 
 const carbonApi = {
   // 목표 데이터 조회
-  fetchTargets: async (year: number): Promise<FullTargetState> => {
+  fetchTargets: async (_year: number): Promise<FullTargetState> => {
     // 실제: await axiosInstance.get(`/targets/${year}`)
     return new Promise((resolve) => {
       setTimeout(() => {
@@ -59,12 +29,12 @@ const carbonApi = {
     return [2020, 2021, 2022, 2023, 2024];
   },
   // 특정 연도의 실제 배출량 실적 조회
-  fetchActualsByYear: async (year: number): Promise<MonthlyData[]> => {
+  fetchActualsByYear: async (_year: number): Promise<MonthlyData[]> => {
     // 실제: await axiosInstance.get(`/actuals/${year}`)
     return generateDummyMonthly(14000 + (Math.random() * 2000), 0.15);
   },
   // 신규 목표 저장
-  saveTargets: async (year: number, data: FullTargetState) => {
+  saveTargets: async (_year: number, _data: FullTargetState) => {
     // 실제: await axiosInstance.post(`/targets/${year}`, data)
     return new Promise((resolve) => setTimeout(resolve, 800));
   }
