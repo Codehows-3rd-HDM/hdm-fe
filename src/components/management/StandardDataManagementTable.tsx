@@ -250,7 +250,7 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
           });
 
           const pageData = response.data;
-          const rawData = pageData.content || pageData;
+          let rawData = pageData.content || pageData;
           
           setTotalPages(pageData.totalPages || 1);
           setTotalElements(pageData.totalElements || rawData.length);
