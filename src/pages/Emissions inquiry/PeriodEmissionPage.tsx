@@ -138,7 +138,7 @@ const PeriodEmissionPage: React.FC = () => {
               />
               <YAxis />
               <Tooltip
-                formatter={(val: number | undefined) => val?.toLocaleString()}
+                formatter={(val: any) => [val?.toLocaleString(), '']}
                 cursor={{ fill: "transparent" }}
               />
               <Legend />

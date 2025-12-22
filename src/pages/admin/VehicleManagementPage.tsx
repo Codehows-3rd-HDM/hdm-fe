@@ -55,7 +55,7 @@ const VehicleManagementPage: React.FC = () => {
     <StandardDataManagementTable<VehicleData>
       title="출입 차량 기준정보 관리"
       columns={VEHICLE_COLUMNS}
-      apiEndpoint="/admin/vehicles"
+      apiEndpoint="/admin/vehicle"
       disableDelete={false}
       options={options}
     />

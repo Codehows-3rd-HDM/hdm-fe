@@ -447,8 +447,8 @@ const CarbonAnalysisTemplate: React.FC<CarbonAnalysisTemplateProps> = ({
                     tickLine={false}
                   />
                   <RechartsTooltip
-                    formatter={(value: number | undefined) =>
-                      value?.toLocaleString()
+                    formatter={(value: any) =>
+                      [value?.toLocaleString(), '']
                     }
                     contentStyle={{
                       borderRadius: "8px",

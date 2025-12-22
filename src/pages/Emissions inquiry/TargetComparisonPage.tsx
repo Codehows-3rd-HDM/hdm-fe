@@ -297,8 +297,8 @@ const TargetComparisonPage: React.FC = () => {
               }}
             />
             <Tooltip
-              formatter={(val: number | undefined) =>
-                `${val?.toLocaleString()} tCO2eq`
+              formatter={(val: any) =>
+                [`${val?.toLocaleString()} tCO2eq`, '']
               }
               labelFormatter={(name) => name}
               contentStyle={{
@@ -368,8 +368,8 @@ const TargetComparisonPage: React.FC = () => {
               }}
             />
             <Tooltip
-              formatter={(val: number | undefined) =>
-                `${val?.toLocaleString()} tCO2eq`
+              formatter={(val: any) =>
+                [`${val?.toLocaleString()} tCO2eq`, '']
               }
             />
             <Legend iconType="circle" wrapperStyle={{ paddingTop: "10px" }} />

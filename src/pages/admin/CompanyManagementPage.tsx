@@ -41,7 +41,7 @@ const CompanyManagementPage: React.FC = () => {
     <StandardDataManagementTable<CompanyData>
       title="협력사 및 주소지 기준정보 관리"
       columns={COMPANY_COLUMNS}
-      apiEndpoint="/admin/companies"
+      apiEndpoint="/admin/company"
       options={options}
     />
   );

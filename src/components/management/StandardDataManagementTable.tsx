@@ -66,8 +66,11 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
   const [selectedRows, setSelectedRows] = useState<number[]>([]);
   const [originalData, setOriginalData] = useState<T[]>([]); // 전체 수정 취소용 백업 데이터
   
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 15;
+  // 페이징 상태 관리
+  const [currentPage, setCurrentPage] = useState(0); // Spring Boot Page는 0부터 시작
+  const [totalPages, setTotalPages] = useState(0);
+  const [totalElements, setTotalElements] = useState(0);
+  // const [pageSize, setPageSize] = useState(15); // 추후 페이지 크기 변경 기능 추가 시 사용
 
   // 대분류 선택 상태 추적 (차량 관리에서 소분류 필터링용)
   const [selectedParentCategories, setSelectedParentCategories] = useState<Record<number, string>>({});
@@ -80,11 +83,11 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
         let endpoint = apiEndpoint;
         console.log(`[${title}] 데이터 로딩 시작 - 원본 엔드포인트: ${apiEndpoint}`);
 
-        if (endpoint.includes('car-models')) {
+        if (endpoint.includes('car-model')) {
           endpoint = '/admin/car-model/search';
-        } else if (endpoint.includes('companies')) {
+        } else if (endpoint.includes('company')) {
           endpoint = '/admin/company/search';
-        } else if (endpoint.includes('vehicles')) {
+        } else if (endpoint.includes('vehicle')) {
           endpoint = '/admin/vehicle/search';
         } else if (endpoint.includes('supply-type')) {
           endpoint = '/admin/supply-type/search';
@@ -95,11 +98,26 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
         }
 
         console.log(`[${title}] 최종 API 엔드포인트: ${endpoint}`);
-        const response = await axiosInstance.get(endpoint);
+        const response = await axiosInstance.get(endpoint, {
+          params: {
+            page: currentPage,
+            size: 15, // 고정된 페이지 크기
+            ...(searchQuery && { keyword: searchQuery })
+          }
+        });
         console.log(`[${title}] API 응답 상태: ${response.status}`);
         console.log(`[${title}] API 응답 데이터:`, response.data);
 
-        let rawData = response.data.content || response.data;
+        // 페이징 정보 추출
+        const pageData = response.data;
+        let rawData = pageData.content || pageData;
+        
+        // 페이징 정보 저장
+        setTotalPages(pageData.totalPages || 1);
+        setTotalElements(pageData.totalElements || rawData.length);
+        setCurrentPage(pageData.number || 0);
+        
+        console.log(`[${title}] 페이징 정보 - 현재페이지: ${pageData.number}, 전체페이지: ${pageData.totalPages}, 전체아이템: ${pageData.totalElements}`);
         console.log(`[${title}] 추출된 데이터 개수: ${Array.isArray(rawData) ? rawData.length : 'N/A'}`);
         console.log(`[${title}] 추출된 데이터 샘플:`, Array.isArray(rawData) && rawData.length > 0 ? rawData[0] : '데이터 없음');
         
@@ -199,6 +217,122 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
     loadData();
   }, [apiEndpoint]); // endpoint가 바뀌면 다시 로딩
 
+  // 검색어 변경 시 페이지를 리셋하고 데이터 다시 로딩
+  useEffect(() => {
+    if (searchQuery !== '') { // 초기 로딩 시 제외
+      setCurrentPage(0);
+      const loadData = async () => {
+        setLoading(true);
+        try {
+          let endpoint = apiEndpoint;
+          console.log(`[${title}] 검색어 변경으로 데이터 재로딩 - 검색어: ${searchQuery}`);
+
+          if (endpoint.includes('car-model')) {
+            endpoint = '/admin/car-model/search';
+          } else if (endpoint.includes('company')) {
+            endpoint = '/admin/company/search';
+          } else if (endpoint.includes('vehicle')) {
+            endpoint = '/admin/vehicle/search';
+          } else if (endpoint.includes('supply-type')) {
+            endpoint = '/admin/supply-type/search';
+          } else if (endpoint.includes('operation-purpose')) {
+            endpoint = '/admin/operation-purpose/search';
+          } else if (endpoint.includes('supply-customer')) {
+            endpoint = '/admin/supply-customer/search';
+          }
+
+          const response = await axiosInstance.get(endpoint, {
+            params: {
+              page: 0, // 검색 시 첫 페이지부터
+              size: 15,
+              keyword: searchQuery
+            }
+          });
+
+          const pageData = response.data;
+          const rawData = pageData.content || pageData;
+          
+          setTotalPages(pageData.totalPages || 1);
+          setTotalElements(pageData.totalElements || rawData.length);
+          setCurrentPage(pageData.number || 0);
+
+          // 데이터 변환 로직 (위와 동일)
+          if (endpoint.includes('car-models')) {
+            rawData = rawData.map((item: any) => ({
+              ...item,
+              parentCategoryName: item.parentCategoryName || '',
+              carCategoryName: item.carCategoryName || '',
+              customEfficiency: item.customEfficiency || '',
+              fuelType: item.fuelType || '',
+              carCategoryId: item.carCategoryId
+            }));
+          } else if (endpoint.includes('companies')) {
+            rawData = rawData.map((item: any) => {
+              let region = item.region || '';
+              let addressDetail = item.detailAddress || item.addressDetail || '';
+              if (!region && !addressDetail && item.address) {
+                const addressParts = item.address.split(' ');
+                if (addressParts.length >= 2) {
+                  region = addressParts[0];
+                  addressDetail = addressParts.slice(1).join(' ');
+                }
+              }
+              return {
+                ...item,
+                region,
+                addressDetail,
+                companyName: item.companyName || '',
+                supplyTypeId: item.supplyTypeId || '',
+                supplyCustomerId: item.customerId || '',
+                oneWayDistance: item.oneWayDistance || '',
+                remark: item.remark || ''
+              };
+            });
+          } else if (endpoint.includes('vehicles')) {
+            rawData = rawData.map((item: any) => ({
+              ...item,
+              carNumber: item.carNumber || '',
+              operationPurposeId: item.operationPurposeId || '',
+              companyId: item.companyId || '',
+              driverMemberId: item.driverMemberId || '',
+              carCategoryId: item.carCategoryId || '',
+              carModelId: item.carModelId || '',
+              carModelName: item.carName || item.carModelName || '',
+              fuelType: item.fuelType || '',
+              operationDistance: item.operationDistance || '',
+              remark: item.remark || ''
+            }));
+          } else if (endpoint.includes('supply-type')) {
+            rawData = rawData.map((item: any) => ({
+              ...item,
+              supplyType: item.supplyTypeName || '',
+              note: item.remark || ''
+            }));
+          } else if (endpoint.includes('operation-purpose')) {
+            rawData = rawData.map((item: any) => ({
+              ...item,
+              purpose: item.purposeName || '',
+              scope: item.defaultScope || ''
+            }));
+          } else if (endpoint.includes('supply-customer')) {
+            rawData = rawData.map((item: any) => ({
+              ...item,
+              supplyCustomer: item.customerName || '',
+              note: item.remark || ''
+            }));
+          }
+
+          setData(rawData);
+        } catch (error) {
+          console.error(`[${title}] 검색 데이터 로딩 중 오류 발생:`, error);
+        } finally {
+          setLoading(false);
+        }
+      };
+      loadData();
+    }
+  }, [searchQuery, apiEndpoint]);
+
   // --- 필터링 & 정렬 로직 (메모이제이션) ---
   const searchableColumns = useMemo(() => 
     columns.filter(col => col.searchable && col.id !== 'actions').map(col => col.id as keyof T)
@@ -239,12 +373,8 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
   }, [data, searchQuery, searchColumn, searchableColumns, currentSort]);
   
   // --- 페이지네이션 ---
-  const totalPages = Math.ceil(filteredData.length / itemsPerPage);
-  const paginatedData = useMemo(() => {
-    const start = (currentPage - 1) * itemsPerPage;
-    const end = start + itemsPerPage;
-    return filteredData.slice(start, end);
-  }, [filteredData, currentPage, itemsPerPage]);
+  // 백엔드에서 페이징된 데이터를 사용하므로 클라이언트 사이드 페이지네이션 불필요
+  const paginatedData = filteredData;
 
   // --- 핸들러 ---
   
@@ -255,6 +385,120 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
       }
       return { key, direction: 'asc' };
     });
+  };
+
+  // [페이지 변경]
+  const handlePageChange = async (page: number) => {
+    if (page < 0 || page >= totalPages) return;
+    
+    setCurrentPage(page);
+    setLoading(true);
+    
+    try {
+      let endpoint = apiEndpoint;
+      console.log(`[${title}] 페이지 변경 - 페이지: ${page}`);
+
+      if (endpoint.includes('car-model')) {
+        endpoint = '/admin/car-model/search';
+      } else if (endpoint.includes('company')) {
+        endpoint = '/admin/company/search';
+      } else if (endpoint.includes('vehicle')) {
+        endpoint = '/admin/vehicle/search';
+      } else if (endpoint.includes('supply-type')) {
+        endpoint = '/admin/supply-type/search';
+      } else if (endpoint.includes('operation-purpose')) {
+        endpoint = '/admin/operation-purpose/search';
+      } else if (endpoint.includes('supply-customer')) {
+        endpoint = '/admin/supply-customer/search';
+      }
+
+      const response = await axiosInstance.get(endpoint, {
+        params: {
+          page: page,
+          size: 15,
+          ...(searchQuery && { keyword: searchQuery })
+        }
+      });
+
+      const pageData = response.data;
+      let rawData = pageData.content || pageData;
+      
+      // 페이징 정보 업데이트
+      setTotalPages(pageData.totalPages || 1);
+      setTotalElements(pageData.totalElements || rawData.length);
+
+      // 데이터 변환 로직 (데이터 로딩과 동일)
+      if (endpoint.includes('car-models')) {
+        rawData = rawData.map((item: any) => ({
+          ...item,
+          parentCategoryName: item.parentCategoryName || '',
+          carCategoryName: item.carCategoryName || '',
+          customEfficiency: item.customEfficiency || '',
+          fuelType: item.fuelType || '',
+          carCategoryId: item.carCategoryId
+        }));
+      } else if (endpoint.includes('companies')) {
+        rawData = rawData.map((item: any) => {
+          let region = item.region || '';
+          let addressDetail = item.detailAddress || item.addressDetail || '';
+          if (!region && !addressDetail && item.address) {
+            const addressParts = item.address.split(' ');
+            if (addressParts.length >= 2) {
+              region = addressParts[0];
+              addressDetail = addressParts.slice(1).join(' ');
+            }
+          }
+          return {
+            ...item,
+            region,
+            addressDetail,
+            companyName: item.companyName || '',
+            supplyTypeId: item.supplyTypeId || '',
+            supplyCustomerId: item.customerId || '',
+            oneWayDistance: item.oneWayDistance || '',
+            remark: item.remark || ''
+          };
+        });
+      } else if (endpoint.includes('vehicles')) {
+        rawData = rawData.map((item: any) => ({
+          ...item,
+          carNumber: item.carNumber || '',
+          operationPurposeId: item.operationPurposeId || '',
+          companyId: item.companyId || '',
+          driverMemberId: item.driverMemberId || '',
+          carCategoryId: item.carCategoryId || '',
+          carModelId: item.carModelId || '',
+          carModelName: item.carName || item.carModelName || '',
+          fuelType: item.fuelType || '',
+          operationDistance: item.operationDistance || '',
+          remark: item.remark || ''
+        }));
+      } else if (endpoint.includes('supply-type')) {
+        rawData = rawData.map((item: any) => ({
+          ...item,
+          supplyType: item.supplyTypeName || '',
+          note: item.remark || ''
+        }));
+      } else if (endpoint.includes('operation-purpose')) {
+        rawData = rawData.map((item: any) => ({
+          ...item,
+          purpose: item.purposeName || '',
+          scope: item.defaultScope || ''
+        }));
+      } else if (endpoint.includes('supply-customer')) {
+        rawData = rawData.map((item: any) => ({
+          ...item,
+          supplyCustomer: item.customerName || '',
+          note: item.remark || ''
+        }));
+      }
+
+      setData(rawData);
+    } catch (error) {
+      console.error(`[${title}] 페이지 변경 중 오류 발생:`, error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   // [수정 모드]
@@ -268,18 +512,18 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
   const handleSingleDelete = async (rowId: number) => {
       if (window.confirm(`ID ${rowId} 행을 정말 삭제하시겠습니까?`)) {
           let endpoint = apiEndpoint;
-          if (endpoint.includes('car-models')) {
+          if (endpoint.includes('car-model')) {
             endpoint = `/admin/car-model/${rowId}`;
-          } else if (endpoint.includes('companies')) {
+          } else if (endpoint.includes('company')) {
             endpoint = `/admin/company/${rowId}`;
-          } else if (endpoint.includes('vehicles')) {
+          } else if (endpoint.includes('vehicle')) {
             endpoint = `/admin/vehicle/${rowId}`;
           } else if (endpoint.includes('supply-type')) {
             endpoint = `/admin/supply-type/${rowId}`;
-          } else if (endpoint.includes('supply-customer')) {
-            endpoint = `/admin/supply-customer/${rowId}`;
           } else if (endpoint.includes('operation-purpose')) {
             endpoint = `/admin/operation-purpose/${rowId}`;
+          } else if (endpoint.includes('supply-customer')) {
+            endpoint = `/admin/supply-customer/${rowId}`;
           } else {
             // 다른 엔티티들은 삭제 API가 없음
             alert("이 데이터는 삭제할 수 없습니다.");
@@ -299,7 +543,7 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
       let endpoint = apiEndpoint;
       let payload: any = rowData;
       
-      if (endpoint.includes('car-models')) {
+      if (endpoint.includes('car-model')) {
         endpoint = `/admin/car-model/${rowId}`;
         // 프론트 데이터 -> 백엔드 데이터 변환
         payload = {
@@ -307,7 +551,7 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
           fuelType: rowData.fuelType,
           customEfficiency: parseFloat(rowData.customEfficiency || '0')
         };
-      } else if (endpoint.includes('companies')) {
+      } else if (endpoint.includes('company')) {
         endpoint = `/admin/company/${rowId}`;
         // 프론트 데이터 -> 백엔드 데이터 변환
         payload = {
@@ -320,7 +564,7 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
           address: `${rowData.region} ${rowData.addressDetail}`.trim(),
           remark: rowData.remark
         };
-      } else if (endpoint.includes('vehicles')) {
+      } else if (endpoint.includes('vehicle')) {
         endpoint = `/admin/vehicle/${rowId}`;
         // 프론트 데이터 -> 백엔드 데이터 변환
         payload = {
@@ -433,12 +677,22 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
       }
 
       // API 엔드포인트 결정
-      let endpoint = `${apiEndpoint}/bulk`;
+      let endpoint = apiEndpoint;
+      if (endpoint.includes('company')) {
+        endpoint = `${apiEndpoint}/bulk-update`;
+      } else if (endpoint.includes('vehicle')) {
+        endpoint = `${apiEndpoint}/bulk-update`;
+      } else if (endpoint.includes('operation-purpose')) {
+        endpoint = `${apiEndpoint}/bulk`;
+      } else {
+        endpoint = `${apiEndpoint}/bulk`;
+      }
       let payload: any[] = [];
 
       if (apiEndpoint.includes('car-models')) {
         // 차종 데이터 변환
         payload = changedData.map(row => ({
+          id: row.id,
           carCategoryId: row.carCategoryId,
           fuelType: row.fuelType,
           customEfficiency: parseFloat(row.customEfficiency || '0')
@@ -799,7 +1053,7 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
                     const rowId = row.id;
                     const isSelected = selectedRows.includes(rowId);
                     const isRowEditing = row.isEditing;
-                    const rowNumber = (currentPage - 1) * itemsPerPage + (index + 1);
+                    const rowNumber = currentPage * 15 + (index + 1);
 
                     return (
                         <tr 
@@ -873,30 +1127,37 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
       </div>
 
       {/* 4. 하단 액션바 (페이지네이션 & 일괄 작업) */}
-      <div className="flex flex-col-reverse md:flex-row justify-between items-center mt-6 gap-4">
+      <div className="flex flex-col gap-4 mt-6">
         
-        {/* Placeholder for layout balance */}
-        <div className="hidden md:block w-1/4"></div> 
+        {/* 페이지 정보 */}
+        <div className="flex justify-center text-sm text-gray-600">
+          총 {totalElements.toLocaleString()}개 항목, {totalPages}페이지 중 {currentPage + 1}페이지
+        </div>
         
-        {/* 페이지네이션 (중앙) */}
+        <div className="flex flex-col-reverse md:flex-row justify-between items-center gap-4">
+          
+          {/* Placeholder for layout balance */}
+          <div className="hidden md:block w-1/4"></div> 
+          
+          {/* 페이지네이션 (중앙) */}
         <div className="flex items-center gap-1">
-            <button onClick={() => setCurrentPage(1)} disabled={currentPage === 1} className="px-3 py-1 border rounded hover:bg-gray-100 disabled:opacity-50">«</button>
-            <button onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))} disabled={currentPage === 1} className="px-3 py-1 border rounded hover:bg-gray-100 disabled:opacity-50">‹</button>
+            <button onClick={() => handlePageChange(0)} disabled={currentPage === 0} className="px-3 py-1 border rounded hover:bg-gray-100 disabled:opacity-50">«</button>
+            <button onClick={() => handlePageChange(currentPage - 1)} disabled={currentPage === 0} className="px-3 py-1 border rounded hover:bg-gray-100 disabled:opacity-50">‹</button>
             
-            {Array.from({ length: totalPages }, (_, i) => i + 1).slice(
-                Math.max(0, currentPage - 3), Math.min(totalPages, currentPage + 2)
+            {Array.from({ length: totalPages }, (_, i) => i).slice(
+                Math.max(0, currentPage - 2), Math.min(totalPages, currentPage + 3)
             ).map(page => (
                 <button
                     key={page}
-                    onClick={() => setCurrentPage(page)}
+                    onClick={() => handlePageChange(page)}
                     className={`px-3 py-1 border rounded ${page === currentPage ? 'bg-blue-600 text-white border-blue-600' : 'bg-white hover:bg-gray-100'}`}
                 >
-                    {page}
+                    {page + 1}
                 </button>
             ))}
             
-            <button onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))} disabled={currentPage === totalPages} className="px-3 py-1 border rounded hover:bg-gray-100 disabled:opacity-50">›</button>
-            <button onClick={() => setCurrentPage(totalPages)} disabled={currentPage === totalPages} className="px-3 py-1 border rounded hover:bg-gray-100 disabled:opacity-50">»</button>
+            <button onClick={() => handlePageChange(currentPage + 1)} disabled={currentPage === totalPages - 1} className="px-3 py-1 border rounded hover:bg-gray-100 disabled:opacity-50">›</button>
+            <button onClick={() => handlePageChange(totalPages - 1)} disabled={currentPage === totalPages - 1} className="px-3 py-1 border rounded hover:bg-gray-100 disabled:opacity-50">»</button>
         </div>
 
         {/* 일괄 작업 버튼 (우측) */}
@@ -925,6 +1186,7 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
             )}
         </div>
       </div>
+    </div>
 
       {/* 엑셀 업로드 모달 연결 - 추후 구현 예정 */}
     </div>
