@@ -473,7 +473,7 @@ export default function App() {
                               type="number" 
                               value={reductionRatio}
                               onChange={(e) => setReductionRatio(Number(e.target.value))}
-                              className="flex-1 bg-white border-2 border-slate-200 rounded-2xl px-6 py-4 font-black text-2xl text-sky-600 outline-none focus:border-sky-500"
+                              className="flex-2 bg-white border-2 border-slate-200 rounded-2xl px-0 py-4 font-black text-2xl text-sky-600 outline-none focus:border-sky-500"
                             />
                             <button 
                               onClick={applyRatioDistribution}
