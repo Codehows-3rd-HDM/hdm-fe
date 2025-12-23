@@ -797,13 +797,20 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
           dynamicOptions = options.companies || [];
         } else if (fieldKey === 'operationPurposeName' || fieldKey === 'operationPurposeId') {
           dynamicOptions = options.operationPurposes || [];
+        } else if (fieldKey === 'parentCategoryName' || fieldKey === 'parentCategoryId') {
+          dynamicOptions = options.carCategories || [];
+        } else if (fieldKey === 'fuelType' || fieldKey === 'fuelTypeId') {
+          dynamicOptions = options.fuelTypes || [];
         }
+
 
         const currentId =
           fieldKey === 'customerName' ? row.customerId :
           fieldKey === 'supplyTypeName' ? row.supplyTypeId :
           fieldKey === 'companyName' ? row.companyId :
           fieldKey === 'operationPurposeName' ? row.operationPurposeId :
+          fieldKey === 'parentCategoryName' ? row.parentCategoryId :
+          fieldKey === 'fuelType' ? row.fuelTypeId :
           '';
 
           // 협력사명 필드의 경우 검색 가능한 드롭다운으로 렌더링 (차량 관리에서만)
@@ -857,6 +864,7 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
                   </select>
               );
           }
+          
 
           return (
             <select
@@ -882,6 +890,24 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
                 if (fieldKey === 'operationPurposeName') {
                   handleDataChange(rowId, 'operationPurposeId' as keyof T, selected.id);
                   handleDataChange(rowId, 'operationPurposeName' as keyof T, selected.name);
+                }
+                if (fieldKey === 'parentCategoryName') {
+                  handleDataChange(rowId, 'parentCategoryId' as keyof T, selected.id);
+                  handleDataChange(rowId, 'parentCategoryName' as keyof T, selected.name);
+
+                  // 🔥 대분류 바뀌면 소분류 초기화
+                  handleDataChange(rowId, 'carCategoryId' as keyof T, '');
+                  handleDataChange(rowId, 'carCategoryName' as keyof T, '');
+
+                  setSelectedParentCategories(prev => ({
+                    ...prev,
+                    [rowId]: selected.name
+                  }));
+                }
+
+                if (fieldKey === 'fuelType') {
+                  handleDataChange(rowId, 'fuelTypeId' as keyof T, selected.id);
+                  handleDataChange(rowId, 'fuelType' as keyof T, selected.name);
                 }
               }}
               className={inputClass}
