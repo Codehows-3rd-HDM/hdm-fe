@@ -53,7 +53,7 @@ export const menuItems: MenuItem[] = [
         ],
       },
       { title: '탄소 배출계수 관리', path: '/admin/emission-factor' }, // API: /emission-factor
-      { title: '탄소 배출량 계산', path: '/admin/calc-method' },       // API: /emission/calc-method
+      // { title: '탄소 배출량 계산', path: '/admin/calc-method' },       // API: /emission/calc-method
       { title: '탄소 배출 목표 조회', path: '/admin/target-view' },    // API: /target
       // { title: '대시보드 관리', path: '/admin/dashboard-setting' }, 기존엔 있었는데 미구현
       { title: '저감활동 기록 관리', path: '/admin/activity-manage' },

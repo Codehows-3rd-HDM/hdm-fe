@@ -7,27 +7,6 @@ import {
 //API 모듈 임포트
 import axiosInstance from '../../apis/axiosInstance';
 
-// --- 엑셀 다운로드 함수 (프론트 구현만) ---
-// const downloadExcel = (data: any[], filename: string) => {
-//   if (data.length === 0) {
-//     alert('다운로드할 데이터가 없습니다.');
-//     return;
-//   }
-//   const headers = Object.keys(data[0]).filter(key => key !== 'isEditing' && key !== 'id');
-//   const csvContent = [
-//     headers.join(','),
-//     ...data.map(row => headers.map(header => row[header]).join(','))
-//   ].join('\n');
-  
-//   const blob = new Blob(["\ufeff", csvContent], { type: 'text/csv;charset=utf-8;' });
-//   const link = document.createElement('a');
-//   link.href = URL.createObjectURL(blob);
-//   link.download = `${filename}_${new Date().toISOString().slice(0,10)}.csv`;
-//   document.body.appendChild(link);
-//   link.click();
-//   document.body.removeChild(link);
-// };
-
 // --- Props 정의 ---
 interface StandardDataManagementTableProps<T> {
   title: string;
@@ -70,7 +49,7 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
   const [currentPage, setCurrentPage] = useState(0); // Spring Boot Page는 0부터 시작
   const [totalPages, setTotalPages] = useState(0);
   const [totalElements, setTotalElements] = useState(0);
-  // const [pageSize, setPageSize] = useState(15); // 추후 페이지 크기 변경 기능 추가 시 사용
+  const [pageSize] = useState(15); // 추후 페이지 크기 변경 기능 추가 시 사용
 
   // 대분류 선택 상태 추적 (차량 관리에서 소분류 필터링용)
   const [selectedParentCategories, setSelectedParentCategories] = useState<Record<number, string>>({});
@@ -101,8 +80,8 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
         const response = await axiosInstance.get(endpoint, {
           params: {
             page: currentPage,
-            size: 15, // 고정된 페이지 크기
-            ...(searchQuery && { keyword: searchQuery })
+            size: pageSize, // 고정된 페이지 크기
+            ...(searchQuery.trim() && { keyword: searchQuery.trim() })
           }
         });
         console.log(`[${title}] API 응답 상태: ${response.status}`);
@@ -168,7 +147,7 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
           rawData = rawData.map((item: any) => ({
             ...item,
             carNumber: item.carNumber || '',
-            purpose: item.operationPurposeName || '',
+            operationPurposeName: item.operationPurposeName || '',
             vendorName: item.companyName || '',
             employeeId: item.driverMemberId || '',
             distance: item.operationDistance || '',
@@ -192,7 +171,7 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
           rawData = rawData.map((item: any) => ({
             ...item,
             purpose: item.purposeName || '',
-            scope: item.defaultScope || ''
+            scope: item.defaultScope === 1 ? 'Scope1' : item.defaultScope === 3 ? 'Scope3' : '기타'
           }));
         } else if (endpoint.includes('supply-customer')) {
           rawData = rawData.map((item: any) => ({
@@ -244,7 +223,7 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
           const response = await axiosInstance.get(endpoint, {
             params: {
               page: 0, // 검색 시 첫 페이지부터
-              size: 15,
+              size: pageSize,
               keyword: searchQuery
             }
           });
@@ -257,7 +236,7 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
           setCurrentPage(pageData.number || 0);
 
           // 데이터 변환 로직 (위와 동일)
-          if (endpoint.includes('car-models')) {
+          if (endpoint.includes('car-model')) {
             rawData = rawData.map((item: any) => ({
               ...item,
               parentCategoryName: item.parentCategoryName || '',
@@ -266,7 +245,7 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
               fuelType: item.fuelType || '',
               carCategoryId: item.carCategoryId
             }));
-          } else if (endpoint.includes('companies')) {
+          } else if (endpoint.includes('company')) {
             rawData = rawData.map((item: any) => {
               let region = item.region || '';
               let addressDetail = item.detailAddress || item.addressDetail || '';
@@ -288,7 +267,7 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
                 remark: item.remark || ''
               };
             });
-          } else if (endpoint.includes('vehicles')) {
+          } else if (endpoint.includes('vehicle')) {
             rawData = rawData.map((item: any) => ({
               ...item,
               carNumber: item.carNumber || '',
@@ -331,7 +310,7 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
       };
       loadData();
     }
-  }, [searchQuery, apiEndpoint]);
+  }, [pageSize, searchQuery, apiEndpoint, title]);
 
   // --- 필터링 & 정렬 로직 (메모이제이션) ---
   const searchableColumns = useMemo(() => 
@@ -415,8 +394,8 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
       const response = await axiosInstance.get(endpoint, {
         params: {
           page: page,
-          size: 15,
-          ...(searchQuery && { keyword: searchQuery })
+          size: pageSize,
+          ...(searchQuery.trim() && { keyword: searchQuery.trim() })
         }
       });
 
@@ -437,7 +416,7 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
           fuelType: item.fuelType || '',
           carCategoryId: item.carCategoryId
         }));
-      } else if (endpoint.includes('companies')) {
+      } else if (endpoint.includes('company')) {
         rawData = rawData.map((item: any) => {
           let region = item.region || '';
           let addressDetail = item.detailAddress || item.addressDetail || '';
@@ -459,7 +438,7 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
             remark: item.remark || ''
           };
         });
-      } else if (endpoint.includes('vehicles')) {
+      } else if (endpoint.includes('vehicle')) {
         rawData = rawData.map((item: any) => ({
           ...item,
           carNumber: item.carNumber || '',
@@ -557,11 +536,11 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
         payload = {
           companyName: rowData.companyName,
           supplyTypeId: rowData.supplyTypeId,
-          customerId: rowData.supplyCustomerId,
+          customerId: rowData.customerId,
           oneWayDistance: rowData.oneWayDistance,
           region: rowData.region,
-          detailAddress: rowData.addressDetail,
-          address: `${rowData.region} ${rowData.addressDetail}`.trim(),
+          detailAddress: rowData.detailAddress,
+          // address: `${rowData.region} ${rowData.addressDetail}`.trim(),
           remark: rowData.remark
         };
       } else if (endpoint.includes('vehicle')) {
@@ -598,14 +577,14 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
         // 프론트 데이터 -> 백엔드 데이터 변환
         payload = {
           purposeName: rowData.purpose,
-          defaultScope: rowData.defaultScope
+          defaultScopeId: rowData.scope === 'Scope1' ? 1 : rowData.scope === 'Scope3' ? 3 : 4
         };
       } else {
         // 다른 엔티티들은 수정 API가 없음
         alert("이 데이터는 수정할 수 없습니다.");
         return;
       }
-      
+      console.log(`[${title}] 개별 저장 요청 - ID: ${rowId}, 페이로드:`, payload);
       await axiosInstance.put(endpoint, payload);
       alert("저장되었습니다.");
       toggleEditMode(rowId);
@@ -639,7 +618,7 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
     }
     
     // 삭제 가능한 엔티티인지 확인
-    const canDelete = apiEndpoint.includes('companies') || apiEndpoint.includes('vehicles') || apiEndpoint.includes('supply-type') || apiEndpoint.includes('supply-customer') || apiEndpoint.includes('operation-purpose');
+    const canDelete = apiEndpoint.includes('company') || apiEndpoint.includes('vehicle') || apiEndpoint.includes('supply-type') || apiEndpoint.includes('supply-customer') || apiEndpoint.includes('operation-purpose');
     if (!canDelete) {
         alert("이 데이터는 삭제할 수 없습니다.");
         return;
@@ -689,7 +668,7 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
       }
       let payload: any[] = [];
 
-      if (apiEndpoint.includes('car-models')) {
+      if (apiEndpoint.includes('car-model')) {
         // 차종 데이터 변환
         payload = changedData.map(row => ({
           id: row.id,
@@ -697,20 +676,20 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
           fuelType: row.fuelType,
           customEfficiency: parseFloat(row.customEfficiency || '0')
         }));
-      } else if (apiEndpoint.includes('companies')) {
+      } else if (apiEndpoint.includes('company')) {
         // 회사 데이터 변환
         payload = changedData.map(row => ({
           id: row.id,
           companyName: row.companyName,
           supplyTypeId: row.supplyTypeId,
-          customerId: row.supplyCustomerId,
+          customerId: row.customerId,
           oneWayDistance: row.oneWayDistance,
           region: row.region,
-          detailAddress: row.addressDetail,
-          address: `${row.region} ${row.addressDetail}`.trim(),
+          detailAddress: row.detailAddress,
+          // address: `${row.region} ${row.addressDetail}`.trim(),
           remark: row.remark
         }));
-      } else if (apiEndpoint.includes('vehicles')) {
+      } else if (apiEndpoint.includes('vehicle')) {
         // 차량 데이터 변환
         payload = changedData.map(row => ({
           id: row.id,
@@ -744,7 +723,7 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
         payload = changedData.map(row => ({
           id: row.id,
           purposeName: row.purpose,
-          defaultScope: row.defaultScopeId
+          defaultScopeId: row.scope === 'Scope1' ? 1 : row.scope === 'Scope3' ? 3 : 4
         }));
       }
 
@@ -970,22 +949,6 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
             <Search size={16} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
           </div>
         </div>
-
-        {/* 엑셀 버튼 영역 */}
-        {/* <div className="flex gap-2">
-          <button 
-            onClick={() => setIsUploadModalOpen(true)} 
-            className="flex items-center px-4 py-2 bg-green-600 text-white rounded-md text-sm font-bold hover:bg-green-700 transition-colors shadow-sm"
-          >
-            <Upload size={16} className="mr-2" /> Excel 업로드
-          </button>
-          <button 
-            onClick={() => downloadExcel(filteredData, title)} 
-            className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-md text-sm font-bold hover:bg-blue-700 transition-colors shadow-sm"
-          >
-            <Download size={16} className="mr-2" /> Excel 다운로드
-          </button>
-        </div> */}
       </div>
       
       {/* 3. 테이블 영역 */}
@@ -1141,11 +1104,13 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
           
           {/* 페이지네이션 (중앙) */}
         <div className="flex items-center gap-1">
-            <button onClick={() => handlePageChange(0)} disabled={currentPage === 0} className="px-3 py-1 border rounded hover:bg-gray-100 disabled:opacity-50">«</button>
-            <button onClick={() => handlePageChange(currentPage - 1)} disabled={currentPage === 0} className="px-3 py-1 border rounded hover:bg-gray-100 disabled:opacity-50">‹</button>
+            <button onClick={() => handlePageChange(0)} disabled={currentPage === 0} className="px-3 py-1 border rounded hover:bg-gray-100 disabled:opacity-50">&lt;&lt;&lt;</button>
+            <button onClick={() => handlePageChange(Math.max(currentPage - 10, 0))} disabled={currentPage === 0} className="px-3 py-1 border rounded hover:bg-gray-100 disabled:opacity-50">&lt;&lt;</button>
+            <button onClick={() => handlePageChange(currentPage - 1)} disabled={currentPage === 0} className="px-3 py-1 border rounded hover:bg-gray-100 disabled:opacity-50">&lt;</button>
+          
             
             {Array.from({ length: totalPages }, (_, i) => i).slice(
-                Math.max(0, currentPage - 2), Math.min(totalPages, currentPage + 3)
+                Math.max(0, currentPage - 4), Math.min(totalPages, currentPage + 5)
             ).map(page => (
                 <button
                     key={page}
@@ -1156,8 +1121,9 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
                 </button>
             ))}
             
-            <button onClick={() => handlePageChange(currentPage + 1)} disabled={currentPage === totalPages - 1} className="px-3 py-1 border rounded hover:bg-gray-100 disabled:opacity-50">›</button>
-            <button onClick={() => handlePageChange(totalPages - 1)} disabled={currentPage === totalPages - 1} className="px-3 py-1 border rounded hover:bg-gray-100 disabled:opacity-50">»</button>
+            <button onClick={() => handlePageChange(currentPage + 1)} disabled={currentPage === totalPages - 1} className="px-3 py-1 border rounded hover:bg-gray-100 disabled:opacity-50">&gt;</button>
+            <button onClick={() => handlePageChange(Math.min(currentPage + 10, totalPages - 1))} disabled={currentPage === totalPages - 1} className="px-3 py-1 border rounded hover:bg-gray-100 disabled:opacity-50">&gt;&gt;</button>
+            <button onClick={() => handlePageChange(totalPages - 1)} disabled={currentPage === totalPages - 1} className="px-3 py-1 border rounded hover:bg-gray-100 disabled:opacity-50">&gt;&gt;&gt;</button>
         </div>
 
         {/* 일괄 작업 버튼 (우측) */}
