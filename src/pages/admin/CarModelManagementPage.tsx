@@ -7,7 +7,7 @@ const CarModelManagementPage: React.FC = () => {
     <StandardDataManagementTable<CarModelData>
       title="차종 및 연비 기준정보 관리"
       columns={CAR_MODEL_COLUMNS}
-      apiEndpoint="/admin/car-models"
+      apiEndpoint="/admin/car-model"
       disableDelete={true}
     />
   );

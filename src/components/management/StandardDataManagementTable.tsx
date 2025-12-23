@@ -101,7 +101,7 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
         console.log(`[${title}] 추출된 데이터 샘플:`, Array.isArray(rawData) && rawData.length > 0 ? rawData[0] : '데이터 없음');
         
         // 데이터 변환
-        if (endpoint.includes('car-models')) {
+        if (endpoint.includes('car-model')) {
           rawData = rawData.map((item: any) => ({
             ...item,
             parentCategoryName: item.parentCategoryName || '',
@@ -407,7 +407,7 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
       setTotalElements(pageData.totalElements || rawData.length);
 
       // 데이터 변환 로직 (데이터 로딩과 동일)
-      if (endpoint.includes('car-models')) {
+      if (endpoint.includes('car-model')) {
         rawData = rawData.map((item: any) => ({
           ...item,
           parentCategoryName: item.parentCategoryName || '',
@@ -807,7 +807,7 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
           '';
 
           // 협력사명 필드의 경우 검색 가능한 드롭다운으로 렌더링 (차량 관리에서만)
-          if (String(fieldKey) === 'companyName' && apiEndpoint.includes('vehicles')) {
+          if (String(fieldKey) === 'companyName' && apiEndpoint.includes('vehicle')) {
               const listId = `company-list-${rowId}`;
               return (
                   <>
@@ -838,7 +838,7 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
           }
 
           // 소분류 필드의 경우 대분류에 따라 옵션 필터링 (차량 관리에서만)
-          if (String(fieldKey) === 'carCategoryName' && apiEndpoint.includes('vehicles')) {
+          if (String(fieldKey) === 'carCategoryName' && apiEndpoint.includes('vehicle')) {
               const selectedParentCategory = selectedParentCategories[rowId] || row.parentCategoryName || '';
               const filteredOptions = selectedParentCategory && options.carCategoryMap ? 
                 options.carCategoryMap[selectedParentCategory] || [] : [];
