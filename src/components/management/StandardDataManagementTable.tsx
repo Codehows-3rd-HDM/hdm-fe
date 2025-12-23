@@ -132,14 +132,14 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
               ...item,
               companyName: item.companyName || '',
               supplyTypeName: item.supplyTypeName || '',
-              supplyCustomerName: item.supplyCustomerName || '',
+              customerName: item.customerName || '',
               oneWayDistance: item.oneWayDistance || 0,
               region: region,
               addressDetail: addressDetail,
               remark: item.remark || '',
               // ID 값들 유지
               supplyTypeId: item.supplyTypeId,
-              supplyCustomerId: item.supplyCustomerId
+              customerId: item.customerId
             };
           });
           console.log(`[${title}] 협력사 데이터 변환 완료`);
@@ -176,7 +176,7 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
         } else if (endpoint.includes('supply-customer')) {
           rawData = rawData.map((item: any) => ({
             ...item,
-            supplyCustomer: item.customerName || '',
+            customerName: item.customerName || '',
             note: item.remark || ''
           }));
         }
@@ -262,7 +262,7 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
                 addressDetail,
                 companyName: item.companyName || '',
                 supplyTypeId: item.supplyTypeId || '',
-                supplyCustomerId: item.customerId || '',
+                customerId: item.customerId || '',
                 oneWayDistance: item.oneWayDistance || '',
                 remark: item.remark || ''
               };
@@ -296,7 +296,7 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
           } else if (endpoint.includes('supply-customer')) {
             rawData = rawData.map((item: any) => ({
               ...item,
-              supplyCustomer: item.customerName || '',
+              customerName: item.customerName || '',
               note: item.remark || ''
             }));
           }
@@ -433,7 +433,7 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
             addressDetail,
             companyName: item.companyName || '',
             supplyTypeId: item.supplyTypeId || '',
-            supplyCustomerId: item.customerId || '',
+            customerId: item.customerId || '',
             oneWayDistance: item.oneWayDistance || '',
             remark: item.remark || ''
           };
@@ -467,7 +467,7 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
       } else if (endpoint.includes('supply-customer')) {
         rawData = rawData.map((item: any) => ({
           ...item,
-          supplyCustomer: item.customerName || '',
+          customerName: item.customerName || '',
           note: item.remark || ''
         }));
       }
@@ -569,7 +569,7 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
         endpoint = `/admin/supply-customer/${rowId}`;
         // 프론트 데이터 -> 백엔드 데이터 변환
         payload = {
-          customerName: rowData.supplyCustomer,
+          customerName: rowData.customerName,
           remark: rowData.note
         };
       } else if (endpoint.includes('operation-purpose')) {
@@ -715,7 +715,7 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
         // 공급고객 데이터 변환
         payload = changedData.map(row => ({
           id: row.id,
-          customerName: row.supplyCustomer,
+          customerName: row.customerName,
           remark: row.note
         }));
       } else if (apiEndpoint.includes('operation-purpose')) {
@@ -787,21 +787,24 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
 
       // 동적 드롭다운 (서버 데이터 기반)
       if (col.inputType === 'dynamic-select') {
-          let dynamicOptions: { id: number; name: string; oneWayDistance?: number }[] = [];
-          
-          if (String(fieldKey) === 'supplyTypeName' || String(fieldKey) === 'supplyTypeId') {
-              dynamicOptions = options.supplyTypes || [];
-          } else if (String(fieldKey) === 'supplyCustomerName' || String(fieldKey) === 'supplyCustomerId') {
-              dynamicOptions = options.supplyCustomers || [];
-          } else if (String(fieldKey) === 'operationPurposeName' || String(fieldKey) === 'operationPurposeId') {
-              dynamicOptions = options.operationPurposes || [];
-          } else if (String(fieldKey) === 'companyName' || String(fieldKey) === 'companyId') {
-              dynamicOptions = options.companies || [];
-          } else if (String(fieldKey) === 'parentCategoryName' || String(fieldKey) === 'parentCategoryId') {
-              dynamicOptions = options.carCategories || [];
-          } else if (String(fieldKey) === 'fuelType' || String(fieldKey) === 'fuelTypeId') {
-              dynamicOptions = options.fuelTypes || [];
-          }
+        let dynamicOptions: { id: number; name: string; oneWayDistance?: number }[] = [];
+
+        if (fieldKey === 'customerName' || fieldKey === 'customerId') {
+          dynamicOptions = options.supplyCustomers || [];
+        } else if (fieldKey === 'supplyTypeName' || fieldKey === 'supplyTypeId') {
+          dynamicOptions = options.supplyTypes || [];
+        } else if (fieldKey === 'companyName' || fieldKey === 'companyId') {
+          dynamicOptions = options.companies || [];
+        } else if (fieldKey === 'operationPurposeName' || fieldKey === 'operationPurposeId') {
+          dynamicOptions = options.operationPurposes || [];
+        }
+
+        const currentId =
+          fieldKey === 'customerName' ? row.customerId :
+          fieldKey === 'supplyTypeName' ? row.supplyTypeId :
+          fieldKey === 'companyName' ? row.companyId :
+          fieldKey === 'operationPurposeName' ? row.operationPurposeId :
+          '';
 
           // 협력사명 필드의 경우 검색 가능한 드롭다운으로 렌더링 (차량 관리에서만)
           if (String(fieldKey) === 'companyName' && apiEndpoint.includes('vehicles')) {
@@ -856,32 +859,42 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
           }
 
           return (
-              <select
-                  value={String(value)}
-                  onChange={(e) => {
-                      // ID 값도 함께 업데이트
-                      if (String(fieldKey) === 'supplyType') {
-                          handleDataChange(rowId, 'supplyTypeId' as keyof T, e.target.value);
-                      } else if (String(fieldKey) === 'supplyCustomer') {
-                          handleDataChange(rowId, 'supplyCustomerId' as keyof T, e.target.value);
-                      } else if (String(fieldKey) === 'purpose') {
-                          handleDataChange(rowId, 'operationPurposeId' as keyof T, e.target.value);
-                      } else if (String(fieldKey) === 'companyName') {
-                          handleDataChange(rowId, 'companyId' as keyof T, e.target.value);
-                      } else if (String(fieldKey) === 'parentCategoryName') {
-                          handleDataChange(rowId, 'parentCategoryId' as keyof T, e.target.value);
-                      } else if (String(fieldKey) === 'fuelType') {
-                          handleDataChange(rowId, 'fuelTypeId' as keyof T, e.target.value);
-                      }
-                      handleDataChange(rowId, fieldKey, e.target.value);
-                  }}
-                  className={inputClass}
-              >
-                  <option value="">선택</option>
-                  {dynamicOptions.map(opt => <option key={opt.id} value={opt.name}>{opt.name}</option>)}
-              </select>
+            <select
+              value={currentId ?? ''}
+              onChange={(e) => {
+                const selectedId = Number(e.target.value);
+                const selected = dynamicOptions.find(opt => opt.id === selectedId);
+                if (!selected) return;
+
+                // ID 저장
+                if (fieldKey === 'customerName') {
+                  handleDataChange(rowId, 'customerId' as keyof T, selected.id);
+                  handleDataChange(rowId, 'customerName' as keyof T, selected.name);
+                }
+                if (fieldKey === 'supplyTypeName') {
+                  handleDataChange(rowId, 'supplyTypeId' as keyof T, selected.id);
+                  handleDataChange(rowId, 'supplyTypeName' as keyof T, selected.name);
+                }
+                if (fieldKey === 'companyName') {
+                  handleDataChange(rowId, 'companyId' as keyof T, selected.id);
+                  handleDataChange(rowId, 'companyName' as keyof T, selected.name);
+                }
+                if (fieldKey === 'operationPurposeName') {
+                  handleDataChange(rowId, 'operationPurposeId' as keyof T, selected.id);
+                  handleDataChange(rowId, 'operationPurposeName' as keyof T, selected.name);
+                }
+              }}
+              className={inputClass}
+            >
+              <option value="">선택</option>
+              {dynamicOptions.map(opt => (
+                <option key={opt.id} value={opt.id}>
+                  {opt.name}
+                </option>
+              ))}
+            </select>
           );
-      }
+        }
 
       if (col.inputType === 'search-select' && col.selectOptions) {
           const listId = `list-${String(col.id)}-${rowId}`;
@@ -1153,8 +1166,6 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
         </div>
       </div>
     </div>
-
-      {/* 엑셀 업로드 모달 연결 - 추후 구현 예정 */}
     </div>
   );
 };

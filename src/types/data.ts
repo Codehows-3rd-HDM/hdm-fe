@@ -46,7 +46,7 @@ export interface CompanyData {
   id: number;
   companyName: string;   // 협력사명
   supplyTypeName: string;   // 공급 유형
-  supplyCustomerName: string; // 공급 고객
+  customerName: string; // 공급 고객
   oneWayDistance: number; // 편도거리
   region: string;       // 지역 (시/도)
   detailAddress: string; // 상세주소
@@ -82,7 +82,7 @@ export interface PurposeData {
 // 6. 공급 고객 정보 데이터 타입
 export interface ProductData {
   id: number;
-  supplyCustomer: string; // 품목 구분명
+  customerName: string; // 공급 고객명
   note: string;         // 비고
   isEditing?: boolean;
 }
@@ -111,7 +111,7 @@ export const VEHICLE_COLUMNS: ColumnDefinition<VehicleData>[] = [
 export const COMPANY_COLUMNS: ColumnDefinition<CompanyData>[] = [
   { id: 'companyName', header: '협력사명', searchable: true, sortable: true, editable: true, width: '15%', inputType: 'text' },
   { id: 'supplyTypeName', header: '공급 유형', searchable: true, sortable: true, editable: true, width: '12%', inputType: 'dynamic-select' },
-  { id: 'supplyCustomerName', header: '공급 고객', searchable: true, sortable: true, editable: true, width: '12%', inputType: 'dynamic-select' },
+  { id: 'customerName', header: '공급 고객', searchable: true, sortable: true, editable: true, width: '12%', inputType: 'dynamic-select' },
   { id: 'oneWayDistance', header: '편도거리(km)', searchable: false, sortable: true, editable: true, width: '10%', inputType: 'number' },
   { id: 'region', header: '지역 (시/도)', searchable: true, sortable: true, editable: true, width: '12%', inputType: 'select', selectOptions: REGION_OPTIONS },
   { id: 'detailAddress', header: '상세주소', searchable: true, sortable: false, editable: true, width: '25%', inputType: 'text' },
@@ -143,7 +143,7 @@ export const PURPOSE_COLUMNS: ColumnDefinition<PurposeData>[] = [
 
 // 6. 공급 고객 컬럼
 export const PRODUCT_COLUMNS: ColumnDefinition<ProductData>[] = [
-  { id: 'supplyCustomer', header: '공급 고객명', searchable: true, sortable: true, editable: true, width: '50%', inputType: 'text' },
+  { id: 'customerName', header: '공급 고객명', searchable: true, sortable: true, editable: true, width: '50%', inputType: 'text' },
   { id: 'note', header: '비고', searchable: false, sortable: false, editable: true, width: '30%', inputType: 'text' },
   { id: 'actions', header: '액션', searchable: false, sortable: false, editable: false, width: '20%' },
 ];
