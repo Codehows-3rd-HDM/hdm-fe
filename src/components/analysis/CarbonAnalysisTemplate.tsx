@@ -14,7 +14,6 @@ import {
 } from "recharts";
 import {
   Search,
-  Printer,
   Download,
   CheckSquare,
   Square,
@@ -200,8 +199,6 @@ const CarbonAnalysisTemplate: React.FC<CarbonAnalysisTemplateProps> = ({
     }));
   };
 
-  const handlePrint = () => window.print();
-
   const handleDownloadExcel = () => {
     if (processedData.length === 0) return;
     const headers = columns.map((c) => c.header).join(",");
@@ -258,15 +255,9 @@ const CarbonAnalysisTemplate: React.FC<CarbonAnalysisTemplateProps> = ({
   return (
     <div ref={componentRef} className="min-h-full p-8 font-sans bg-gray-50">
       {/* 헤더 */}
-      <div className="flex items-center justify-between mb-6 print:hidden">
+      <div className="flex items-center justify-between mb-6">
         <h2 className="text-2xl font-bold text-gray-800">{title}</h2>
         <div className="flex gap-3">
-          <button
-            onClick={handlePrint}
-            className="flex items-center px-4 py-2 font-bold text-gray-700 transition-colors bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-100"
-          >
-            <Printer size={16} className="mr-2" /> Print
-          </button>
           <button
             onClick={handleDownloadExcel}
             className="flex items-center px-4 py-2 font-bold text-white transition-colors bg-green-600 rounded-md shadow-sm hover:bg-green-700"
@@ -278,7 +269,7 @@ const CarbonAnalysisTemplate: React.FC<CarbonAnalysisTemplateProps> = ({
 
       {/* Scope 탭 */}
       {hasScopeTabs && (
-        <div className="flex mb-6 border-b border-gray-200 print:hidden">
+        <div className="flex mb-6 border-b border-gray-200">
           {SCOPE_TABS.map((tab) => (
             <button
               key={tab.id}
@@ -299,7 +290,7 @@ const CarbonAnalysisTemplate: React.FC<CarbonAnalysisTemplateProps> = ({
       )}
 
       {/* 필터 영역 */}
-      <div className="flex gap-6 p-5 mb-6 bg-white border border-gray-100 shadow-sm rounded-xl print:hidden">
+      <div className="flex gap-6 p-5 mb-6 bg-white border border-gray-100 shadow-sm rounded-xl ">
         {/* 연도 선택 */}
         <div className="flex flex-col gap-1.5">
           <label className="text-xs font-bold text-gray-500">▼ 연도 선택</label>

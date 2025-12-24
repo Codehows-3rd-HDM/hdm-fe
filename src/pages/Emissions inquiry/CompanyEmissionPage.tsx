@@ -9,7 +9,7 @@ import {
   ResponsiveContainer,
   Cell,
 } from "recharts";
-import { Printer, Download, ChevronDown, Search } from "lucide-react";
+import { Download, ChevronDown, Search } from "lucide-react";
 import KoreaMapChart from "../../components/analysis/KoreaMapChart";
 
 // --- Mock Data ---
@@ -128,10 +128,6 @@ const CompanyEmissionPage: React.FC = () => {
       direction: prev?.key === key && prev.direction === "asc" ? "desc" : "asc",
     }));
   };
-
-  // Print & Download 핸들러
-  const handlePrint = () => window.print();
-
   const handleDownloadExcel = () => {
     if (filteredData.length === 0) return;
     const headers = [
@@ -155,17 +151,11 @@ const CompanyEmissionPage: React.FC = () => {
   return (
     <div className="min-h-screen p-8 font-sans bg-gray-50">
       {/* 헤더 */}
-      <div className="flex items-center justify-between mb-6 print:hidden">
+      <div className="flex items-center justify-between mb-6">
         <h2 className="text-2xl font-bold text-gray-800">
           협력사별 탄소 배출량
         </h2>
         <div className="flex gap-3">
-          <button
-            onClick={handlePrint}
-            className="flex items-center px-4 py-2 font-bold text-gray-700 transition-colors bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-100"
-          >
-            <Printer size={16} className="mr-2" /> Print
-          </button>
           <button
             onClick={handleDownloadExcel}
             className="flex items-center px-4 py-2 font-bold text-white transition-colors bg-green-600 rounded-md shadow-sm hover:bg-green-700"
@@ -176,7 +166,7 @@ const CompanyEmissionPage: React.FC = () => {
       </div>
 
       {/* 필터 영역 */}
-      <div className="flex gap-6 p-5 mb-6 bg-white border border-gray-100 shadow-sm rounded-xl print:hidden">
+      <div className="flex gap-6 p-5 mb-6 bg-white border border-gray-100 shadow-sm rounded-xl">
         {/* 연도 선택 */}
         <div className="flex flex-col gap-1.5">
           <label className="text-xs font-bold text-gray-500">▼ 연도 선택</label>
@@ -234,18 +224,18 @@ const CompanyEmissionPage: React.FC = () => {
       {/* ========================== */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-10">
         {/* 왼쪽: 지역별 탄소 배출량 지도 */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 h-[600px]">
-          <h3 className="mb-4 text-lg font-bold text-gray-800">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 h-[600px]">
+          <h3 className="mb-2 text-lg font-bold text-gray-800">
             지역별 탄소 배출량
           </h3>
-          <div className="h-[500px]">
+          <div className="h-[600px]">
             <KoreaMapChart data={MOCK_MAP_DATA} />
           </div>
         </div>
 
         {/* 오른쪽: 협력사별 탄소 배출량 Top5 */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 h-[600px]">
-          <h3 className="mb-4 text-lg font-bold text-gray-800">
+          <h3 className="mb-15 text-lg font-bold text-gray-800">
             협력사별 탄소 배출량 Top5
           </h3>
           <div className="h-[500px]">
@@ -286,7 +276,7 @@ const CompanyEmissionPage: React.FC = () => {
       {/* ========================== */}
 
       {/* 검색바 */}
-      <div className="flex items-center gap-3 p-4 mb-6 border border-blue-100 bg-blue-50 rounded-xl print:hidden">
+      <div className="flex items-center gap-3 p-4 mb-6 border border-blue-100 bg-blue-50 rounded-xl">
         <span className="font-bold text-blue-700 whitespace-nowrap">
           협력사명 검색
         </span>

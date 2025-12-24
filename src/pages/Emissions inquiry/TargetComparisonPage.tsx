@@ -13,7 +13,7 @@ import {
   LabelList,
   Legend,
 } from "recharts";
-import { Printer, ChevronDown, TrendingUp, TrendingDown } from "lucide-react";
+import { ChevronDown, TrendingUp, TrendingDown } from "lucide-react";
 
 // --- 타입 정의 ---
 type ScopeType = "total" | "scope1" | "scope3";
@@ -136,9 +136,6 @@ const TargetComparisonPage: React.FC = () => {
     { name: "목표 배출량", value: data.totalTarget },
   ];
 
-  // --- 이벤트 핸들러 ---
-  const handlePrint = () => window.print();
-
   //   const handleDownloadExcel = () => {
   //     const headers = "Month,Actual Emission,Target Emission\n";
   //     const rows = data.monthlyData.map(d => `${d.month},${d.actual},${d.target}`).join("\n");
@@ -154,28 +151,10 @@ const TargetComparisonPage: React.FC = () => {
   return (
     <div className="min-h-screen p-8 font-sans bg-gray-50">
       {/* 헤더 */}
-      <header className="flex items-center justify-between mb-6 print:hidden">
+      <header className="flex items-center justify-between mb-6">
         <h2 className="text-2xl font-bold text-gray-800">
           목표 대비 탄소 배출량
         </h2>
-        <div className="flex gap-3">
-          {/* Print 버튼 */}
-          <button
-            onClick={handlePrint}
-            className="flex items-center px-4 py-2 text-sm font-semibold text-gray-700 transition duration-150 bg-white border border-gray-300 rounded-lg shadow-sm hover:bg-gray-100"
-          >
-            <Printer size={16} className="mr-2" />
-            인쇄
-          </button>
-          {/* Excel 다운로드 버튼 */}
-          {/* <button 
-            onClick={handleDownloadExcel} 
-            className="flex items-center px-4 py-2 text-sm font-semibold text-white transition duration-150 bg-green-500 border border-green-500 rounded-lg shadow-md hover:bg-green-600"
-          >
-            <Download size={16} className="mr-2" /> 
-            Excel 다운로드
-          </button> */}
-        </div>
       </header>
 
       {/* 1. 탭 (Scope 선택) */}

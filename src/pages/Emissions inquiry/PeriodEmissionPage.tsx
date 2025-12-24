@@ -11,7 +11,6 @@ import {
   LabelList,
 } from "recharts";
 import {
-  Printer,
   Calendar as CalendarIcon,
   TrendingDown,
   TrendingUp,
@@ -68,8 +67,6 @@ const PeriodEmissionPage: React.FC = () => {
   const percent = ((Math.abs(diff) / data.prevTotal) * 100).toFixed(1);
   const isDecreased = diff < 0;
 
-  const handlePrint = () => window.print();
-
   return (
     <div className="min-h-screen p-6 bg-gray-100">
       {/* 헤더 */}
@@ -77,12 +74,6 @@ const PeriodEmissionPage: React.FC = () => {
         <h2 className="text-2xl font-bold text-gray-800">
           기간별 탄소 총 배출량 (Scope 1, Scope 3)
         </h2>
-        <button
-          onClick={handlePrint}
-          className="flex items-center px-3 py-2 text-gray-700 bg-white border rounded-md shadow-sm hover:bg-gray-50"
-        >
-          <Printer size={16} className="mr-2" /> Print
-        </button>
       </div>
 
       {/* 기간 선택 */}
