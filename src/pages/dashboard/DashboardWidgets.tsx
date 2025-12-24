@@ -1,10 +1,11 @@
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
-  LineChart, Line, ComposedChart, PieChart, Pie, Cell, LabelList
+  Line, ComposedChart, PieChart, Pie, Cell, LabelList
 } from 'recharts';
 import { getBusinessYear } from '../../utils/dateUtils';
 import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
+import KoreaMapChart from '../../components/analysis/KoreaMapChart';
 
 // ----------------------------------------------------------------------
 // [Mock Data 생성]
@@ -14,17 +15,16 @@ const currentYear = getBusinessYear();
 
 const monthlyData = Array.from({ length: 12 }, (_, i) => ({
   name: `${i + 1}월`,
-  total: Math.floor(Math.random() * 500) + 500,
-  target: Math.floor(Math.random() * 200) + 1000,
-  scope1: Math.floor(Math.random() * 300) + 200,
-  scope3: Math.floor(Math.random() * 300) + 200,
-  lastYear: Math.floor(Math.random() * 500) + 400,
+  target: Math.floor(Math.random() * 200) + 1200,
+  scope1: Math.floor(Math.random() * 400) + 400,
+  scope3: Math.floor(Math.random() * 400) + 350,
 }));
 
 const yearlyHistoryData = Array.from({ length: 5 }, (_, i) => ({
   year: currentYear - 5 + i,
-  scope1: Math.floor(Math.random() * 1000) + 500,
-  scope3: Math.floor(Math.random() * 1000) + 800,
+  scope1: Math.floor(Math.random() * 1200) + 600,
+  scope3: Math.floor(Math.random() * 1200) + 700,
+  target: Math.floor(Math.random() * 2400) + 1500,
 }));
 
 const rawPieData = [
@@ -35,53 +35,69 @@ const rawPieData = [
   { name: '기타', value: 5 },
 ];
 const pieData = rawPieData.sort((a, b) => b.value - a.value);
-const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
+const COLORS = ['#60a5fa', '#22d3ee', '#fbbf24', '#fb7185', '#c084fc'];
+
+const reductionItems = [
+  '물류 동선 최적화로 연료 8% 절감',
+  '야간 공정 전력 피크 컷 적용',
+  '폐열 회수 보일러 시범 운영',
+  '사내 EV 충전 인센티브 도입',
+  '친환경 포장재 전환 파일럿 착수',
+];
+
+const cardBase = 'bg-white/10 backdrop-blur-sm rounded-xl shadow-md p-5 h-full flex flex-col overflow-hidden border border-white/30';
+const axisStyle = { stroke: '#fff', strokeWidth: 2 };
+const tickStyle = { fill: '#fff', fontSize: 12, fontWeight: 600 };
+const legendStyle = { fontSize: 13, color: '#fff' };
+const tooltipStyle = { backgroundColor: 'rgba(15,23,42,0.9)', borderRadius: 8, border: '1px solid #334155' };
 
 // ----------------------------------------------------------------------
 // [Section 컴포넌트들]
 // ----------------------------------------------------------------------
 
 export const SummarySection = () => {
-  const totalEmission = 8000;
-  const targetEmission = 10000;
-  const diff = ((targetEmission - totalEmission) / targetEmission) * 100;
-  const simpleBarData = [
-    { name: '2025년 탄소 배출량', value: totalEmission, fill: '#2c68ff' },
-    { name: '목표 배출량', value: targetEmission, fill: '#e0e0e0' }
+  const scope1 = 4200;
+  const scope3 = 3800;
+  const targetScope1 = 5000;
+  const targetScope3 = 5000;
+  const total = scope1 + scope3;
+  const target = targetScope1 + targetScope3;
+  const diff = ((target - total) / target) * 100;
+
+  const scopeBarData = [
+    { name: 'Scope 1', value: scope1, fill: '#60a5fa' },
+    { name: 'Scope 3', value: scope3, fill: '#22d3ee' },
   ];
 
   return (
-    <div className="bg-white/10 backdrop-blur-sm rounded-xl shadow-md p-5 h-full flex flex-col overflow-hidden border border-white/20">
-      {/* 상단 요약 */}
-      <div className="flex justify-around mb-2.5 p-2.5 bg-white/10 rounded-lg">
-        <div className="text-center">
-          <div className="text-xs text-gray-300">올해의 총 배출량</div>
-          <div className="text-xl font-bold text-green-400">
-            {totalEmission.toLocaleString()} <span className="text-[11px]">tCO2eq</span>
+    <div className={`${cardBase}`}>
+      <div className="flex justify-between gap-4 mb-4 bg-white/10 rounded-lg p-4">
+        <div className="flex-1 text-center">
+          <div className="text-sm text-gray-200">올해 총 배출량</div>
+          <div className="text-3xl font-extrabold text-white leading-tight">
+            {total.toLocaleString()} <span className="text-base">tCO₂eq</span>
           </div>
-          <div className="text-[11px] text-green-400">▼ {diff.toFixed(0)}% (목표 대비)</div>
+          <div className="text-sm text-emerald-300 font-semibold">▼ {diff.toFixed(0)}% (목표 대비)</div>
         </div>
-        <div className="text-center">
-          <div className="text-xs text-gray-300">올해의 목표 배출량</div>
-          <div className="text-xl font-bold text-white">
-            {targetEmission.toLocaleString()} <span className="text-[11px]">tCO2eq</span>
+        <div className="flex-1 text-center">
+          <div className="text-sm text-gray-200">목표 배출량</div>
+          <div className="text-3xl font-extrabold text-white leading-tight">
+            {target.toLocaleString()} <span className="text-base">tCO₂eq</span>
           </div>
         </div>
       </div>
 
-      {/* 바 차트 */}
-      <div className="flex-1 min-h-[180px] mb-2.5">
-        <h4 className="text-[13px] text-center my-1.5 text-white">{currentYear}년 탄소 배출량</h4>
+      <div className="flex-1 min-h-[220px] mb-4">
+        <h4 className="text-lg font-bold text-white text-center mb-3">{currentYear}년 배출량 (Scope)</h4>
         <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={simpleBarData} margin={{ top: 20, right: 30, left: 30, bottom: 20 }} barSize={40}>
-            <CartesianGrid strokeDasharray="3 3" vertical={false} />
-            <XAxis dataKey="name" fontSize={11} interval={0} tick={{ dy: 5 }} />
-            <YAxis hide />
-            <Tooltip cursor={{ fill: 'transparent' }} />
-            <Bar dataKey="value" radius={[5, 5, 0, 0]}>
-              <LabelList dataKey="value" position="top" fill="#333" fontSize={12}
-                formatter={(val: any) => (typeof val === 'number' ? val.toLocaleString() : '')} />
-              {simpleBarData.map((entry, index) => (
+          <BarChart data={scopeBarData} barCategoryGap={30} barSize={48} margin={{ top: 10, right: 20, left: 10, bottom: 10 }}>
+            <CartesianGrid strokeDasharray="4 4" stroke="#ffffff22" />
+            <XAxis dataKey="name" tick={tickStyle} axisLine={axisStyle} tickLine={axisStyle} />
+            <YAxis tick={tickStyle} axisLine={axisStyle} tickLine={axisStyle} />
+            <Tooltip contentStyle={tooltipStyle} labelStyle={{ color: '#fff', fontWeight: 700 }} itemStyle={{ color: '#fff' }} />
+            <Bar dataKey="value" radius={[8, 8, 4, 4]}>
+              <LabelList dataKey="value" position="top" fill="#fff" fontSize={14} fontWeight={700} formatter={(val: number) => val.toLocaleString()} />
+              {scopeBarData.map((entry, index) => (
                 <Cell key={`cell-${index}`} fill={entry.fill} />
               ))}
             </Bar>
@@ -89,117 +105,90 @@ export const SummarySection = () => {
         </ResponsiveContainer>
       </div>
 
-      {/* 월별 추이 */}
-      <div className="flex-2 min-h-[200px]">
-        <h4 className="text-[13px] text-center my-1.5 text-white">{currentYear}년 월별 배출량</h4>
+      <div className="flex-1 min-h-[200px]">
+        <h4 className="text-lg font-bold text-white text-center mb-3">연간 탄소 배출량 (최근 5년)</h4>
         <ResponsiveContainer width="100%" height="100%">
-          <ComposedChart data={monthlyData} margin={{ top: 20, right: 10, left: -20, bottom: 20 }}>
-            <CartesianGrid strokeDasharray="3 3" vertical={false} />
-            <XAxis dataKey="name" fontSize={11} />
-            <YAxis fontSize={11} />
-            <Tooltip />
-            <Legend wrapperStyle={{ fontSize: '11px', paddingTop: '10px' }} />
-            <Bar dataKey="total" name="월별 배출량" fill="#4a90e2" barSize={15} radius={[3, 3, 0, 0]} />
-            <Line type="monotone" dataKey="target" name="목표 배출량" stroke="#ff7300" strokeWidth={2} dot={false} />
-          </ComposedChart>
+          <BarChart data={yearlyHistoryData} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
+            <CartesianGrid strokeDasharray="4 4" stroke="#ffffff22" />
+            <XAxis dataKey="year" tick={tickStyle} axisLine={axisStyle} tickLine={axisStyle} />
+            <YAxis tick={tickStyle} axisLine={axisStyle} tickLine={axisStyle} />
+            <Tooltip contentStyle={tooltipStyle} labelStyle={{ color: '#fff', fontWeight: 700 }} itemStyle={{ color: '#fff' }} />
+            <Legend wrapperStyle={legendStyle} formatter={(v) => <span style={{ color: '#fff' }}>{v}</span>} />
+            <Bar dataKey="scope1" name="Scope 1" stackId="a" fill="#60a5fa" barSize={32}>
+              <LabelList dataKey="scope1" position="insideTop" fill="#0f172a" fontSize={12} fontWeight={700} />
+            </Bar>
+            <Bar dataKey="scope3" name="Scope 3" stackId="a" fill="#22d3ee" barSize={32}>
+              <LabelList dataKey="scope3" position="insideTop" fill="#0f172a" fontSize={12} fontWeight={700} />
+            </Bar>
+            <Line type="monotone" dataKey="target" name="목표" stroke="#fbbf24" strokeWidth={4} dot={{ r: 4 }} />
+          </BarChart>
         </ResponsiveContainer>
       </div>
     </div>
   );
 };
 
-export const ScopeAnalysisSection = () => (
-  <div className="bg-white/10 backdrop-blur-sm rounded-xl shadow-md p-5 h-full flex flex-col overflow-hidden border border-white/20">
-    <h3 className="text-lg font-bold mb-2.5 text-white text-center">올해의 월별 탄소 배출량 (Scope)</h3>
-    <div className="flex-1 min-h-[220px] mb-5">
+export const MonthlyScopeSection = () => (
+  <div className={cardBase}>
+    <h3 className="text-xl font-bold mb-3 text-white text-center">올해 월별 배출량 (Scope)</h3>
+    <div className="flex-1 min-h-[260px]">
       <ResponsiveContainer width="100%" height="100%">
-        <ComposedChart data={monthlyData} margin={{ top: 20, right: 10, left: -20, bottom: 0 }}>
-          <CartesianGrid strokeDasharray="3 3" vertical={false} />
-          <XAxis dataKey="name" fontSize={11} />
-          <YAxis fontSize={11} />
-          <Tooltip />
-          <Legend wrapperStyle={{ fontSize: '11px' }} />
-          <Bar dataKey="scope1" name="Scope 1" stackId="a" fill="#0056b3" barSize={20} />
-          <Bar dataKey="scope3" name="Scope 3" stackId="a" fill="#fd7e14" barSize={20} />
-          <Line type="monotone" dataKey="target" name="목표 배출량" stroke="#8884d8" strokeWidth={3} dot={false} />
+        <ComposedChart data={monthlyData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+          <CartesianGrid strokeDasharray="4 4" stroke="#ffffff22" />
+          <XAxis dataKey="name" tick={tickStyle} axisLine={axisStyle} tickLine={axisStyle} />
+          <YAxis tick={tickStyle} axisLine={axisStyle} tickLine={axisStyle} />
+          <Tooltip contentStyle={tooltipStyle} labelStyle={{ color: '#fff', fontWeight: 700 }} itemStyle={{ color: '#fff' }} />
+          <Legend wrapperStyle={legendStyle} formatter={(v) => <span style={{ color: '#fff' }}>{v}</span>} />
+          <Bar dataKey="scope1" name="Scope 1" stackId="a" fill="#60a5fa" barSize={26} radius={[6, 6, 2, 2]} />
+          <Bar dataKey="scope3" name="Scope 3" stackId="a" fill="#22d3ee" barSize={26} radius={[6, 6, 2, 2]} />
+          <Line type="monotone" dataKey="target" name="목표" stroke="#fbbf24" strokeWidth={4} dot={{ r: 4 }} />
         </ComposedChart>
-      </ResponsiveContainer>
-    </div>
-
-    <h3 className="text-lg font-bold mb-2.5 text-white text-center">연간 탄소 배출량 (최근 5년)</h3>
-    <div className="flex-1 min-h-[220px]">
-      <ResponsiveContainer width="100%" height="100%">
-        <BarChart data={yearlyHistoryData} margin={{ top: 30, right: 10, left: -20, bottom: 0 }}>
-          <CartesianGrid strokeDasharray="3 3" vertical={false} />
-          <XAxis dataKey="year" fontSize={11} />
-          <YAxis fontSize={11} />
-          <Tooltip />
-          <Legend wrapperStyle={{ fontSize: '11px' }} />
-          <Bar dataKey="scope1" name="Scope 1" stackId="a" fill="#0056b3" barSize={30}>
-            <LabelList dataKey="scope1" position="center" fill="#fff" fontSize={10} />
-          </Bar>
-          <Bar dataKey="scope3" name="Scope 3" stackId="a" fill="#fd7e14" barSize={30}>
-            <LabelList dataKey="scope3" position="center" fill="#fff" fontSize={10} />
-          </Bar>
-        </BarChart>
       </ResponsiveContainer>
     </div>
   </div>
 );
 
-// [위젯 3] 비교 분석
-export const ComparisonSection = () => (
-  <div className="bg-white/10 backdrop-blur-sm rounded-xl shadow-md p-5 h-full flex flex-col overflow-hidden border border-white/20">
-    <h3 className="text-lg font-bold mb-2.5 text-white text-center">전년 대비 및 목표 비교</h3>
-    <ResponsiveContainer width="100%" height="100%">
-      <LineChart data={monthlyData} margin={{ top: 20, right: 20, left: -10, bottom: 0 }}>
-        <CartesianGrid strokeDasharray="3 3" vertical={false} />
-        <XAxis dataKey="name" fontSize={11} />
-        <YAxis fontSize={11} />
-        <Tooltip />
-        <Legend wrapperStyle={{ fontSize: '11px' }} />
-        <Line type="monotone" dataKey="total" name="올해 배출량" stroke="#28a745" strokeWidth={2} activeDot={{ r: 6 }} />
-        <Line type="monotone" dataKey="lastYear" name="전년도 배출량" stroke="#007bff" strokeWidth={2} />
-        <Line type="monotone" dataKey="target" name="목표 배출량" stroke="#ffc107" strokeWidth={2} strokeDasharray="5 5" />
-      </LineChart>
-    </ResponsiveContainer>
+export const PartnerMapSection = () => (
+  <div className={`${cardBase} min-h-[420px]`}>
+    <h3 className="text-xl font-bold mb-3 text-white text-center">협력사 지역별 현황</h3>
+    <div className="flex-1 h-full">
+      <KoreaMapChart large />
+    </div>
   </div>
 );
 
 // [위젯 4] 운행 목적 파이 차트
 export const PurposePieSection = () => (
-  <div className="bg-white/10 backdrop-blur-sm rounded-xl shadow-md p-5 h-full flex flex-col overflow-hidden border border-white/20">
-    <h3 className="text-lg font-bold mb-2.5 text-white text-center">{currentYear}년 운행 목적별 배출량</h3>
+  <div className={cardBase}>
+    <h3 className="text-xl font-bold mb-3 text-white text-center">{currentYear}년 운행 목적별 배출량</h3>
     <div className="flex-1 relative w-full h-full">
-      {/* 중앙 텍스트 */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-[120%] text-center pointer-events-none z-10 -mt-3.5">
-        <div className="text-2xl font-bold text-white">100%</div>
-        <div className="text-xs text-gray-300">Total</div>
+        <div className="text-3xl font-bold text-white">100%</div>
+        <div className="text-sm text-gray-200">Total</div>
       </div>
       <ResponsiveContainer width="100%" height="100%">
         <PieChart>
           <Pie
             data={pieData}
-            cx="50%"
+            cx="45%"
             cy="50%"
-            innerRadius={70}
-            outerRadius={110}
-            fill="#8884d8"
-            paddingAngle={3}
+            innerRadius={80}
+            outerRadius={130}
+            paddingAngle={2}
             dataKey="value"
           >
             {pieData.map((_entry, index) => (
-              <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+              <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} stroke="#0f172a" strokeWidth={2} />
             ))}
           </Pie>
-          <Tooltip />
+          <Tooltip contentStyle={tooltipStyle} labelStyle={{ color: '#fff', fontWeight: 700 }} itemStyle={{ color: '#fff' }} />
           <Legend
             layout="vertical"
-            verticalAlign="bottom"
-            align="center"
-            wrapperStyle={{ fontSize: '15px', width: '100%' }}
+            verticalAlign="middle"
+            align="right"
+            wrapperStyle={{ ...legendStyle, padding: '8px 0', color: '#fff' }}
             formatter={(value, entry: any) => (
-              <span className="text-white ml-1.5">
+              <span className="text-white ml-1.5 font-semibold">
                 {value} : <b>{entry.payload.value}%</b>
               </span>
             )}
@@ -207,5 +196,19 @@ export const PurposePieSection = () => (
         </PieChart>
       </ResponsiveContainer>
     </div>
+  </div>
+);
+
+export const ReductionListSection = () => (
+  <div className={cardBase}>
+    <h3 className="text-xl font-bold mb-3 text-white text-center">최근 저감 활동 5건</h3>
+    <ul className="space-y-3 text-white text-base font-semibold">
+      {reductionItems.map((item) => (
+        <li key={item} className="flex items-start gap-2">
+          <span className="mt-1 block w-2 h-2 rounded-full bg-emerald-300" />
+          <span>{item}</span>
+        </li>
+      ))}
+    </ul>
   </div>
 );

@@ -102,7 +102,7 @@ const KoreaMapChart: React.FC<KoreaMapChartProps> = ({ data: propData, large = f
     return regions.sort((a, b) => b.value - a.value);
   }, [normalizedDataMap]);
 
-  const leftRegions = sortedRegions.slice(0, 9);
+  const leftRegions = sortedRegions.slice(0, 10);
   // const rightRegions = sortedRegions.slice(9);
 
   return (
@@ -112,8 +112,8 @@ const KoreaMapChart: React.FC<KoreaMapChartProps> = ({ data: propData, large = f
         <h4 className="text-sm font-bold text-gray-700 mb-3">지역별 배출량</h4>
         <div className="space-y-2">
           {leftRegions.map(({ regionName, value }) => (
-            <div key={regionName} className="flex justify-between items-center text-xs">
-              <span className="font-medium text-gray-600">{regionName}</span>
+            <div key={regionName} className="flex justify-between items-center text-xs font-stretch-200%">
+              <span className="font-bold text-gray-600">{regionName}</span>
               <span className="text-gray-800 font-semibold">{value.toLocaleString()}</span>
             </div>
           ))}

@@ -186,10 +186,10 @@ const CompanyEmissionPage: React.FC = () => {
                 </option>
               ))}
             </select>
-            <ChevronDown
+            {/* <ChevronDown
               size={16}
               className="absolute text-gray-400 -translate-y-1/2 pointer-events-none right-2 top-1/2"
-            />
+            /> */}
           </div>
         </div>
 
@@ -210,10 +210,10 @@ const CompanyEmissionPage: React.FC = () => {
                   </option>
                 ))}
               </select>
-              <ChevronDown
+              {/* <ChevronDown
                 size={16}
                 className="absolute text-gray-400 -translate-y-1/2 pointer-events-none right-2 top-1/2"
-              />
+              /> */}
             </div>
           </div>
         )}
