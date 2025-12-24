@@ -53,6 +53,8 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
 
   // 대분류 선택 상태 추적 (차량 관리에서 소분류 필터링용)
   const [selectedParentCategories, setSelectedParentCategories] = useState<Record<number, string>>({});
+  // 단일 수정 취소를 위한 원본 행 백업
+  const [originalRows, setOriginalRows] = useState<Record<number, T>>({});
 
   // --- [API] 데이터 로딩 (Mount 시점) ---
   useEffect(() => {
@@ -143,25 +145,36 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
             };
           });
           console.log(`[${title}] 협력사 데이터 변환 완료`);
-        } else if (endpoint.includes('vehicles')) {
-          rawData = rawData.map((item: any) => ({
-            ...item,
-            carNumber: item.carNumber || '',
-            operationPurposeName: item.operationPurposeName || '',
-            vendorName: item.companyName || '',
-            employeeId: item.driverMemberId || '',
-            distance: item.operationDistance || '',
-            categoryLarge: item.parentCategoryName || '',
-            categorySmall: item.carCategoryName || '',
-            carModel: item.carModelName || '',
-            fuelType: item.fuelType || '',
-            note: item.remark || '',
-            // ID 값들 유지
-            purposeId: item.operationPurposeId,
-            companyId: item.companyId,
-            carCategoryId: item.carCategoryId,
-            carModelId: item.carModelId
-          }));
+        } else if (endpoint.includes('vehicle')) {
+          // 차량 데이터 초기 로딩 시 모델명이 비어있는 문제 수정 (carName 우선 반영)
+          rawData = rawData.map((item: any) => {
+            // 연료 타입 ID 설정 (fuelType은 이름, ID도 필요)
+            let fuelTypeId: any = '';
+            if (options.fuelTypes && item.fuelType) {
+              const fuelMatch = options.fuelTypes.find(f => f.name === item.fuelType);
+              fuelTypeId = fuelMatch ? fuelMatch.id : '';
+            }
+            return {
+              ...item,
+              carNumber: item.carNumber || '',
+              purposeId: item.purposeId || '',
+              companyId: item.companyId || '',
+              driverMemberId: item.driverMemberId || '',
+              parentCategoryId: item.parentCategoryId || item.carCategoryParentId || '',
+              carCategoryId: item.carCategoryId || '',
+              carModelId: item.carModelId || '',
+              carModelName: item.carName || item.carModelName || '',
+              fuelType: item.fuelType || '',
+              fuelTypeId: fuelTypeId,
+              operationDistance: item.operationDistance || '',
+              remark: item.remark || '',
+              // 표시용 이름 필드들 보존
+              operationPurposeName: item.operationPurposeName || '',
+              companyName: item.companyName || '',
+              parentCategoryName: item.parentCategoryName || '',
+              carCategoryName: item.carCategoryName || '',
+            };
+          });
         } else if (endpoint.includes('supply-type')) {
           rawData = rawData.map((item: any) => ({
             ...item,
@@ -268,19 +281,32 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
               };
             });
           } else if (endpoint.includes('vehicle')) {
-            rawData = rawData.map((item: any) => ({
-              ...item,
-              carNumber: item.carNumber || '',
-              operationPurposeId: item.operationPurposeId || '',
-              companyId: item.companyId || '',
-              driverMemberId: item.driverMemberId || '',
-              carCategoryId: item.carCategoryId || '',
-              carModelId: item.carModelId || '',
-              carModelName: item.carName || item.carModelName || '',
-              fuelType: item.fuelType || '',
-              operationDistance: item.operationDistance || '',
-              remark: item.remark || ''
-            }));
+            rawData = rawData.map((item: any) => {
+              let fuelTypeId: any = '';
+              if (options.fuelTypes && item.fuelType) {
+                const fuelMatch = options.fuelTypes.find(f => f.name === item.fuelType);
+                fuelTypeId = fuelMatch ? fuelMatch.id : '';
+              }
+              return {
+                ...item,
+                carNumber: item.carNumber || '',
+                purposeId: item.purposeId || '',
+                companyId: item.companyId || '',
+                driverMemberId: item.driverMemberId || '',
+                parentCategoryId: item.parentCategoryId || item.carCategoryParentId || '',
+                carCategoryId: item.carCategoryId || '',
+                carModelId: item.carModelId || '',
+                carModelName: item.carName || item.carModelName || '',
+                fuelType: item.fuelType || '',
+                fuelTypeId: fuelTypeId,
+                operationDistance: item.operationDistance || '',
+                remark: item.remark || '',
+                operationPurposeName: item.operationPurposeName || '',
+                companyName: item.companyName || '',
+                parentCategoryName: item.parentCategoryName || '',
+                carCategoryName: item.carCategoryName || ''
+              };
+            });
           } else if (endpoint.includes('supply-type')) {
             rawData = rawData.map((item: any) => ({
               ...item,
@@ -439,19 +465,32 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
           };
         });
       } else if (endpoint.includes('vehicle')) {
-        rawData = rawData.map((item: any) => ({
-          ...item,
-          carNumber: item.carNumber || '',
-          operationPurposeId: item.operationPurposeId || '',
-          companyId: item.companyId || '',
-          driverMemberId: item.driverMemberId || '',
-          carCategoryId: item.carCategoryId || '',
-          carModelId: item.carModelId || '',
-          carModelName: item.carName || item.carModelName || '',
-          fuelType: item.fuelType || '',
-          operationDistance: item.operationDistance || '',
-          remark: item.remark || ''
-        }));
+        rawData = rawData.map((item: any) => {
+          let fuelTypeId: any = '';
+          if (options.fuelTypes && item.fuelType) {
+            const fuelMatch = options.fuelTypes.find(f => f.name === item.fuelType);
+            fuelTypeId = fuelMatch ? fuelMatch.id : '';
+          }
+          return {
+            ...item,
+            carNumber: item.carNumber || '',
+            purposeId: item.purposeId || '',
+            companyId: item.companyId || '',
+            driverMemberId: item.driverMemberId || '',
+            parentCategoryId: item.parentCategoryId || item.carCategoryParentId || '',
+            carCategoryId: item.carCategoryId || '',
+            carModelId: item.carModelId || '',
+            carModelName: item.carName || item.carModelName || '',
+            fuelType: item.fuelType || '',
+            fuelTypeId: fuelTypeId,
+            operationDistance: item.operationDistance || '',
+            remark: item.remark || '',
+            operationPurposeName: item.operationPurposeName || '',
+            companyName: item.companyName || '',
+            parentCategoryName: item.parentCategoryName || '',
+            carCategoryName: item.carCategoryName || ''
+          };
+        });
       } else if (endpoint.includes('supply-type')) {
         rawData = rawData.map((item: any) => ({
           ...item,
@@ -482,9 +521,42 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
 
   // [수정 모드]
   const toggleEditMode = (rowId: number) => {
+    const target = data.find(row => row.id === rowId);
+    const enteringEdit = target ? !target.isEditing : true;
+    if (target && enteringEdit) {
+      // 편집 시작 시 원본 백업
+      setOriginalRows(prev => ({ ...prev, [rowId]: { ...target } }));
+      // 차량 관리에서 대분류 선택 상태 초기화
+      if (apiEndpoint.includes('vehicle') && target.parentCategoryName) {
+        setSelectedParentCategories(prev => ({ ...prev, [rowId]: target.parentCategoryName }));
+      }
+    } else {
+      // 편집 종료 시 백업 제거
+      setOriginalRows(prev => {
+        const next = { ...prev };
+        delete next[rowId];
+        return next;
+      });
+    }
     setData(prev => prev.map(row => 
       row.id === rowId ? { ...row, isEditing: !row.isEditing } : row
     ));
+  };
+
+  // 단일 수정 취소
+  const handleSingleCancel = (rowId: number) => {
+    const original = originalRows[rowId];
+    if (!original) {
+      // 백업이 없으면 편집 모드만 종료
+      toggleEditMode(rowId);
+      return;
+    }
+    setData(prev => prev.map(row => row.id === rowId ? { ...original, isEditing: false } as T : row));
+    setOriginalRows(prev => {
+      const next = { ...prev };
+      delete next[rowId];
+      return next;
+    });
   };
   
   // [API] 개별 삭제
@@ -548,10 +620,10 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
         // 프론트 데이터 -> 백엔드 데이터 변환
         payload = {
           carNumber: rowData.carNumber,
-          operationPurposeId: rowData.operationPurposeId,
+          purposeId: rowData.purposeId,
           companyId: rowData.companyId,
           driverMemberId: rowData.driverMemberId,
-          // parentCategoryId: rowData.parentCategoryId,
+          parentCategoryId: rowData.parentCategoryId,
           carCategoryId: rowData.carCategoryId,
           carModelId: rowData.carModelId,
           carName: rowData.carModelName,
@@ -694,7 +766,7 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
         payload = changedData.map(row => ({
           id: row.id,
           carNumber: row.carNumber,
-          operationPurposeId: row.operationPurposeId,
+          purposeId: row.purposeId,
           companyId: row.companyId,
           driverMemberId: row.driverMemberId,
           parentCategoryId: row.parentCategoryId,
@@ -752,7 +824,7 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
     ));
     
     // 대분류 선택 시 소분류 초기화 및 선택 상태 업데이트
-    if (String(key) === 'parentCategoryName' && apiEndpoint.includes('vehicles')) {
+    if (String(key) === 'parentCategoryName' && apiEndpoint.includes('vehicle')) {
       setSelectedParentCategories(prev => ({
         ...prev,
         [rowId]: value
@@ -795,7 +867,7 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
           dynamicOptions = options.supplyTypes || [];
         } else if (fieldKey === 'companyName' || fieldKey === 'companyId') {
           dynamicOptions = options.companies || [];
-        } else if (fieldKey === 'operationPurposeName' || fieldKey === 'operationPurposeId') {
+        } else if (fieldKey === 'operationPurposeName' || fieldKey === 'purposeId') {
           dynamicOptions = options.operationPurposes || [];
         } else if (fieldKey === 'parentCategoryName' || fieldKey === 'parentCategoryId') {
           dynamicOptions = options.carCategories || [];
@@ -808,7 +880,7 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
           fieldKey === 'customerName' ? row.customerId :
           fieldKey === 'supplyTypeName' ? row.supplyTypeId :
           fieldKey === 'companyName' ? row.companyId :
-          fieldKey === 'operationPurposeName' ? row.operationPurposeId :
+          fieldKey === 'operationPurposeName' ? row.purposeId :
           fieldKey === 'parentCategoryName' ? row.parentCategoryId :
           fieldKey === 'fuelType' ? row.fuelTypeId :
           '';
@@ -828,10 +900,14 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
                               
                               // 선택된 협력사 찾기
                               const selectedCompany = dynamicOptions.find(opt => opt.name === selectedValue);
-                              if (selectedCompany && selectedCompany.oneWayDistance !== undefined) {
-                                  // 거리 자동 반영 (operationDistance 필드)
-                                  handleDataChange(rowId, 'operationDistance' as keyof T, selectedCompany.oneWayDistance);
-                                  console.log(`[${title}] 협력사 선택으로 거리 자동 설정: ${selectedCompany.oneWayDistance}km`);
+                              if (selectedCompany) {
+                                  // 협력사 ID 저장
+                                  handleDataChange(rowId, 'companyId' as keyof T, selectedCompany.id);
+                                  if (selectedCompany.oneWayDistance !== undefined) {
+                                      // 거리 자동 반영 (operationDistance 필드)
+                                      handleDataChange(rowId, 'operationDistance' as keyof T, selectedCompany.oneWayDistance);
+                                      console.log(`[${title}] 협력사 선택으로 거리 자동 설정: ${selectedCompany.oneWayDistance}km`);
+                                  }
                               }
                           }}
                           className={inputClass}
@@ -850,25 +926,46 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
               const filteredOptions = selectedParentCategory && options.carCategoryMap ? 
                 options.carCategoryMap[selectedParentCategory] || [] : [];
               
+              // 소분류 ID 계산
+              const carCategoryCurrentId = (() => {
+                if (row.carCategoryId) return row.carCategoryId;
+                const nameVal = typeof value === 'string' ? value : '';
+                const match = filteredOptions.find(opt => opt.name === nameVal);
+                return match ? match.id : '';
+              })();
+              
               return (
                   <select
-                      value={String(value)}
+                      value={carCategoryCurrentId}
                       onChange={(e) => {
-                          handleDataChange(rowId, fieldKey, e.target.value);
+                          const selectedId = Number(e.target.value);
+                          const selected = filteredOptions.find(opt => opt.id === selectedId);
+                          if (selected) {
+                              handleDataChange(rowId, 'carCategoryId' as keyof T, selected.id);
+                              handleDataChange(rowId, fieldKey, selected.name);
+                          }
                       }}
                       className={inputClass}
                       disabled={!selectedParentCategory}
                   >
                       <option value="">{selectedParentCategory ? '선택' : '대분류를 먼저 선택하세요'}</option>
-                      {filteredOptions.map(opt => <option key={opt.id} value={opt.name}>{opt.name}</option>)}
+                      {filteredOptions.map(opt => <option key={opt.id} value={opt.id}>{opt.name}</option>)}
                   </select>
               );
           }
           
 
+          // 선택 값: ID가 없으면 이름으로 매칭해 기본 선택
+          const computedSelectedId = (() => {
+            if (currentId) return currentId;
+            const nameVal = typeof value === 'string' ? value : '';
+            const match = dynamicOptions.find(opt => opt.name === nameVal);
+            return match ? match.id : '';
+          })();
+
           return (
             <select
-              value={currentId ?? ''}
+              value={computedSelectedId}
               onChange={(e) => {
                 const selectedId = Number(e.target.value);
                 const selected = dynamicOptions.find(opt => opt.id === selectedId);
@@ -888,7 +985,7 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
                   handleDataChange(rowId, 'companyName' as keyof T, selected.name);
                 }
                 if (fieldKey === 'operationPurposeName') {
-                  handleDataChange(rowId, 'operationPurposeId' as keyof T, selected.id);
+                  handleDataChange(rowId, 'purposeId' as keyof T, selected.id);
                   handleDataChange(rowId, 'operationPurposeName' as keyof T, selected.name);
                 }
                 if (fieldKey === 'parentCategoryName') {
@@ -1085,12 +1182,21 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
                             {col.id === 'actions' ? (
                                 <div className="flex gap-2">
                                     {isRowEditing && !isBatchEditing ? (
+                                      <>
                                         <button 
-                                            onClick={() => handleSingleSave(rowId)} 
-                                            className="p-1.5 bg-green-100 text-green-700 rounded hover:bg-green-200" title="저장"
+                                          onClick={() => handleSingleSave(rowId)} 
+                                          className="p-1.5 bg-green-100 text-green-700 rounded hover:bg-green-200" title="저장"
                                         >
-                                            <Save size={16} />
+                                          <Save size={16} />
                                         </button>
+                                        {/* 단일 수정 취소 */}
+                                        <button
+                                          onClick={() => handleSingleCancel(rowId)}
+                                          className="p-1.5 bg-gray-100 text-gray-700 rounded hover:bg-gray-200" title="취소"
+                                        >
+                                          <X size={16} />
+                                        </button>
+                                      </>
                                     ) : !isBatchEditing ? (
                                         <button 
                                             onClick={() => toggleEditMode(rowId)} 

@@ -1,12 +1,11 @@
+//지역 좌우로 정렬
 import React, { useMemo, useState, useEffect } from "react";
 import {
   ComposableMap,
   Geographies,
   Geography,
-  Annotation,
 } from "react-simple-maps";
 import { scaleLinear } from "d3-scale";
-import { geoCentroid } from "d3-geo";
 import { fetchRegionalEmissionData } from "../../apis/mapApi";
 
 // 대한민국 TopoJSON
@@ -92,12 +91,37 @@ const KoreaMapChart: React.FC<KoreaMapChartProps> = ({ data: propData, large = f
   const containerHeight = large ? 'h-[1100px]' : 'h-[535px]';
   const projectionScale = large ? 8500 : 7000;
 
-  // 좌우 리스트 대신 지도에 직선(리더 라인)과 라벨로 표시
+  // 지역 데이터를 정렬하여 좌측/우측에 표시
+  const sortedRegions = useMemo(() => {
+    const regions = Object.keys(REGION_MAPPING).map(engName => {
+      const regionName = REGION_MAPPING[engName];
+      const norm = normalize(regionName);
+      const value = normalizedDataMap[norm] ?? 0;
+      return { regionName, value };
+    });
+    return regions.sort((a, b) => b.value - a.value);
+  }, [normalizedDataMap]);
+
+  const leftRegions = sortedRegions.slice(0, 9);
+  // const rightRegions = sortedRegions.slice(9);
 
   return (
-    <div className={`w-full ${containerHeight} relative bg-white rounded-xl shadow-md overflow-hidden`}>
-      {/* 중앙 지도 + 리더 라인 라벨 */}
-      <div className="w-full h-full relative">
+    <div className={`w-full ${containerHeight} relative bg-white rounded-xl shadow-md overflow-hidden flex`}>
+      {/* 좌측 지역 리스트 */}
+      <div className="w-48 border-r border-gray-200 p-4 overflow-y-auto">
+        <h4 className="text-sm font-bold text-gray-700 mb-3">지역별 배출량</h4>
+        <div className="space-y-2">
+          {leftRegions.map(({ regionName, value }) => (
+            <div key={regionName} className="flex justify-between items-center text-xs">
+              <span className="font-medium text-gray-600">{regionName}</span>
+              <span className="text-gray-800 font-semibold">{value.toLocaleString()}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* 중앙 지도 */}
+      <div className="flex-1 relative">
         <ComposableMap
           projection="geoMercator"
           projectionConfig={{
@@ -112,56 +136,32 @@ const KoreaMapChart: React.FC<KoreaMapChartProps> = ({ data: propData, large = f
             {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
             {({ geographies }: { geographies: any[] }) =>
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              geographies.map((geo: any, i: number) => {
+              geographies.map((geo: any) => {
                 const engName = geo.properties.name;
                 const regionName = REGION_MAPPING[engName] || engName;
                 const norm = normalize(String(regionName));
                 const value = normalizedDataMap[norm] ?? 0;
-                const centroid = geoCentroid(geo as any);
-                const lon = centroid[0];
-                const isLeft = lon < 127.8; // 중심 경도 기준 좌/우 분기
-                const dx = isLeft ? -120 : 120; // 좌우로 직선 길이
-                const dy = ((i % 5) - 2) * 8; // 경미한 수직 오프셋으로 겹침 완화
 
                 return (
-                  <React.Fragment key={geo.rsmKey}>
-                    <Geography
-                      geography={geo}
-                      style={{
-                        default: {
-                          fill: value > 0 ? colorScale(value) : "#F3F4F6",
-                          stroke: "#fff",
-                          strokeWidth: 0.7,
-                          outline: "none",
-                        },
-                        hover: {
-                          fill: "#F59E0B", // hover color (orange)
-                          cursor: "default",
-                        },
-                        pressed: {
-                          fill: "#D97706",
-                        },
-                      }}
-                    />
-                    <Annotation
-                      subject={centroid as [number, number]}
-                      dx={dx}
-                      dy={dy}
-                      connectorProps={{ stroke: "#9CA3AF", strokeWidth: 1 }}
-                    >
-                      <text
-                        x={isLeft ? -8 : 8}
-                        y={0}
-                        textAnchor={isLeft ? "end" : "start"}
-                        alignmentBaseline="middle"
-                        fill="#1F2937"
-                        fontSize={11}
-                        fontWeight={600}
-                      >
-                        {`${regionName}: ${value.toLocaleString()}`}
-                      </text>
-                    </Annotation>
-                  </React.Fragment>
+                  <Geography
+                    key={geo.rsmKey}
+                    geography={geo}
+                    style={{
+                      default: {
+                        fill: value > 0 ? colorScale(value) : "#F3F4F6",
+                        stroke: "#fff",
+                        strokeWidth: 0.7,
+                        outline: "none",
+                      },
+                      hover: {
+                        fill: "#F59E0B", // hover color (orange)
+                        cursor: "default",
+                      },
+                      pressed: {
+                        fill: "#D97706",
+                      },
+                    }}
+                  />
                 );
               })
             }
@@ -182,7 +182,18 @@ const KoreaMapChart: React.FC<KoreaMapChartProps> = ({ data: propData, large = f
         </div>
       </div>
 
-      {/* 좌우 리스트 제거, 지도만 표시 */}
+      {/* 우측 지역 리스트 */}
+      {/* <div className="w-48 border-l border-gray-200 p-4 overflow-y-auto">
+        <h4 className="text-sm font-bold text-gray-700 mb-3 invisible">지역별 배출량</h4>
+        <div className="space-y-2">
+          {rightRegions.map(({ regionName, value }) => (
+            <div key={regionName} className="flex justify-between items-center text-xs">
+              <span className="font-medium text-gray-600">{regionName}</span>
+              <span className="text-gray-800 font-semibold">{value.toLocaleString()}</span>
+            </div>
+          ))}
+        </div>
+      </div> */}
     </div>
   );
 };
