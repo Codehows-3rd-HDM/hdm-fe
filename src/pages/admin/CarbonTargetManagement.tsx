@@ -240,6 +240,66 @@ export default function App() {
     
     const next = { ...targetState };
     next[activeTab] = { total: newTotal, monthly: newMonthly };
+    
+    // Total = Scope1 + Scope3 자동 계산
+    if (activeTab === 'Scope1') {
+      next.Total.monthly = newMonthly.map((s1, i) => ({
+        month: s1.month,
+        value: s1.value + next.Scope3.monthly[i].value
+      }));
+      next.Total.total = next.Total.monthly.reduce((sum, m) => sum + m.value, 0);
+    } else if (activeTab === 'Scope3') {
+      next.Total.monthly = next.Scope1.monthly.map((s1, i) => ({
+        month: s1.month,
+        value: s1.value + newMonthly[i].value
+      }));
+      next.Total.total = next.Total.monthly.reduce((sum, m) => sum + m.value, 0);
+    } else if (activeTab === 'Total') {
+      next.Scope3.monthly = newMonthly.map((t, i) => ({
+        month: t.month,
+        value: Math.max(0, t.value - next.Scope1.monthly[i].value)
+      }));
+      next.Scope3.total = next.Scope3.monthly.reduce((sum, m) => sum + m.value, 0);
+    }
+    
+    setTargetState(next);
+  };
+
+  const applyEqualDistribution = () => {
+    if (!targetState) return;
+    const currentTotal = targetState[activeTab].total || 0;
+    const monthlyAvg = Math.floor(currentTotal / 12);
+    const remainder = currentTotal - (monthlyAvg * 12);
+    
+    const newMonthly = Array.from({length: 12}, (_, i) => ({
+      month: i + 1,
+      value: i === 11 ? monthlyAvg + remainder : monthlyAvg
+    }));
+    
+    const next = { ...targetState };
+    next[activeTab] = { ...next[activeTab], monthly: newMonthly };
+    
+    // Total = Scope1 + Scope3 자동 계산
+    if (activeTab === 'Scope1') {
+      next.Total.monthly = newMonthly.map((s1, i) => ({
+        month: s1.month,
+        value: s1.value + next.Scope3.monthly[i].value
+      }));
+      next.Total.total = next.Total.monthly.reduce((sum, m) => sum + m.value, 0);
+    } else if (activeTab === 'Scope3') {
+      next.Total.monthly = next.Scope1.monthly.map((s1, i) => ({
+        month: s1.month,
+        value: s1.value + newMonthly[i].value
+      }));
+      next.Total.total = next.Total.monthly.reduce((sum, m) => sum + m.value, 0);
+    } else if (activeTab === 'Total') {
+      next.Scope3.monthly = newMonthly.map((t, i) => ({
+        month: t.month,
+        value: Math.max(0, t.value - next.Scope1.monthly[i].value)
+      }));
+      next.Scope3.total = next.Scope3.monthly.reduce((sum, m) => sum + m.value, 0);
+    }
+    
     setTargetState(next);
   };
 
@@ -519,16 +579,16 @@ export default function App() {
 
                         <div className="space-y-3">
                           <label className="text-xs font-black text-slate-400 uppercase tracking-widest">목표 감축률 (%)</label>
-                          <div className="flex gap-2">
+                          <div className="flex flex-col gap-2">
                             <input 
                               type="number" 
                               value={reductionRatio}
                               onChange={(e) => setReductionRatio(Number(e.target.value))}
-                              className="flex-2 bg-white border-2 border-slate-200 rounded-2xl px-0 py-4 font-black text-2xl text-sky-600 outline-none focus:border-sky-500"
+                              className="flex-1 bg-white border-2 border-slate-200 rounded-2xl px-4 py-4 font-black text-2xl text-sky-600 outline-none focus:border-sky-500 text-center"
                             />
                             <button 
                               onClick={applyRatioDistribution}
-                              className="px-8 bg-sky-600 text-white font-black rounded-2xl hover:bg-sky-700 transition-all active:scale-95 shadow-lg shadow-sky-100"
+                              className="px-8 py-4 bg-sky-600 text-white font-black rounded-2xl hover:bg-sky-700 transition-all active:scale-95 shadow-lg shadow-sky-100 whitespace-nowrap"
                             >
                               비율 적용
                             </button>
@@ -538,8 +598,8 @@ export default function App() {
                         <div className="space-y-3">
                           <label className="text-xs font-black text-slate-400 uppercase tracking-widest">자동 분배 방식</label>
                           <div className="flex p-1.5 bg-slate-200/50 rounded-2xl">
-                            <button onClick={() => setDistType('actual')} className={`flex-1 py-3 text-sm font-black rounded-xl transition-all ${distType === 'actual' ? 'bg-white shadow-sm text-slate-900' : 'text-slate-500'}`}>실적 비율</button>
-                            <button onClick={() => setDistType('equal')} className={`flex-1 py-3 text-sm font-black rounded-xl transition-all ${distType === 'equal' ? 'bg-white shadow-sm text-slate-900' : 'text-slate-500'}`}>1/12 균등</button>
+                            <button onClick={() => { setDistType('actual'); applyRatioDistribution(); }} className={`flex-1 py-3 text-sm font-black rounded-xl transition-all ${distType === 'actual' ? 'bg-white shadow-sm text-slate-900' : 'text-slate-500'}`}>실적 비율</button>
+                            <button onClick={() => { setDistType('equal'); applyEqualDistribution(); }} className={`flex-1 py-3 text-sm font-black rounded-xl transition-all ${distType === 'equal' ? 'bg-white shadow-sm text-slate-900' : 'text-slate-500'}`}>1/12 균등</button>
                           </div>
                         </div>
                       </div>
