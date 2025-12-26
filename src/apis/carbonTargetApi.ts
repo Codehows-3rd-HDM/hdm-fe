@@ -37,6 +37,12 @@ const carbonTargetApi = {
     return data;
   },
 
+  async fetchActualsByScope(year: number, scope: 1 | 3): Promise<MonthlyActualResponse> {
+    const { data } = await axiosInstance.get(`/admin/emission-targets/actuals/${year}/scope/${scope}`);
+    console.log('[carbonTargetApi] fetchActualsByScope', { year, scope, data });
+    return data;
+  },
+
   async saveTargets(year: number, payload: FullTargetState) {
     const { data } = await axiosInstance.post(`/admin/emission-targets/${year}`, payload);
     console.log('[carbonTargetApi] saveTargets', { year, payload, data });

@@ -86,15 +86,26 @@ export default function App() {
   // 등록 페이지에서 기준연도 변경 시 실적 로드
   useEffect(() => {
     if (view === 'register' && baseYear) {
-      carbonTargetApi.fetchActualsByYear(baseYear)
-        .then((res) => {
+      const fetchActuals = async () => {
+        try {
+          let res;
+          if (activeTab === 'Scope1') {
+            res = await carbonTargetApi.fetchActualsByScope(baseYear, 1);
+          } else if (activeTab === 'Scope3') {
+            res = await carbonTargetApi.fetchActualsByScope(baseYear, 3);
+          } else {
+            res = await carbonTargetApi.fetchActualsByYear(baseYear);
+          }
           const monthly = res?.monthly ?? [];
-          console.log('[CarbonTargetManagement] 기준 연도 실적 로드', { baseYear, monthly });
+          console.log('[CarbonTargetManagement] 기준 연도 실적 로드', { baseYear, activeTab, monthly });
           setBaseActuals(monthly);
-        })
-        .catch((error) => console.error('[CarbonTargetManagement] 기준 연도 실적 조회 실패', error));
+        } catch (error) {
+          console.error('[CarbonTargetManagement] 기준 연도 실적 조회 실패', error);
+        }
+      };
+      fetchActuals();
     }
-  }, [baseYear, view]);
+  }, [baseYear, view, activeTab]);
 
   // 등록 페이지에서 등록연도 변경 시 기존 데이터 체크
   useEffect(() => {
@@ -155,7 +166,41 @@ export default function App() {
     if (!targetState) return;
     const nVal = val === '' ? 0 : parseInt(val);
     const next = { ...targetState };
-    next[activeTab].monthly[index].value = nVal;
+    const updatedMonthly = next[activeTab].monthly.map((mm, idx) => (
+      idx === index ? { ...mm, value: nVal } : mm
+    ));
+    next[activeTab] = { ...next[activeTab], monthly: updatedMonthly };
+    
+    // 자동 계산: Total = Scope1 + Scope3
+    if (activeTab === 'Scope1') {
+      // Scope1 변경 → Total 갱신
+      const scope1Monthly = updatedMonthly;
+      const scope3Monthly = next.Scope3.monthly;
+      next.Total.monthly = scope1Monthly.map((s1, i) => ({
+        month: s1.month,
+        value: s1.value + scope3Monthly[i].value
+      }));
+      next.Total.total = next.Total.monthly.reduce((sum, m) => sum + m.value, 0);
+    } else if (activeTab === 'Scope3') {
+      // Scope3 변경 → Total 갱신
+      const scope1Monthly = next.Scope1.monthly;
+      const scope3Monthly = updatedMonthly;
+      next.Total.monthly = scope1Monthly.map((s1, i) => ({
+        month: s1.month,
+        value: s1.value + scope3Monthly[i].value
+      }));
+      next.Total.total = next.Total.monthly.reduce((sum, m) => sum + m.value, 0);
+    } else if (activeTab === 'Total') {
+      // Total 변경 → Scope1은 비율 유지, Scope3 조정
+      const totalMonthly = updatedMonthly;
+      const scope1Monthly = next.Scope1.monthly;
+      next.Scope3.monthly = totalMonthly.map((t, i) => ({
+        month: t.month,
+        value: Math.max(0, t.value - scope1Monthly[i].value)
+      }));
+      next.Scope3.total = next.Scope3.monthly.reduce((sum, m) => sum + m.value, 0);
+    }
+    
     setTargetState(next);
   };
 
@@ -163,7 +208,20 @@ export default function App() {
     if (!targetState) return;
     const nVal = val === '' ? 0 : parseInt(val);
     const next = { ...targetState };
-    next[activeTab].total = nVal;
+    next[activeTab] = { ...next[activeTab], total: nVal };
+    
+    // 자동 계산: Total = Scope1 + Scope3
+    if (activeTab === 'Scope1') {
+      // Scope1 연간합 변경 → Total 갱신
+      next.Total.total = nVal + next.Scope3.total;
+    } else if (activeTab === 'Scope3') {
+      // Scope3 연간합 변경 → Total 갱신
+      next.Total.total = next.Scope1.total + nVal;
+    } else if (activeTab === 'Total') {
+      // Total 연간합 변경 → Scope3 조정
+      next.Scope3.total = Math.max(0, nVal - next.Scope1.total);
+    }
+    
     setTargetState(next);
   };
 
@@ -195,6 +253,22 @@ export default function App() {
       setView('list');      // 목록으로 전환
     } catch (error) {
       console.error('[CarbonTargetManagement] 목표 저장 실패', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleListSave = async () => {
+    if (!targetState) return;
+    setIsLoading(true);
+    try {
+      await carbonTargetApi.saveTargets(listYear, targetState);
+      console.log('[CarbonTargetManagement] 목록 수정 저장 완료', { listYear, targetState });
+      setIsEditMode(false);
+      const data = await carbonTargetApi.fetchTargets(listYear);
+      setTargetState(data);
+    } catch (error) {
+      console.error('[CarbonTargetManagement] 목록 수정 저장 실패', error);
     } finally {
       setIsLoading(false);
     }
@@ -296,7 +370,7 @@ export default function App() {
                         <>
                           <button onClick={() => setIsEditMode(false)} className="w-full py-4 rounded-2xl font-black bg-slate-800 hover:bg-slate-700 transition-all">수정 취소</button>
                           <button 
-                            onClick={() => setIsEditMode(false)}
+                            onClick={handleListSave}
                             disabled={diffAmount !== 0}
                             className="w-full flex items-center justify-center gap-2 bg-emerald-500 text-white py-4 rounded-2xl font-black hover:bg-emerald-600 disabled:opacity-30 transition-all"
                           >
