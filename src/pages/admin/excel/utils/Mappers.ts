@@ -69,7 +69,6 @@ export const mapToBaseInfoData = (data: any[]) => {
     carNumber: cleanString(row["차량번호"]), // 차량번호 공백 절대 금지
     carModelName: cleanString(row["차종"]),
     driverMemberId: cleanString(row["사원번호"]),
-    calcBaseDate:
-      row.calcBaseDate || formatDate(row["기준일"] || row["적용시작일"]) || "",
+    calcBaseDate: row.calcBaseDate || "",
   }));
 };

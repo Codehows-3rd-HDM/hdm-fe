@@ -63,12 +63,23 @@ const ExcelManagementPage: React.FC = () => {
         const result =
           checkResults.find((r: any) => r.carNumber === row.carNumber) ||
           checkResults[index];
+
+        // [수정] DB에서 날짜 꺼내오기
+        // 설명: result.dbData는 백엔드가 보내준 "현재 DB에 저장된 정보"입니다.
+        const dbStoredDate = result?.dbData?.calcBaseDate || "";
+
         return {
           ...row,
           rowStatus: result?.rowStatus || "UNCHANGED",
           message: result?.message || "",
           // dbData는 이제 굳이 필요 없지만, 나중에 혹시 쓸까봐 남겨만 둠 (화면엔 안 뿌림)
           dbData: result?.dbData || {},
+
+          // [핵심 수정]
+          // 1순위: 엑셀 파일에 적혀있는 날짜 (row.calcBaseDate)
+          // 2순위: DB에 저장되어 있는 날짜 (dbStoredDate)
+          // 3순위: 빈값 ("")
+          calcBaseDate: row.calcBaseDate || dbStoredDate || "",
         };
       });
 
@@ -241,8 +252,22 @@ const ExcelManagementPage: React.FC = () => {
   const handleDateChange = (index: number, newDate: string) => {
     setExcelData((prev) => {
       const newData = [...prev];
-      // 해당 행의 날짜 업데이트
-      newData[index] = { ...newData[index], calcBaseDate: newDate };
+      const currentRow = newData[index];
+
+      // 1. 날짜 업데이트
+      const updatedRow = {
+        ...currentRow,
+        calcBaseDate: newDate,
+      };
+
+      // 2. [핵심] 상태 업데이트 로직 추가!
+      // 신규(NEW)인 건 건드리지 말고, 기존 데이터(UNCHANGED)인 경우만 '수정(UPDATED)'으로 변경
+      if (updatedRow.rowStatus === "UNCHANGED") {
+        updatedRow.rowStatus = "UPDATED";
+        updatedRow.message = "기준일 입력됨"; // 비고란에도 표시해주면 더 좋음
+      }
+
+      newData[index] = updatedRow;
       return newData;
     });
   };
@@ -406,18 +431,25 @@ const ExcelManagementPage: React.FC = () => {
                         <input
                           type="date"
                           value={row.calcBaseDate || ""} // 값이 없으면 빈칸
+                          // [수정] 신규(NEW)가 아니면 잠금(disabled)
+                          disabled={row.rowStatus !== "NEW"}
                           onChange={(e) =>
                             handleDateChange(idx, e.target.value)
                           }
                           className={`
-                          w-full px-2 py-1 text-xs border rounded outline-none transition-all cursor-pointer
-                          focus:border-blue-500 focus:ring-1 focus:ring-blue-500
-                          ${
-                            !row.calcBaseDate
-                              ? "bg-red-50 border-red-300 text-red-600 font-bold"
-                              : "border-gray-300 text-gray-700"
-                          }
-                         `}
+                            w-full px-2 py-1 text-xs border rounded outline-none transition-all
+                            focus:border-blue-500 focus:ring-1 focus:ring-blue-500
+                            ${
+                              // [우선순위 1] 기존 데이터(NEW가 아님) -> 회색 배경 & 잠김 커서
+                              row.rowStatus !== "NEW"
+                                ? "bg-gray-200 text-gray-500 cursor-not-allowed border-gray-300"
+                                : // [우선순위 2] 신규 데이터인데 값이 없음 -> 빨간 배경
+                                !row.calcBaseDate
+                                ? "bg-red-50 border-red-300 text-red-600 font-bold cursor-pointer"
+                                : // [우선순위 3] 신규 데이터이고 값도 있음 -> 흰 배경 (일반)
+                                  "bg-white border-gray-300 text-gray-700 cursor-pointer"
+                            }
+                          `}
                           // 값이 없으면 빨간색으로 "입력해!"라고 티를 냅니다.
                         />
                       </td>
