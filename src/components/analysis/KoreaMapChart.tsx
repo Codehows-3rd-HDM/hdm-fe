@@ -15,6 +15,7 @@ const KOREA_TOPO_JSON =
 interface KoreaMapChartProps {
   data?: { region: string; value: number }[];
   large?: boolean; // CompanyEmissionPage passes `large` prop
+  defaultFitAll?: boolean; // Show full country on load
 }
 
 // TopoJSON 영문명 → 실제 지역 한글명 매핑
@@ -38,7 +39,7 @@ const REGION_MAPPING: Record<string, string> = {
   "Jeju-do": "제주",
 };
 
-const KoreaMapChart: React.FC<KoreaMapChartProps> = ({ data: propData, large = false }) => {
+const KoreaMapChart: React.FC<KoreaMapChartProps> = ({ data: propData, large = false, defaultFitAll = false }) => {
   const [localData, setLocalData] = useState<{ region: string; value: number }[]>(propData ?? []);
 
   // api 전 더미데이터 반환
@@ -88,8 +89,9 @@ const KoreaMapChart: React.FC<KoreaMapChartProps> = ({ data: propData, large = f
       .range(["#E0F2FE", "#1E3A8A"]);
   }, [maxValue]);
 
-  const containerHeight = large ? 'h-[1100px]' : 'h-[535px]';
-  const projectionScale = large ? 8500 : 7000;
+  const containerHeight = large ? 'h-[1325px]' : 'h-[535px]';
+  const projectionScale = defaultFitAll ? 6500 : (large ? 8500 : 7000);
+  const projectionCenter = defaultFitAll ? [127.5, 36.8] : [127.8, 36.4];
 
   // 지역 데이터를 정렬하여 좌측/우측에 표시
   const sortedRegions = useMemo(() => {
@@ -108,13 +110,13 @@ const KoreaMapChart: React.FC<KoreaMapChartProps> = ({ data: propData, large = f
   return (
     <div className={`w-full ${containerHeight} relative bg-white rounded-xl shadow-md overflow-hidden flex`}>
       {/* 좌측 지역 리스트 */}
-      <div className="w-48 border-r border-gray-200 p-4 overflow-y-auto">
-        <h4 className="text-sm font-bold text-gray-700 mb-3">지역별 배출량</h4>
-        <div className="space-y-2">
+      <div className="w-64 border-r border-gray-200 p-6 overflow-y-auto bg-gradient-to-b from-gray-50 to-white">
+        <h4 className="text-2xl font-bold text-gray-800 mb-5">지역별 배출량</h4>
+        <div className="space-y-3">
           {leftRegions.map(({ regionName, value }) => (
-            <div key={regionName} className="flex justify-between items-center text-xs font-stretch-200%">
-              <span className="font-bold text-gray-600">{regionName}</span>
-              <span className="text-gray-800 font-semibold">{value.toLocaleString()}</span>
+            <div key={regionName} className="flex justify-between items-center">
+              <span className="font-bold text-gray-700 text-lg">{regionName}</span>
+              <span className="text-gray-900 font-extrabold text-lg">{value.toLocaleString()}</span>
             </div>
           ))}
         </div>
@@ -126,7 +128,7 @@ const KoreaMapChart: React.FC<KoreaMapChartProps> = ({ data: propData, large = f
           projection="geoMercator"
           projectionConfig={{
             scale: projectionScale,
-            center: [127.8, 36.4],
+            center: projectionCenter as [number, number],
           }}
           width={700}
           height={600}
@@ -169,15 +171,18 @@ const KoreaMapChart: React.FC<KoreaMapChartProps> = ({ data: propData, large = f
         </ComposableMap>
 
         {/* 범례 */}
-        <div className="absolute bottom-4 right-4 flex flex-col gap-1 bg-white/90 p-2 rounded-md shadow-sm text-xs border border-gray-100">
-          <div className="flex items-center gap-2">
-            <span className="w-3 h-3 rounded-sm" style={{ backgroundColor: colorScale(maxValue) }}></span> High
+        <div className="absolute bottom-4 right-4 flex flex-col gap-3 bg-white/95 p-4 rounded-md shadow-lg text-base border border-gray-200">
+          <div className="flex items-center gap-3">
+            <span className="w-5 h-5 rounded-sm" style={{ backgroundColor: colorScale(maxValue) }}></span> 
+            <span className="font-bold text-gray-800">High</span>
           </div>
-          <div className="flex items-center gap-2">
-            <span className="w-3 h-3 rounded-sm" style={{ backgroundColor: colorScale(minValue) }}></span> Low
+          <div className="flex items-center gap-3">
+            <span className="w-5 h-5 rounded-sm" style={{ backgroundColor: colorScale(minValue) }}></span>
+            <span className="font-bold text-gray-800">Low</span>
           </div>
-          <div className="flex items-center gap-2">
-            <span className="w-3 h-3 bg-[#F3F4F6] rounded-sm border border-gray-200"></span>No Data
+          <div className="flex items-center gap-3">
+            <span className="w-5 h-5 bg-[#F3F4F6] rounded-sm border border-gray-300"></span>
+            <span className="font-bold text-gray-800">No Data</span>
           </div>
         </div>
       </div>
