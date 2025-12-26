@@ -4,65 +4,14 @@ import {
   AlertCircle, BarChart3,
   Database, Target
 } from 'lucide-react';
+import carbonTargetApi, { type EmissionCategory, type FullTargetState, type MonthlyData } from '../../apis/carbonTargetApi';
 
 // =============================================================================
-// [2] API Layer with Mock Data
+// [2] Local Type Definitions
 // =============================================================================
 
-const carbonApi = {
-  // 목표 데이터 조회
-  fetchTargets: async (_year: number): Promise<FullTargetState> => {
-    // 실제: await axiosInstance.get(`/targets/${year}`)
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve({
-          Total: { total: 12000, monthly: generateDummyMonthly(12000) },
-          Scope1: { total: 5000, monthly: generateDummyMonthly(5000) },
-          Scope3: { total: 7000, monthly: generateDummyMonthly(7000) }
-        });
-      }, 300);
-    });
-  },
-  // 기준실적이 있는 연도 목록 조회
-  fetchAvailableBaseYears: async (): Promise<number[]> => {
-    // 실제: await axiosInstance.get('/base-years')
-    return [2020, 2021, 2022, 2023, 2024];
-  },
-  // 특정 연도의 실제 배출량 실적 조회
-  fetchActualsByYear: async (_year: number): Promise<MonthlyData[]> => {
-    // 실제: await axiosInstance.get(`/actuals/${year}`)
-    return generateDummyMonthly(14000 + (Math.random() * 2000), 0.15);
-  },
-  // 신규 목표 저장
-  saveTargets: async (_year: number, _data: FullTargetState) => {
-    // 실제: await axiosInstance.post(`/targets/${year}`, data)
-    return new Promise((resolve) => setTimeout(resolve, 800));
-  }
-};
-
-const generateDummyMonthly = (total: number, variance = 0.1): MonthlyData[] => {
-  const base = total / 12;
-  let currentSum = 0;
-  const data = Array.from({ length: 11 }, (_, i) => {
-    const val = Math.round(base + (Math.random() - 0.5) * (base * variance));
-    currentSum += val;
-    return { month: i + 1, value: val };
-  });
-  data.push({ month: 12, value: Math.max(0, Math.round(total - currentSum)) });
-  return data;
-};
-
-// =============================================================================
-// [3] Type Definitions
-// =============================================================================
-
-type EmissionCategory = 'Total' | 'Scope1' | 'Scope3';
 type RegistrationType = 'ratio' | 'manual';
 type DistributionType = 'actual' | 'equal';
-
-interface MonthlyData { month: number; value: number; }
-interface TargetData { total: number; monthly: MonthlyData[]; }
-interface FullTargetState { Total: TargetData; Scope1: TargetData; Scope3: TargetData; }
 
 // =============================================================================
 // [4] Main App Component
@@ -95,10 +44,16 @@ export default function App() {
   useEffect(() => {
     if (view === 'list') {
       const load = async () => {
-        setIsLoading(true);
-        const data = await carbonApi.fetchTargets(listYear);
-        setTargetState(data);
-        setIsLoading(false);
+        try {
+          setIsLoading(true);
+          const data = await carbonTargetApi.fetchTargets(listYear);
+          console.log('[CarbonTargetManagement] 목록 조회 대상 연도 데이터 로드', { listYear, data });
+          setTargetState(data);
+        } catch (error) {
+          console.error('[CarbonTargetManagement] 목록 조회 실패', error);
+        } finally {
+          setIsLoading(false);
+        }
       };
       load();
     }
@@ -108,16 +63,21 @@ export default function App() {
   useEffect(() => {
     if (view === 'register') {
       const loadRegInfo = async () => {
-        const years = await carbonApi.fetchAvailableBaseYears();
-        setAvailableBaseYears(years);
-        if (years.length > 0 && !years.includes(baseYear)) setBaseYear(years[years.length-1]);
-        
-        // 초기 목표 데이터 셋업 (비어있는 상태)
-        setTargetState({
-          Total: { total: 0, monthly: Array.from({length:12}, (_,i)=>({month:i+1, value:0})) },
-          Scope1: { total: 0, monthly: Array.from({length:12}, (_,i)=>({month:i+1, value:0})) },
-          Scope3: { total: 0, monthly: Array.from({length:12}, (_,i)=>({month:i+1, value:0})) },
-        });
+        try {
+          const years = await carbonTargetApi.fetchAvailableBaseYears();
+          console.log('[CarbonTargetManagement] 기준 연도 목록 로드', years);
+          setAvailableBaseYears(years);
+          if (years.length > 0 && !years.includes(baseYear)) setBaseYear(years[years.length-1]);
+          
+          // 초기 목표 데이터 셋업 (비어있는 상태)
+          setTargetState({
+            Total: { total: 0, monthly: Array.from({length:12}, (_,i)=>({month:i+1, value:0})) },
+            Scope1: { total: 0, monthly: Array.from({length:12}, (_,i)=>({month:i+1, value:0})) },
+            Scope3: { total: 0, monthly: Array.from({length:12}, (_,i)=>({month:i+1, value:0})) },
+          });
+        } catch (error) {
+          console.error('[CarbonTargetManagement] 기준 연도/초기 데이터 로드 실패', error);
+        }
       };
       loadRegInfo();
     }
@@ -126,7 +86,13 @@ export default function App() {
   // 등록 페이지에서 기준연도 변경 시 실적 로드
   useEffect(() => {
     if (view === 'register' && baseYear) {
-      carbonApi.fetchActualsByYear(baseYear).then(setBaseActuals);
+      carbonTargetApi.fetchActualsByYear(baseYear)
+        .then((res) => {
+          const monthly = res?.monthly ?? [];
+          console.log('[CarbonTargetManagement] 기준 연도 실적 로드', { baseYear, monthly });
+          setBaseActuals(monthly);
+        })
+        .catch((error) => console.error('[CarbonTargetManagement] 기준 연도 실적 조회 실패', error));
     }
   }, [baseYear, view]);
 
@@ -134,7 +100,12 @@ export default function App() {
   useEffect(() => {
     if (view === 'register' && regYear) {
        // 실제로는 서버에 해당 연도 데이터가 있는지 체크하고 불러올 수 있음
-       carbonApi.fetchTargets(regYear).then(setTargetState);
+       carbonTargetApi.fetchTargets(regYear)
+        .then((data) => {
+          console.log('[CarbonTargetManagement] 등록 연도 기존 데이터 로드', { regYear, data });
+          setTargetState(data);
+        })
+        .catch((error) => console.error('[CarbonTargetManagement] 등록 연도 목표 조회 실패', error));
     }
   }, [regYear, view]);
 
@@ -217,10 +188,16 @@ export default function App() {
   const handleFinalSubmit = async () => {
     if (!targetState) return;
     setIsLoading(true);
-    await carbonApi.saveTargets(regYear, targetState);
-    setIsLoading(false);
-    setListYear(regYear); // 등록한 연도로 세팅
-    setView('list');      // 목록으로 전환
+    try {
+      await carbonTargetApi.saveTargets(regYear, targetState);
+      console.log('[CarbonTargetManagement] 목표 저장 완료', { regYear, targetState });
+      setListYear(regYear); // 등록한 연도로 세팅
+      setView('list');      // 목록으로 전환
+    } catch (error) {
+      console.error('[CarbonTargetManagement] 목표 저장 실패', error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   if (!targetState || !currentData) return <div className="p-20 text-center font-bold text-slate-400">데이터를 불러오는 중입니다...</div>;
