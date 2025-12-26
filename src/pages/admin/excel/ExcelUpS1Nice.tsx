@@ -1,9 +1,11 @@
 import React, { useState, useMemo, useRef, useEffect } from "react";
 import { Upload, AlertCircle, Save, X, Search } from "lucide-react";
-import * as XLSX from "xlsx";
 import axios from "axios";
-import Modal from "../../components/Modal";
-import ConfirmModal from "../../components/ConfirmModal";
+import Modal from "../../../components/Modal";
+import ConfirmModal from "../../../components/ConfirmModal";
+import { parseExcelFile } from "./utils/Parsing";
+import { mapToNiceParkData, mapToS1Data } from "./utils/Mappers";
+import LoadingSpinner from "../../../components/LoadingSpinner";
 
 // --- 타입 정의 ---
 interface NiceParkRow {
@@ -34,19 +36,34 @@ const DataUploadPage: React.FC = () => {
   const [niceParkData, setNiceParkData] = useState<NiceParkRow[]>([]);
   const [s1Data, setS1Data] = useState<S1Row[]>([]);
 
-  const [isDataExisting, setIsDataExisting] = useState(false);
+  const [isNiceDataExisting, setIsNiceDataExisting] = useState(false);
+  const [isS1DataExisting, setIsS1DataExisting] = useState(false);
   const [isDragOverNice, setIsDragOverNice] = useState(false);
   const [isDragOverS1, setIsDragOverS1] = useState(false);
 
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false); //확인 모달 열기, 닫기
   const [confirmMessage, setConfirmMessage] = useState(""); // 확인 모달에 띄울 멘트
 
-  const [alertModalOpen, setAlertModalOpen] = useState(false);
+  const [ModalOpen, setModalOpen] = useState(false);
   const [alertState, setAlertState] = useState({
     title: "",
     message: "",
     isSuccess: true,
   });
+  const openAlertModal = (
+    title: string,
+    message: string,
+    isSuccess: boolean
+  ) => {
+    // 여기서 위의 setAlertState를 갖다 씁니다.
+    setAlertState({
+      title,
+      message,
+      isSuccess,
+    });
+    // 여기서 위의 setModalOpen을 갖다 씁니다.
+    setModalOpen(true);
+  };
 
   const niceFileInputRef = useRef<HTMLInputElement>(null);
   const s1FileInputRef = useRef<HTMLInputElement>(null);
@@ -62,45 +79,8 @@ const DataUploadPage: React.FC = () => {
   const [niceSearchTerm, setNiceSearchTerm] = useState(""); // 왼쪽(나이스) 검색어
   const [s1SearchTerm, setS1SearchTerm] = useState(""); // 오른쪽(S1) 검색어
 
-  // 1. [S1용] 날짜만 필요할 때 (시간 버림, 날짜 밀림 방지)
-  const formatDate = (val: any) => {
-    if (!val) return "";
-
-    // 엑셀에서 날짜 객체(Date)로 넘어왔을 때
-    if (val instanceof Date) {
-      // 시차 보정 (UTC시간을 한국 시간으로 밀어줌)
-      // 엑셀(UTC 0시) -> 한국(09시)로 인식되게 만들어서 날짜가 전날로 가는 걸 막음
-      const offset = val.getTimezoneOffset() * 60000;
-      const dateOffset = new Date(val.getTime() - offset);
-
-      const year = dateOffset.getFullYear();
-      const month = String(dateOffset.getMonth() + 1).padStart(2, "0");
-      const day = String(dateOffset.getDate()).padStart(2, "0");
-
-      return `${year}-${month}-${day}`;
-    }
-    // 2. 혹시 문자로 들어오면 (예: "2025/10/29")
-    // 최대한 "-"로 맞춰줌
-    return String(val).replace(/\//g, "-").trim();
-  };
-
-  // 2. [나이스파크용] 날짜+시간 전부 필요할 때 시간 포맷팅 (HH:mm:ss) (시간 왜곡 절대 방지!)
-  const formatTimeOnly = (val: any) => {
-    if (!val) return "00:00:00"; // 없으면 0시
-
-    if (val instanceof Date) {
-      // 엑셀에서 시간만 있는 셀도 Date 객체(1899년...)로 옴
-      // 시차 보정 후 시간 부분만 뚝 떼어냄
-      const offset = val.getTimezoneOffset() * 60000;
-      const dateOffset = new Date(val.getTime() - offset);
-
-      // "2025-10-29T17:26:20.000Z" -> "17:26:20"
-      return dateOffset.toISOString().split("T")[1].split(".")[0];
-    }
-
-    // 문자로 오면 그대로 리턴 (혹시 모를 공백 제거)
-    return String(val).trim();
-  };
+  // 로딩 상태 관리 (true면 스피너 뜸, false면 안 뜸)
+  const [isLoading, setIsLoading] = useState(false);
 
   // ✅ [수정] 연도/월 변경 시, 업로드된 데이터가 있다면 무조건 초기화
   useEffect(() => {
@@ -125,39 +105,58 @@ const DataUploadPage: React.FC = () => {
     }
   }, [selectedYear, selectedMonth]); // 연도나 월이 바뀔 때마다 실행됨
 
-  // ✅ [추가] 연도/월 변경 시 데이터 존재 여부 체크 (백엔드 연동)
+  // ✅ 데이터 존재 여부 확인 (파일이 있거나, 날짜가 바뀔 때 실행)
   useEffect(() => {
     const checkDataExistence = async () => {
-      try {
-        const token = sessionStorage.getItem("token");
-        if (!token) return;
+      // 1. 연도가 없으면 체크 안 함
+      if (!selectedYear) return;
 
-        // (가정) 백엔드에 요청 보냄
-        const res = await axios.get(`${BASE_URL}/admin/excel/check`, {
-          params: {
-            year: selectedYear,
-            month: selectedMonth,
-          },
-          // 2. 헤더 (토큰)
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+      const token = sessionStorage.getItem("token");
+      if (!token) return;
 
-        // 3. 결과 처리 (JSON 변환 필요 없음!)
-        // res.data 안에 백엔드가 보낸 { exists: true } 객체가 바로 들어있음
-        if (res.data && res.data.exists) {
-          setIsDataExisting(true);
-        } else {
-          setIsDataExisting(false);
+      // 2. 초기화
+      setIsNiceDataExisting(false);
+      setIsS1DataExisting(false);
+
+      // 3. 나이스파크가 업로드되어 있을 때만 체크
+      if (niceParkData.length > 0) {
+        try {
+          const res = await axios.get(`${BASE_URL}/admin/excel/check`, {
+            params: {
+              year: selectedYear,
+              month: selectedMonth,
+              source: "NICE", // 꼬리표 부착
+            },
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          setIsNiceDataExisting(res.data.exists);
+        } catch (err) {
+          console.error("나이스 데이터 확인 중 오류:", err);
         }
-      } catch (err) {
-        console.error("데이터 확인 중 오류:", err);
+      }
+
+      // 4. 에스원이 업로드되어 있을 때만 체크
+      if (s1Data.length > 0) {
+        try {
+          const res = await axios.get(`${BASE_URL}/admin/excel/check`, {
+            params: {
+              year: selectedYear,
+              month: selectedMonth,
+              source: "S1", // 꼬리표
+            },
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          setIsS1DataExisting(res.data.exists);
+        } catch (err) {
+          console.error("S1 데이터 확인 중 오류:", err);
+        }
       }
     };
 
     checkDataExistence();
-  }, [selectedYear, selectedMonth]); // 연도나 월이 바뀌면 실행됨
+
+    // 의존성 배열: 이 값들이 변할 때마다 위 로직이 재실행됨
+  }, [niceParkData, s1Data, selectedYear, selectedMonth]);
 
   //niceparkData || s1Data 유효성 검증
   //1. 나이스파크 데이터 내 차량번호가 DB에 기준정보로 등록 되어있는지 여부
@@ -238,7 +237,12 @@ const DataUploadPage: React.FC = () => {
   const handleCheckBeforeUpload = async () => {
     // 1. 데이터 없음 체크
     if (niceParkData.length === 0 && s1Data.length === 0) {
-      alert("업로드할 데이터가 없습니다.");
+      // [수정] 데이터 없을 때 alert -> 경고 모달
+      openAlertModal(
+        "데이터 없음",
+        "업로드할 데이터가 없습니다.\n먼저 엑셀 파일을 업로드해주세요.",
+        false
+      );
       return;
     }
 
@@ -256,7 +260,7 @@ const DataUploadPage: React.FC = () => {
         const totalCount = niceParkData.length;
         const successCount = totalCount - invalidCount;
 
-        confirmMsg += `[나이스파크]\n총 ${totalCount}건 (정상: ${successCount}건 / ⚠️오류: ${invalidCount}건)\n`;
+        confirmMsg += `[나이스파크]\n총 ${totalCount}건 (등록가능: ${successCount}건 / 등록불가: ${invalidCount}건)\n`;
 
         if (invalidCount > 0) hasError = true;
       }
@@ -271,7 +275,7 @@ const DataUploadPage: React.FC = () => {
         const totalCount = s1Data.length;
         const successCount = totalCount - invalidCount;
 
-        confirmMsg += `[에스원]\n총 ${totalCount}건 (정상: ${successCount}건 / ⚠️오류: ${invalidCount}건)\n`;
+        confirmMsg += `[에스원]\n총 ${totalCount}건 (등록가능: ${successCount}건 / 등록불가: ${invalidCount}건)\n`;
 
         if (invalidCount > 0) hasError = true;
       }
@@ -280,7 +284,7 @@ const DataUploadPage: React.FC = () => {
       confirmMsg += "\n--------------------------\n";
       if (hasError) {
         confirmMsg +=
-          "⚠️ 기준 정보 미등록 데이터가 포함되어 있습니다.\n(기준 정보 미등록 데이터는 저장되지 않습니다.)\n\n그래도 진행하시겠습니까?";
+          "기준 정보 미등록 데이터가 포함되어 있습니다.\n(기준 정보 미등록 데이터는 저장되지 않습니다.)\n\n그래도 진행하시겠습니까?";
       } else {
         confirmMsg += "모든 데이터가 유효합니다.\n등록하시겠습니까?";
       }
@@ -295,138 +299,82 @@ const DataUploadPage: React.FC = () => {
   };
 
   // 엑셀 파일 파싱, 업로드
-  const handleFileUpload = (file: File, type: "nice" | "s1") => {
-    if (!file.name.endsWith(".xlsx") && !file.name.endsWith(".xls")) {
-      alert("엑셀 파일만 업로드 가능합니다.");
-      return;
-    }
+  const handleFileUpload = async (file: File, type: "nice" | "s1") => {
+    try {
+      // 1️. 엑셀 파싱 (parsing.ts)
+      const { normalizedData } = await parseExcelFile(file);
 
-    const reader = new FileReader();
-    reader.onload = async (e) => {
-      const data = new Uint8Array(e.target?.result as ArrayBuffer);
-      const workbook = XLSX.read(data, { type: "array", cellDates: true });
-      const sheetName = workbook.SheetNames[0];
-      const worksheet = workbook.Sheets[sheetName];
+      // 2. 타입별 매핑
+      let mappedData: (NiceParkRow | S1Row)[] = [];
 
-      // 첫 행을 헤더로 인식해서 JSON 변환
-      const jsonData = XLSX.utils.sheet_to_json(worksheet, { defval: "" });
-
-      // [수정] 변수를 미리 선언, if문 밖에서도 살리기
-      let mappedData: any[] = [];
-
-      let idxCnt = 1;
-      // 타입별 데이터 매핑 (한글->영어)
       if (type === "nice") {
-        mappedData = jsonData
-          .map((row: any) => ({
-            idx: idxCnt++,
-            carNumber: row["차량번호"] || row["차량 번호"],
-            accessDate: formatDate(row["입차일자"] || row["입차 일자"]),
-            accessTime: formatTimeOnly(row["입차시간"] || row["입차 시간"]),
-            isInvalid: false,
-          }))
-          .filter((item) => item.carNumber && item.accessDate); // 빈 데이터 필터링
-
-        // const invalidCnt = await checkAndSetNiceparkState(mappedData);
-        // alert(
-        //   `[NicePark] ${file.name} 파싱 완료 (${mappedData.length}건) 기준정보 미등록(${invalidCnt}건 업로드 불가)`
-        // );
+        mappedData = mapToNiceParkData(normalizedData);
       } else if (type === "s1") {
-        mappedData = jsonData
-          .map((row: any) => ({
-            idx: idxCnt++,
-            memberId: row["사원번호"],
-            employeeName: row["이름"],
-            // ✅ [핵심 3] 여기도 formatDate 씌우기!
-            accessDate: formatDate(row["근무일자"]),
-            // accessTime: row["출근시간"],
-            isInvalid: false,
-          }))
-          .filter((item) => item.memberId && item.accessDate); // 빈 데이터 필터링
+        mappedData = mapToS1Data(normalizedData);
       }
 
-      // ---------------------------------------------------------
-      // [추가] 2. 연도/월 일치 여부 검사 (핵심 로직)
-      // ---------------------------------------------------------
+      // 3️. 연/월 검증
+      const invalidRow = mappedData.find((row) => {
+        if (!row.accessDate) return false;
 
-      if (mappedData.length > 0) {
-        const invalidRow = mappedData.find((row) => {
-          // row.accessDate는 "YYYY-MM-DD" 형태임 (formatDate 함수 거침)
-          if (!row.accessDate) return false;
+        const [y, m] = row.accessDate.split("-");
 
-          const [rowYear, rowMonth] = row.accessDate.split("-"); // ["2025", "07", "29"]
+        const rowYear = parseInt(y);
+        const rowMonth = parseInt(m);
 
-          // 1) 연도 체크
-          if (rowYear !== selectedYear) {
-            return true; // 불일치 발견!
-          }
+        // [추가] 숫자가 아니면(빈칸, 헤더 등) 그냥 검사 안 하고 통과!
+        if (isNaN(rowYear) || isNaN(rowMonth)) return false;
 
-          // 2) 월 체크 (selectedMonth가 "0"(전체)이 아닐 때만 검사)
-          if (selectedMonth !== "0") {
-            // rowMonth는 "07", selectedMonth는 "7" 일 수 있으므로 정수로 변환해서 비교
-            if (parseInt(rowMonth) !== parseInt(selectedMonth)) {
-              return true; // 불일치 발견!
-            }
-          }
-          return false; // 통과
-        });
+        if (rowYear !== parseInt(selectedYear)) return true;
 
-        // 불일치 데이터가 발견되었다면?
-        if (invalidRow) {
-          const [rowYear, rowMonth] = invalidRow.accessDate.split("-");
+        if (selectedMonth !== "0" && rowMonth !== parseInt(selectedMonth))
+          return true;
 
-          let errorMsg = `🚨 날짜 불일치!\n\n선택하신 날짜: [${selectedYear}년`;
-          if (selectedMonth !== "0") errorMsg += ` ${selectedMonth}월`;
-          errorMsg += `]\n파일 내 날짜: [${rowYear}년 ${rowMonth}월 데이터 포함]`;
+        return false;
+      });
 
-          errorMsg += `\n\n선택한 연도/월과 일치하는 엑셀 파일만 업로드해주세요.`;
-
-          alert(errorMsg);
-
-          // input 초기화 (같은 파일 다시 올릴 수 있게)
-          if (type === "nice" && niceFileInputRef.current)
-            niceFileInputRef.current.value = "";
-          if (type === "s1" && s1FileInputRef.current)
-            s1FileInputRef.current.value = "";
-
-          return; // 여기서 함수 즉시 종료 (화면에 데이터 안 보여줌)
-        }
+      if (invalidRow) {
+        // [수정] alert -> 모달 (실패일 때)
+        openAlertModal(
+          "날짜 불일치",
+          "선택한 연/월과 엑셀 데이터가 일치하지 않습니다.\n파일의 날짜를 확인해주세요.",
+          false
+        );
+        return;
       }
 
-      // ---------------------------------------------------------
-      // 3. 검증 통과 시 로직 진행 (기존 코드)
-      // ---------------------------------------------------------
+      // 4. 검증 + 상태 반영
       if (type === "nice") {
-        // 타입 단언 (any -> NiceParkRow[])
-        const niceRows = mappedData as NiceParkRow[];
-
-        // [추가] 검색어 초기화
         setNiceSearchTerm("");
-
-        const invalidCnt = await checkAndSetNiceparkState(niceRows);
-        alert(
-          `[NicePark] ${file.name} 파싱 완료 (${niceRows.length}건)\n(기준정보 미등록: ${invalidCnt}건 업로드 불가)`
+        const invalidCnt = await checkAndSetNiceparkState(
+          mappedData as NiceParkRow[]
         );
-      } else if (type === "s1") {
-        // 타입 단언 (any -> S1Row[])
-        const s1Rows = mappedData as S1Row[];
-
-        // [추가] 검색어 초기화
-        setS1SearchTerm("");
-
-        const invalidCnt = await checkAndSetS1State(s1Rows);
-        alert(
-          `[에스원] ${file.name} 파싱 완료 (${s1Rows.length}건)\n(기준정보 미등록: ${invalidCnt}건 업로드 불가)`
+        // [수정] alert -> 모달 (성공일 때)
+        openAlertModal(
+          "나이스파크 로드 완료",
+          `총 ${mappedData.length}건이 로드되었습니다.\n(등록불가 : ${invalidCnt}건)`,
+          true
         );
       }
-    };
-    //     const invalidCnt = await checkAndSetS1State(mappedData);
-    //     alert(
-    //       `[에스원] ${file.name} 파싱 완료 (${mappedData.length}건) 기준정보 미등록(${invalidCnt}건 업로드 불가)`
-    //     );
-    //   }
-    // };
-    reader.readAsArrayBuffer(file);
+
+      if (type === "s1") {
+        setS1SearchTerm("");
+        const invalidCnt = await checkAndSetS1State(mappedData as S1Row[]);
+        // [수정] alert -> 모달 (성공일 때)
+        openAlertModal(
+          "에스원 로드 완료",
+          `총 ${mappedData.length}건이 로드되었습니다.\n(등록불가: ${invalidCnt}건)`,
+          true
+        );
+      }
+    } catch (e: any) {
+      // [수정] 에러 발생 시 모달
+      openAlertModal(
+        "파일 처리 오류",
+        e.message || "파일 처리 중 알 수 없는 오류가 발생했습니다.",
+        false
+      );
+    }
   };
 
   // const onDragOverNice = (e: React.DragEvent) => {
@@ -458,6 +406,9 @@ const DataUploadPage: React.FC = () => {
     // 확인 모달부터 닫기
     setIsConfirmModalOpen(false);
 
+    // ✅ [시작] 스피너 켜기! (화면 잠금)
+    setIsLoading(true);
+
     // 1. 데이터 빈 값 체크
     if (niceParkData.length === 0 && s1Data.length === 0) {
       alert("업로드할 데이터가 없습니다.");
@@ -481,24 +432,26 @@ const DataUploadPage: React.FC = () => {
         const invalid = niceParkData.filter((row) => row.isInvalid).length;
         const success = total - invalid;
 
-        await axios.post(
+        const res = await axios.post(
           `${BASE_URL}/admin/excel/upload/nicepark`,
-          niceParkData, // Body
+          niceParkData,
           {
-            params: {
-              year: selectedYear,
-              month: selectedMonth,
-            },
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
+            params: { year: selectedYear, month: selectedMonth },
+            headers: { Authorization: `Bearer ${token}` },
           }
         );
+
         // (3) 결과 메시지 직접 조립 (백엔드 응답 무시)
-        let msg = `[나이스파크] ✅총 ${total}건 중 💾${success}건 저장 완료`;
+        let msg = `[나이스파크] 총 ${total}건 중 ${success}건 저장 완료`;
         if (invalid > 0) {
-          msg += `\n(⚠️ 기준정보 미등록 🗑️${invalid}건 제외)`;
+          msg += `\n(기준정보 미등록 ${invalid}건 제외)`;
         }
+        // 백엔드에서 온 "임직원 제외" 추가
+        if (res.data.startsWith("EXCLUDED:")) {
+          const s1Cars = res.data.replace("EXCLUDED:", "");
+          msg += `\n(임직원 차량 추가 제외: ${s1Cars})`;
+        }
+
         resultMessages.push(msg);
       }
 
@@ -518,9 +471,9 @@ const DataUploadPage: React.FC = () => {
           },
         });
         // (3) 결과 메시지 직접 조립
-        let msg = `[에스원] ✅총 ${total}건 중 💾${success}건 저장 완료`;
+        let msg = `[에스원] 총 ${total}건 중 ${success}건 저장 완료`;
         if (invalid > 0) {
-          msg += `\n(⚠️ 기준정보 미등록 🗑️${invalid}건 제외)`;
+          msg += `\n(기준정보 미등록 ${invalid}건 제외)`;
         }
         resultMessages.push(msg);
       }
@@ -535,14 +488,16 @@ const DataUploadPage: React.FC = () => {
         isSuccess: true,
       });
 
-      setAlertModalOpen(true);
+      setModalOpen(true);
 
       // 성공 후 초기화
       setNiceParkData([]);
       setS1Data([]);
 
-      // ✅ [추가] 업로드 성공했으니 데이터 존재 여부 다시 체크 (경고창 띄우기 위해)
-      setIsDataExisting(true);
+      // 기존 setIsDataExisting(true); 삭제하고 아래 코드로 대체
+      // 방금 업로드를 성공했으니, 해당 데이터가 DB에 존재한다고 상태 업데이트
+      if (niceParkData.length > 0) setIsNiceDataExisting(true);
+      if (s1Data.length > 0) setIsS1DataExisting(true);
     } catch (error: any) {
       console.error("업로드 실패:", error);
 
@@ -564,7 +519,10 @@ const DataUploadPage: React.FC = () => {
         message: errorMessage,
         isSuccess: false,
       });
-      setAlertModalOpen(true);
+      setModalOpen(true);
+    } finally {
+      // ✅ [끝] 성공하든 실패하든 무조건 스피너 끄기!
+      setIsLoading(false);
     }
   };
 
@@ -598,6 +556,9 @@ const DataUploadPage: React.FC = () => {
 
   return (
     <div className="p-8 font-sans bg-white">
+      {/*로딩 중일 때 화면 전체 덮어버림 */}
+      {isLoading && <LoadingSpinner />}
+
       {/* Header */}
       <div className="mb-6">
         <h2 className="mb-4 text-xl font-bold text-gray-800">
@@ -640,17 +601,31 @@ const DataUploadPage: React.FC = () => {
               ))}
             </select>
           </div>
+          <div className="flex flex-col gap-2">
+            {/* 1. 나이스파크 데이터 중복 경고 (파란색) */}
+            {niceParkData.length > 0 && isNiceDataExisting && (
+              <div className="flex items-center gap-2 p-3 mt-2 text-sm font-bold text-blue-700 bg-blue-50 border border-blue-200 rounded">
+                <AlertCircle size={20} />
+                <span>
+                  {selectedMonth === "0"
+                    ? `[주의] ${selectedYear}년도의 기존 '나이스파크' 데이터가 모두 삭제되고 덮어씌워집니다!`
+                    : `[알림] ${selectedYear}년 ${selectedMonth}월 '나이스파크' 데이터가 이미 존재합니다. 업로드 시 덮어씁니다.`}
+                </span>
+              </div>
+            )}
 
-          {isDataExisting && (
-            <div className="flex items-center gap-2 p-3 mt-2 text-sm font-bold text-red-600 border border-red-200 rounded">
-              <AlertCircle size={20} />
-              <span>
-                {selectedMonth === "0"
-                  ? `⚠️ [주의] ${selectedYear}년도의 모든 기존 데이터(1월~12월)가 삭제되고 덮어씌워집니다!`
-                  : `ℹ️ ${selectedYear}년 ${selectedMonth}월 데이터가 이미 존재합니다. 업로드 시 덮어씁니다.`}
-              </span>
-            </div>
-          )}
+            {/* 2. 에스원 데이터 중복 경고 (주황색) */}
+            {s1Data.length > 0 && isS1DataExisting && (
+              <div className="flex items-center gap-2 p-3 mt-2 text-sm font-bold text-orange-700 bg-orange-50 border border-orange-200 rounded">
+                <AlertCircle size={20} />
+                <span>
+                  {selectedMonth === "0"
+                    ? `[주의] ${selectedYear}년도의 기존 '에스원' 데이터가 모두 삭제되고 덮어씌워집니다!`
+                    : `[알림] ${selectedYear}년 ${selectedMonth}월 '에스원' 데이터가 이미 존재합니다. 업로드 시 덮어씁니다.`}
+                </span>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
@@ -709,7 +684,7 @@ const DataUploadPage: React.FC = () => {
             </div>
           )}
 
-          {/* 🟢 나이스파크 헤더 (제목 + 검색창 + 범례) */}
+          {/* 나이스파크 헤더 (제목 + 검색창 + 범례) */}
           <div className="flex items-end justify-between mb-2">
             <h4 className="text-xs font-bold text-gray-600">
               나이스파크 출입차량 데이터
@@ -753,13 +728,13 @@ const DataUploadPage: React.FC = () => {
               <thead className="bg-gray-100">
                 <tr>
                   <th className="p-2 font-semibold text-left text-gray-700">
-                    차량 번호
+                    차량번호
                   </th>
                   <th className="p-2 font-semibold text-left text-gray-700">
-                    입차 일자
+                    입차일자
                   </th>
                   <th className="p-2 font-semibold text-left text-gray-700">
-                    입차 시간
+                    입차시간
                   </th>
                 </tr>
               </thead>
@@ -844,7 +819,7 @@ const DataUploadPage: React.FC = () => {
             </div>
           )}
 
-          {/* 🔵 에스원 헤더 (제목 + 검색창 + 범례) */}
+          {/* 에스원 헤더 (제목 + 검색창 + 범례) */}
           <div className="flex items-end justify-between mb-2">
             <h4 className="text-xs font-bold text-gray-600">
               에스원 출퇴근 데이터
@@ -954,7 +929,7 @@ const DataUploadPage: React.FC = () => {
         {totalInvalidCount > 0 && (
           <div className="p-3 mt-4 text-left border rounded-lg bg-red-50">
             <h4 className="flex items-center gap-2 mb-3 text-sm font-bold text-red-600">
-              ⚠️ 등록 제외 리스트 ({totalInvalidCount}건)
+              등록 제외 리스트 ({totalInvalidCount}건)
               <span className="text-xs font-normal text-gray-500">
                 (기준정보 미등록 데이터)
               </span>
@@ -965,7 +940,7 @@ const DataUploadPage: React.FC = () => {
               {invalidNiceRows.length > 0 && (
                 <div className="p-3 bg-white border rounded-lg">
                   <h5 className="mb-2 text-sm font-bold text-red-600">
-                    🚗 나이스파크 등록 제외 차량 ({invalidNiceRows.length}건)
+                    나이스파크 등록 제외 차량 ({invalidNiceRows.length}건)
                   </h5>
 
                   <div className="overflow-y-auto border border-red-200 rounded max-h-48">
@@ -995,7 +970,7 @@ const DataUploadPage: React.FC = () => {
               {invalidS1Rows.length > 0 && (
                 <div className="p-3 bg-white border rounded-lg">
                   <h5 className="mb-2 text-sm font-bold text-red-600">
-                    🏭 에스원 등록 제외 이력 ({invalidS1Rows.length}건)
+                    에스원 등록 제외 이력 ({invalidS1Rows.length}건)
                   </h5>
 
                   <div className="overflow-y-auto border border-red-200 rounded max-h-48">
@@ -1024,8 +999,8 @@ const DataUploadPage: React.FC = () => {
       </ConfirmModal>
 
       <Modal
-        isOpen={alertModalOpen}
-        onClose={() => setAlertModalOpen(false)}
+        isOpen={ModalOpen}
+        onClose={() => setModalOpen(false)}
         title={alertState.title}
         message={alertState.message}
         isSuccess={alertState.isSuccess}
