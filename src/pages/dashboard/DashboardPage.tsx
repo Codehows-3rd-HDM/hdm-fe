@@ -23,27 +23,27 @@ const DashboardPage: React.FC = () => {
   const initialLayouts = {
     lg: [
       // 좌상단 - 2025년 탄소 배출량
-      { i: 'section1', x: 0, y: 0, w: 7, h: 14 },
+      { i: 'section1', x: 0, y: 0, w: 6, h: 14 },
       // 우상단 - 올해 월별 탄소 배출량
-      { i: 'section2', x: 7, y: 0, w: 5, h: 14 },
-      // 좌하단 - 협력사 지역별 현황
-      { i: 'section3', x: 0, y: 14, w: 7, h: 24 },
-      // 우하단 상 - 최근 5년 탄소 배출량
-      { i: 'section4', x: 7, y: 14, w: 5, h: 8 },
-      // 우하단 중 - 운행 목적별 배출량
-      { i: 'section5', x: 7, y: 22, w: 5, h: 8 },
-      // 우하단 하 - 최근 저감 활동
-      { i: 'section6', x: 7, y: 30, w: 5, h: 8 },
+      { i: 'section2', x: 6, y: 0, w: 6, h: 14 },
+      // 우하단 - 협력사 지역별 배출량 현황
+      { i: 'section3', x: 6, y: 14, w: 6, h: 16 },
+      // 좌하단 상 - 최근 5년 탄소 배출량
+      { i: 'section4', x: 0, y: 14, w: 6, h: 8 },
+      // 좌하단 중 - 운행 목적별 배출량 (절반 너비)
+      { i: 'section5', x: 0, y: 22, w: 3, h: 8 },
+      // 좌하단 하 - 최근 저감 활동 5건 (절반 너비)
+      { i: 'section6', x: 3, y: 22, w: 3, h: 8 },
     ],
     md: [
       // md에서도 상단은 좌7:우5 비율 유지
       { i: 'section1', x: 0, y: 0, w: 7, h: 14 },
       { i: 'section2', x: 7, y: 0, w: 5, h: 14 },
-      // 하단 동일 비율 유지
-      { i: 'section3', x: 0, y: 14, w: 7, h: 24 },
-      { i: 'section4', x: 7, y: 14, w: 5, h: 8 },
-      { i: 'section5', x: 7, y: 22, w: 5, h: 8 },
-      { i: 'section6', x: 7, y: 30, w: 5, h: 8 },
+      // 하단 동일 비율 유지: 좌측 3개, 우측 지도
+      { i: 'section3', x: 7, y: 14, w: 5, h: 16 },
+      { i: 'section4', x: 0, y: 14, w: 7, h: 8 },
+      { i: 'section5', x: 0, y: 22, w: 3, h: 8 },
+      { i: 'section6', x: 3, y: 22, w: 4, h: 8 },
     ],
   };
 
@@ -59,12 +59,12 @@ const DashboardPage: React.FC = () => {
         >
           <ArrowLeft size={16} className="mr-1" /> 메인으로
         </button>
-        <h1 className="text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-teal-400">
+        <h1 className="text-6xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-teal-400">
           HDM Carbon Monitor
         </h1>
       </div>
       <div className="text-center mb-8">
-        <p className="text-lg text-gray-300">
+        <p className="text-2xl text-gray-300">
           실시간 탄소 배출량 현황 및 분석 데이터 ({currentYear}년)
         </p>
       </div>
@@ -80,19 +80,19 @@ const DashboardPage: React.FC = () => {
         isResizable={true}
         margin={[10, 10]}
       >
-        {/* 좌상단 - 2025년 탄소 배출량 */}
+        {/* 좌상단 - 2025년 탄소 배출량 (요약) */}
         <div key="section1">
-          <MonthlyScopeSection />
-        </div>
-
-        {/* 우상단 - 올해 월별 탄소 배출량 */}
-        <div key="section2">
           <SummarySection />
         </div>
 
-        {/* 좌하단 - 협력사 지역별 현황 */}
+        {/* 우상단 - 올해 월별 탄소 배출량 (Scope) */}
+        <div key="section2">
+          <MonthlyScopeSection />
+        </div>
+
+        {/* 우하단 - 협력사 지역별 배출량 현황 */}
         <div key="section3">
-          <PartnerMapSection />
+          <PartnerMapSection theme="dark" />
         </div>
 
         {/* 우하단 상 - 최근 5년 탄소 배출량 */}

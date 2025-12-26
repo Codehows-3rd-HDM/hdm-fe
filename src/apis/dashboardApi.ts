@@ -35,7 +35,7 @@ export interface PurposeData {
 export interface ReductionActivity {
   id: string;
   description: string;
-  reduction: number; // %
+  reduction?: number; // % (optional for mock data)
 }
 
 // 더미 데이터 반환 함수들
