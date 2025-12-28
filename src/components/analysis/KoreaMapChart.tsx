@@ -87,10 +87,10 @@ const KoreaMapChart: React.FC<KoreaMapChartProps> = ({ data: propData, large = f
   // 색상 스케일: theme에 따라 분기
   const colorScale = useMemo(() => {
     if (theme === 'dark') {
-      // Dark theme: low=blue, high=green
+      // Dark theme: low=파란색, high=보라색 (차분한 그라데이션)
       return scaleLinear<string>()
         .domain([0, maxValue])
-        .range(["#1e40af", "#22c55e"]);
+        .range(["#64748b", "#a78bfa"]);
     } else {
       // Light theme: original light blue->dark blue
       return scaleLinear<string>()
@@ -174,11 +174,11 @@ const KoreaMapChart: React.FC<KoreaMapChartProps> = ({ data: propData, large = f
                         outline: "none",
                       },
                       hover: {
-                        fill: theme === 'dark' ? "#22c55e" : "#F59E0B",
+                        fill: theme === 'dark' ? "#84CC16" : "#F59E0B",
                         cursor: "default",
                       },
                       pressed: {
-                        fill: theme === 'dark' ? "#16a34a" : "#D97706",
+                        fill: theme === 'dark' ? "#65A30D" : "#D97706",
                       },
                     }}
                   />

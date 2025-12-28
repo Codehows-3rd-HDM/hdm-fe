@@ -36,7 +36,7 @@ const formatNumber = (v: number) => {
 };
 
 // -----------------------------------------------------------------------
-// [Summary Section - 2025년 탄소 배출량]
+// [Summary Section - 2025년 배출량 현황 (좌우 1:2 분할)]
 // -----------------------------------------------------------------------
 export const SummarySection = () => {
   const [data, setData] = useState<DashboardSummaryData | null>(null);
@@ -51,7 +51,7 @@ export const SummarySection = () => {
   const target = data.scope1Target + data.scope3Target;
   const diff = target - total;
   const diffPercent = ((diff / target) * 100).toFixed(1);
-  const isGood = diff > 0;
+  const isGood = diff >= 0;
 
   // 데이터 순서: '목표' 먼저, 그 다음 '올해'
   const summaryBarData = [
@@ -61,53 +61,68 @@ export const SummarySection = () => {
 
   return (
     <div className={`${cardBase}`}>
-      {/* 텍스트 비교 영역 - 순서: 목표 → 올해 → 목표 달성도 */}
-      <div className="flex justify-between gap-4 mb-6 bg-white/10 rounded-lg p-6">
-        <div className="flex-1 text-center">
-          <div className="text-xl text-gray-300 font-bold mb-3">목표 배출량</div>
-          <div className="text-5xl font-extrabold text-white leading-tight">
-            {target.toLocaleString()} <span className="text-3xl">tCO₂eq</span>
+      <h3 className="text-4xl font-extrabold text-white text-center mb-6">2025년 배출량 현황</h3>
+      
+      {/* 좌우 1:2 비율 분할 */}
+      <div className="grid grid-cols-3 gap-8 flex-1 h-full">
+        {/* 좌측 (col-span-1) - 텍스트 영역 */}
+        <div className="col-span-1 flex flex-col justify-around gap-0 pr-8 border-r-2 border-emerald-400/50">
+          {/* 목표 배출량 */}
+          <div className="text-center py-6 border-b-2 border-emerald-400/30">
+            <div className="text-lg text-emerald-300 font-bold mb-2 tracking-wide uppercase">목표 배출량</div>
+            <div className="text-5xl font-extrabold text-white leading-tight drop-shadow-lg">
+              {target.toLocaleString()}
+            </div>
+            <div className="text-sm text-emerald-200 mt-2 font-semibold">tCO₂eq</div>
           </div>
-        </div>
-        <div className="border-l border-white/20"></div>
-        <div className="flex-1 text-center">
-          <div className="text-xl text-gray-300 font-bold mb-3">올해 총 배출량</div>
-          <div className="text-5xl font-extrabold text-white leading-tight">
-            {total.toLocaleString()} <span className="text-3xl">tCO₂eq</span>
-          </div>
-        </div>
-        <div className="border-l border-white/20"></div>
-        <div className="flex-1 text-center">
-          <div className="text-xl text-gray-300 font-bold mb-3">목표 달성도</div>
-          <div className={`text-5xl font-extrabold leading-tight ${isGood ? 'text-emerald-300' : 'text-red-300'}`}>
-            {isGood ? '▼' : '▲'} {Math.abs(Number(diffPercent))}%
-          </div>
-        </div>
-      </div>
 
-      <div className="flex-1 min-h-[260px]">
-        <h4 className="text-4xl font-extrabold text-white text-center mb-5">{currentYear}년 배출량 현황</h4>
-        <ResponsiveContainer width="100%" height="100%">
-          {/* 막대 좌우폭 확대 */}
-          <BarChart data={summaryBarData} barCategoryGap={60} barSize={120} margin={{ top: 15, right: 30, left: 30, bottom: 15 }}>
-            <CartesianGrid strokeDasharray="5 5" stroke="#ffffff22" strokeWidth={2} />
-            <XAxis dataKey="name" tick={{ fill: '#fff', fontSize: 26, fontWeight: 800 }} axisLine={axisStyle} tickLine={axisStyle} />
-            <YAxis tick={{ fill: '#fff', fontSize: 24, fontWeight: 800 }} axisLine={axisStyle} tickLine={axisStyle} width={70} tickFormatter={formatNumber} />
-            <Tooltip
-              contentStyle={tooltipStyle}
-              labelStyle={{ color: '#fff', fontWeight: 800, fontSize: 20 }}
-              itemStyle={{ color: '#fff', fontWeight: 800, fontSize: 19 }}
-              formatter={(value: number, name: string) => [formatNumber(value), name]}
-            />
-            <Legend wrapperStyle={{ fontSize: 22, color: '#fff', fontWeight: 800, paddingTop: 15 }} formatter={(v) => <span style={{ color: '#fff', fontWeight: 800 }}>{v}</span>} />
-            <Bar dataKey="scope1" name="Scope 1" stackId="a" fill="#60a5fa" radius={[8, 8, 3, 3]}>
-              <LabelList dataKey="scope1" position="insideTop" fill="#0f172a" fontSize={20} fontWeight={800} />
-            </Bar>
-            <Bar dataKey="scope3" name="Scope 3" stackId="a" fill="#22d3ee" radius={[8, 8, 3, 3]}>
-              <LabelList dataKey="scope3" position="insideTop" fill="#0f172a" fontSize={20} fontWeight={800} />
-            </Bar>
-          </BarChart>
-        </ResponsiveContainer>
+          {/* 올해 총 배출량 */}
+          <div className="text-center py-6 border-b-2 border-emerald-400/30">
+            <div className="text-lg text-gray-300 font-bold mb-2 tracking-wide uppercase">올해 총 배출량</div>
+            <div className={`text-5xl font-extrabold leading-tight drop-shadow-lg transition-all ${isGood ? 'text-emerald-300' : 'text-rose-400'}`}>
+              {total.toLocaleString()}
+            </div>
+            <div className="text-sm text-gray-300 mt-2 font-semibold">tCO₂eq</div>
+          </div>
+
+          {/* 목표 달성도 */}
+          <div className="text-center py-6">
+            <div className="text-lg text-gray-300 font-bold mb-2 tracking-wide uppercase">목표 달성도</div>
+            <div className={`text-5xl font-extrabold leading-tight drop-shadow-lg transition-all ${isGood ? 'text-emerald-400' : 'text-rose-400'}`}>
+              {isGood ? '✓' : '✕'} {Math.abs(Number(diffPercent))}%
+            </div>
+            <div className={`text-sm mt-2 font-semibold ${isGood ? 'text-emerald-300' : 'text-rose-300'}`}>
+              {isGood ? '목표 달성 경로' : '목표 초과'}
+            </div>
+          </div>
+        </div>
+
+        {/* 우측 (col-span-2) - 막대그래프 */}
+        <div className="col-span-2 flex flex-col">
+          <h4 className="text-3xl font-extrabold text-white text-center mb-6 text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-emerald-400">배출량 비교</h4>
+          <div className="flex-1 min-h-[240px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={summaryBarData} barCategoryGap={60} barSize={120} margin={{ top: 15, right: 30, left: 30, bottom: 15 }}>
+                <CartesianGrid strokeDasharray="5 5" stroke="#ffffff22" strokeWidth={2} />
+                <XAxis dataKey="name" tick={{ fill: '#fff', fontSize: 24, fontWeight: 800 }} axisLine={axisStyle} tickLine={axisStyle} />
+                <YAxis tick={{ fill: '#fff', fontSize: 20, fontWeight: 800 }} axisLine={axisStyle} tickLine={axisStyle} width={60} tickFormatter={formatNumber} />
+                <Tooltip
+                  contentStyle={tooltipStyle}
+                  labelStyle={{ color: '#fff', fontWeight: 800, fontSize: 18 }}
+                  itemStyle={{ color: '#fff', fontWeight: 800, fontSize: 16 }}
+                  formatter={(value: number, name: string) => [formatNumber(value), name]}
+                />
+                <Legend wrapperStyle={{ fontSize: 18, color: '#fff', fontWeight: 800, paddingTop: 12 }} formatter={(v) => <span style={{ color: '#fff', fontWeight: 800 }}>{v}</span>} />
+                <Bar dataKey="scope1" name="Scope 1" stackId="a" fill="#60a5fa" radius={[8, 8, 3, 3]}>
+                  <LabelList dataKey="scope1" position="insideTop" fill="#0f172a" fontSize={16} fontWeight={800} />
+                </Bar>
+                <Bar dataKey="scope3" name="Scope 3" stackId="a" fill="#22d3ee" radius={[8, 8, 3, 3]}>
+                  <LabelList dataKey="scope3" position="insideTop" fill="#0f172a" fontSize={16} fontWeight={800} />
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -232,7 +247,7 @@ export const PurposePieSection = () => {
     <div className={cardBase}>
       <h3 className="text-4xl font-extrabold mb-5 text-white text-center">{currentYear}년 운행 목적별 배출량</h3>
       <div className="flex-1 relative w-full h-full">
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-[120%] text-center pointer-events-none z-10 -mt-3.5">
+        <div className="absolute top-1/2 left-[30%] -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none z-10">
           <div className="text-6xl font-extrabold text-white">100%</div>
           <div className="text-2xl text-gray-200 font-bold">Total</div>
         </div>
@@ -240,7 +255,7 @@ export const PurposePieSection = () => {
           <PieChart>
             <Pie
               data={pieData}
-              cx="36%"
+              cx="40%"
               cy="50%"
               innerRadius={95}
               outerRadius={160}
@@ -256,9 +271,9 @@ export const PurposePieSection = () => {
               layout="vertical"
               verticalAlign="middle"
               align="right"
-              wrapperStyle={{ fontSize: 22, color: '#fff', fontWeight: 800, padding: '10px 0' }}
+              wrapperStyle={{ fontSize: 20, color: '#fff', fontWeight: 800, paddingRight: '20px' }}
               formatter={(value, entry: any) => (
-                <span className="text-white ml-2 font-extrabold text-xl">
+                <span className="text-white ml-2 font-extrabold text-lg">
                   {value} : <b>{entry.payload.value}%</b>
                 </span>
               )}
@@ -274,7 +289,7 @@ export const PurposePieSection = () => {
 // [Reduction List Section - 최근 저감 활동]
 // -----------------------------------------------------------------------
 export const ReductionListSection = () => {
-  const [activities, setActivities] = useState<Array<{ id: string; description: string; }>>([]);
+  const [activities, setActivities] = useState<Array<{ id: string; description: string; date?: string; }>>([]);
 
   useEffect(() => {
     fetchReductionActivities().then((arr) => {
@@ -286,15 +301,22 @@ export const ReductionListSection = () => {
 
   if (activities.length === 0) return <div className={cardBase}>로딩 중...</div>;
 
+  const formatDate = (dateStr?: string) => {
+    if (!dateStr) return '';
+    const date = new Date(dateStr);
+    return `${date.getFullYear()}.${String(date.getMonth() + 1).padStart(2, '0')}.${String(date.getDate()).padStart(2, '0')}`;
+  };
+
   return (
     <div className={cardBase}>
-      <h3 className="text-4xl font-extrabold mb-5 text-white text-center">최근 저감 활동 5건</h3>
-      <ul className="space-y-4 text-white text-2xl font-bold">
+      <h3 className="text-4xl font-extrabold mb-6 text-white text-center">최근 저감 활동 5건</h3>
+      <ul className="space-y-0 text-white text-2xl font-bold h-full flex flex-col justify-between">
         {activities.map((item) => (
-          <li key={item.id} className="flex items-start gap-3">
-            <span className="mt-2 block w-4 h-4 rounded-full bg-emerald-300 flex-shrink-0" />
+          <li key={item.id} className="flex items-start gap-4 py-3 px-4 border-b border-white/10 hover:bg-white/5 transition-colors rounded">
+            <span className="mt-1 block w-4 h-4 rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 flex-shrink-0 shadow-lg" />
             <div className="flex-1">
-              <span>{item.description}</span>
+              <div className="font-bold text-white leading-snug text-lg">{item.description}</div>
+              {item.date && <div className="text-xs text-gray-400 mt-1 font-semibold">{formatDate(item.date)}</div>}
             </div>
           </li>
         ))}

@@ -35,6 +35,7 @@ export interface PurposeData {
 export interface ReductionActivity {
   id: string;
   description: string;
+  date?: string; // 날짜 (YYYY-MM-DD 형식)
   reduction?: number; // % (optional for mock data)
 }
 
@@ -113,11 +114,12 @@ export const fetchPurposeData = async (): Promise<PurposeData[]> => {
 
 export const fetchReductionActivities = async (): Promise<ReductionActivity[]> => {
   // TODO: 실제 API 호출로 변경
+  const today = new Date();
   return Promise.resolve([
-    { id: '1', description: '물류 동선 최적화로 연료 절감' },
-    { id: '2', description: '야간 공정 전력 피크 컷 적용' },
-    { id: '3', description: '폐열 회수 보일러 시범 운영' },
-    { id: '4', description: '사내 EV 충전 인센티브 도입' },
-    { id: '5', description: '친환경 포장재 전환 파일럿 착수' },
+    { id: '1', description: '물류 동선 최적화로 연료 절감', date: new Date(today.getTime() - 0 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] },
+    { id: '2', description: '야간 공정 전력 피크 컷 적용', date: new Date(today.getTime() - 1 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] },
+    { id: '3', description: '폐열 회수 보일러 시범 운영', date: new Date(today.getTime() - 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] },
+    { id: '4', description: '사내 EV 충전 인센티브 도입', date: new Date(today.getTime() - 5 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] },
+    { id: '5', description: '친환경 포장재 전환 파일럿 착수', date: new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] },
   ]);
 };
