@@ -13,22 +13,7 @@ import { Download, ChevronDown, Search } from "lucide-react";
 import KoreaMapChart from "../../components/analysis/KoreaMapChart";
 
 // --- Mock Data ---
-// 1. 지도 데이터 (지역별 합계)
-const MOCK_MAP_DATA = [
-  { region: "경기", value: 25400 },
-  { region: "울산", value: 18000 },
-  { region: "경상남도", value: 20000 },
-  { region: "충청남도", value: 9200 },
-  { region: "부산", value: 8100 },
-  { region: "서울", value: 5000 },
-  { region: "인천", value: 6500 },
-  { region: "대구", value: 4200 },
-  { region: "경상북도", value: 7800 },
-  { region: "전라남도", value: 6300 },
-  { region: "전라북도", value: 5100 },
-  { region: "충청북도", value: 4800 },
-  { region: "강원도", value: 3900 },
-];
+// Note: Map data is now fetched from mapApi automatically
 
 // 2. 협력사 데이터 (전체 데이터)
 const MOCK_COMPANY_DATA = Array.from({ length: 30 }, (_, i) => ({
@@ -229,7 +214,7 @@ const CompanyEmissionPage: React.FC = () => {
             지역별 탄소 배출량
           </h3>
           <div className="h-[600px]">
-            <KoreaMapChart data={MOCK_MAP_DATA} />
+            <KoreaMapChart />
           </div>
         </div>
 

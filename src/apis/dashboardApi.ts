@@ -22,11 +22,6 @@ export interface YearlyData {
   target: number;
 }
 
-export interface RegionalData {
-  region: string;
-  value: number;
-}
-
 export interface PurposeData {
   name: string;
   value: number;
@@ -75,30 +70,6 @@ export const fetchYearlyData = async (): Promise<YearlyData[]> => {
       target: Math.floor(Math.random() * 2400) + 1500,
     }))
   );
-};
-
-export const fetchRegionalData = async (): Promise<RegionalData[]> => {
-  // TODO: 실제 API 호출로 변경
-  const regions = [
-    { region: '서울', value: Math.floor(Math.random() * 500) + 200 },
-    { region: '부산', value: Math.floor(Math.random() * 400) + 150 },
-    { region: '대구', value: Math.floor(Math.random() * 300) + 100 },
-    { region: '인천', value: Math.floor(Math.random() * 400) + 150 },
-    { region: '광주', value: Math.floor(Math.random() * 250) + 80 },
-    { region: '대전', value: Math.floor(Math.random() * 280) + 90 },
-    { region: '울산', value: Math.floor(Math.random() * 350) + 120 },
-    { region: '세종', value: Math.floor(Math.random() * 200) + 60 },
-    { region: '경기', value: Math.floor(Math.random() * 600) + 250 },
-    { region: '강원', value: Math.floor(Math.random() * 300) + 100 },
-    { region: '충북', value: Math.floor(Math.random() * 250) + 80 },
-    { region: '충남', value: Math.floor(Math.random() * 280) + 90 },
-    { region: '전북', value: Math.floor(Math.random() * 220) + 70 },
-    { region: '전남', value: Math.floor(Math.random() * 300) + 100 },
-    { region: '경북', value: Math.floor(Math.random() * 320) + 110 },
-    { region: '경남', value: Math.floor(Math.random() * 350) + 120 },
-    { region: '제주', value: Math.floor(Math.random() * 180) + 50 },
-  ];
-  return Promise.resolve(regions);
 };
 
 export const fetchPurposeData = async (): Promise<PurposeData[]> => {

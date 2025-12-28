@@ -18,23 +18,24 @@ export const fetchRegionalEmissionData = async (): Promise<MapData[]> => {
 
 /**
  * 더미 데이터: 지역별 탄소 배출량
+ * 경상남도 창원 위치 기준으로 경상도 지역 높게 설정
  */
 const getRegionalDummyData = (): MapData[] => [
-  { region: '서울', value: 5000 },
-  { region: '부산', value: 8100 },
-  { region: '대구', value: 4200 },
-  { region: '인천', value: 6500 },
-  { region: '광주', value: 2100 },
-  { region: '대전', value: 1800 },
-  { region: '울산', value: 18000 },
-  { region: '세종', value: 900 },
-  { region: '경기', value: 25400 },
-  { region: '강원', value: 3900 },
-  { region: '충북', value: 4800 },
-  { region: '충남', value: 9200 },
-  { region: '전북', value: 5100 },
-  { region: '전남', value: 6300 },
-  { region: '경북', value: 7800 },
-  { region: '경남', value: 15000 },
-  { region: '제주', value: 500 },
+  { region: '경상남도', value: 28000 },  // 최고값 - 창원 위치
+  { region: '경상북도', value: 22000 },  // 2위
+  { region: '부산광역시', value: 18000 },  // 3위 - 인근 지역
+  { region: '울산광역시', value: 16000 },  // 4위 - 인근 지역
+  { region: '대구광역시', value: 14000 },  // 5위 - 경상권
+  { region: '경기도', value: 12000 },
+  { region: '충청남도', value: 10000 },
+  { region: '인천광역시', value: 8500 },
+  { region: '전라남도', value: 7500 },
+  { region: '서울특별시', value: 6800 },
+  { region: '전라북도', value: 5500 },
+  { region: '충청북도', value: 5000 },
+  { region: '강원도', value: 4200 },
+  { region: '광주광역시', value: 3500 },
+  { region: '대전광역시', value: 2800 },
+  { region: '세종특별자치시', value: 1500 },
+  { region: '제주특별자치도', value: 800 },
 ];

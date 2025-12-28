@@ -113,10 +113,10 @@ export const SummarySection = () => {
                   formatter={(value: number, name: string) => [formatNumber(value), name]}
                 />
                 <Legend wrapperStyle={{ fontSize: 18, color: '#fff', fontWeight: 800, paddingTop: 12 }} formatter={(v) => <span style={{ color: '#fff', fontWeight: 800 }}>{v}</span>} />
-                <Bar dataKey="scope1" name="Scope 1" stackId="a" fill="#60a5fa" radius={[8, 8, 3, 3]}>
+                <Bar dataKey="scope1" name="Scope 1" stackId="a" fill="#60a5fa" radius={[2, 2, 0, 0]}>
                   <LabelList dataKey="scope1" position="insideTop" fill="#0f172a" fontSize={16} fontWeight={800} />
                 </Bar>
-                <Bar dataKey="scope3" name="Scope 3" stackId="a" fill="#22d3ee" radius={[8, 8, 3, 3]}>
+                <Bar dataKey="scope3" name="Scope 3" stackId="a" fill="#22d3ee" radius={[2, 2, 0, 0]}>
                   <LabelList dataKey="scope3" position="insideTop" fill="#0f172a" fontSize={16} fontWeight={800} />
                 </Bar>
               </BarChart>
@@ -163,8 +163,8 @@ export const MonthlyScopeSection = () => {
               formatter={(value: number, name: string) => [formatNumber(value), name]}
             />
             <Legend wrapperStyle={{ fontSize: 22, color: '#fff', fontWeight: 800, paddingTop: 15 }} formatter={(v) => <span style={{ color: '#fff', fontWeight: 800 }}>{v}</span>} />
-            <Bar dataKey="scope1" name="Scope 1" stackId="a" fill="#60a5fa" barSize={52} radius={[8, 8, 3, 3]} />
-            <Bar dataKey="scope3" name="Scope 3" stackId="a" fill="#22d3ee" barSize={52} radius={[8, 8, 3, 3]} />
+            <Bar dataKey="scope1" name="Scope 1" stackId="a" fill="#60a5fa" barSize={52} radius={[2, 2, 0, 0]} />
+            <Bar dataKey="scope3" name="Scope 3" stackId="a" fill="#22d3ee" barSize={52} radius={[2, 2, 0, 0]} />
             <Line type="monotone" dataKey="target" name="목표" stroke="#fbbf24" strokeWidth={6} dot={{ r: 8, fill: '#fbbf24' }} />
           </ComposedChart>
         </ResponsiveContainer>
@@ -213,10 +213,10 @@ export const YearlyHistorySection = () => {
               formatter={(value: number, name: string) => [formatNumber(value), name]}
             />
             <Legend wrapperStyle={{ fontSize: 22, color: '#fff', fontWeight: 800, paddingTop: 12 }} formatter={(v) => <span style={{ color: '#fff', fontWeight: 800 }}>{v}</span>} />
-            <Bar dataKey="scope1" name="Scope 1" stackId="a" fill="#60a5fa" barSize={60} radius={[8, 8, 3, 3]}>
+            <Bar dataKey="scope1" name="Scope 1" stackId="a" fill="#60a5fa" barSize={60} radius={[2, 2, 0, 0]}>
               <LabelList dataKey="scope1" position="insideTop" fill="#0f172a" fontSize={18} fontWeight={800} />
             </Bar>
-            <Bar dataKey="scope3" name="Scope 3" stackId="a" fill="#22d3ee" barSize={60} radius={[8, 8, 3, 3]}>
+            <Bar dataKey="scope3" name="Scope 3" stackId="a" fill="#22d3ee" barSize={60} radius={[2, 2, 0, 0]}>
               <LabelList dataKey="scope3" position="insideTop" fill="#0f172a" fontSize={18} fontWeight={800} />
             </Bar>
             <Line type="monotone" dataKey="target" name="목표" stroke="#fbbf24" strokeWidth={6} dot={{ r: 6, fill: '#fbbf24' }} />

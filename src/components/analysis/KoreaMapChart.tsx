@@ -87,10 +87,10 @@ const KoreaMapChart: React.FC<KoreaMapChartProps> = ({ data: propData, large = f
   // 색상 스케일: theme에 따라 분기
   const colorScale = useMemo(() => {
     if (theme === 'dark') {
-      // Dark theme: low=파란색, high=보라색 (차분한 그라데이션)
+      // Dark theme: low=청록색, high=파란색 (차분한 그라데이션)
       return scaleLinear<string>()
         .domain([0, maxValue])
-        .range(["#64748b", "#a78bfa"]);
+        .range(["#475569", "#60a5fa"]);
     } else {
       // Light theme: original light blue->dark blue
       return scaleLinear<string>()
@@ -99,22 +99,23 @@ const KoreaMapChart: React.FC<KoreaMapChartProps> = ({ data: propData, large = f
     }
   }, [maxValue, theme]);
 
-  const containerHeight = large ? 'h-[1325px]' : 'h-[535px]';
+  const containerHeight = large ? 'h-[850px]' : 'h-[535px]';
   const projectionScale = defaultFitAll ? 6500 : (large ? 8500 : 7000);
-  const projectionCenter = defaultFitAll ? [127.5, 36.8] : [127.8, 36.4];
+  const projectionCenter = defaultFitAll ? [127.5, 36.4] : [127.8, 36.4];
 
-  // 지역 데이터를 정렬하여 좌측/우측에 표시
+  // 지역 데이터를 정렬하여 좌측에 표시 (실제 데이터 값 기준 상위 10개)
   const sortedRegions = useMemo(() => {
-    const regions = Object.keys(REGION_MAPPING).map(engName => {
-      const regionName = REGION_MAPPING[engName];
-      const norm = normalize(regionName);
-      const value = normalizedDataMap[norm] ?? 0;
-      return { regionName, value };
-    });
-    return regions.sort((a, b) => b.value - a.value);
-  }, [normalizedDataMap]);
+    // 실제 데이터를 풍네임으로 표시하고 값을 기준으로 정렬
+    return data
+      .map(item => ({
+        regionName: item.region,  // 풍네임 사용
+        value: item.value
+      }))
+      .sort((a, b) => b.value - a.value)
+      .slice(0, 10);
+  }, [data]);
 
-  const leftRegions = sortedRegions.slice(0, 10);
+  const leftRegions = sortedRegions;
   // const rightRegions = sortedRegions.slice(9);
 
   return (
@@ -124,17 +125,29 @@ const KoreaMapChart: React.FC<KoreaMapChartProps> = ({ data: propData, large = f
         : 'bg-white'
     }`}>
       {/* 좌측 지역 리스트 */}
-      <div className={`w-64 p-6 overflow-y-auto ${
+      <div className={`w-[500px] p-8 overflow-y-auto ${
         theme === 'dark'
           ? 'border-r border-white/20 bg-white/5 text-white'
           : 'border-r border-gray-200 bg-gradient-to-b from-gray-50 to-white text-gray-800'
       }`}>
-        <h4 className={`text-3xl font-extrabold mb-5 ${theme === 'dark' ? 'text-white' : 'text-gray-800'}`}>지역별 배출량</h4>
-        <div className="space-y-3">
+        <h4 className={`text-6xl font-extrabold mb-5 ${
+          theme === 'dark' ? 'text-white' : 'text-gray-800'
+        }`}>
+          지역별 배출량
+        </h4>
+        <div className="space-y-4">
           {leftRegions.map(({ regionName, value }) => (
-            <div key={regionName} className="flex justify-between items-center">
-              <span className={`font-extrabold text-xl ${theme === 'dark' ? 'text-white' : 'text-gray-700'}`}>{regionName}</span>
-              <span className={`font-extrabold text-xl ${theme === 'dark' ? 'text-emerald-300' : 'text-gray-900'}`}>{value.toLocaleString()}</span>
+            <div key={regionName} className="flex justify-between items-center gap-3">
+              <span className={`font-extrabold text-5xl ${
+                theme === 'dark' ? 'text-white' : 'text-gray-700'
+              }`}>
+                {regionName}
+              </span>
+              <span className={`font-extrabold text-5xl whitespace-nowrap ${
+                theme === 'dark' ? 'text-sky-400' : 'text-gray-900'
+              }`}>
+                {value.toLocaleString()}
+              </span>
             </div>
           ))}
         </div>
@@ -174,11 +187,11 @@ const KoreaMapChart: React.FC<KoreaMapChartProps> = ({ data: propData, large = f
                         outline: "none",
                       },
                       hover: {
-                        fill: theme === 'dark' ? "#84CC16" : "#F59E0B",
+                        fill: theme === 'dark' ? "#3b82f6" : "#F59E0B",
                         cursor: "default",
                       },
                       pressed: {
-                        fill: theme === 'dark' ? "#65A30D" : "#D97706",
+                        fill: theme === 'dark' ? "#2563eb" : "#D97706",
                       },
                     }}
                   />
