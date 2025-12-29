@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { Responsive, WidthProvider } from 'react-grid-layout';
 import { 
-  SummarySection, 
+  TextSummarySection,
+  ChartSummarySection,
   MonthlyScopeSection, 
   PartnerMapSection, 
   YearlyHistorySection,
@@ -22,28 +23,29 @@ const DashboardPage: React.FC = () => {
 
   const initialLayouts = {
     lg: [
-      // 좌상단 - 2025년 탄소 배출량
-      { i: 'section1', x: 0, y: 0, w: 6, h: 14 },
-      // 우상단 - 올해 월별 탄소 배출량
-      { i: 'section2', x: 6, y: 0, w: 6, h: 14 },
-      // 우하단 - 협력사 지역별 배출량 현황
-      { i: 'section3', x: 6, y: 14, w: 6, h: 16 },
-      // 좌하단 상 - 최근 5년 탄소 배출량
-      { i: 'section4', x: 0, y: 14, w: 6, h: 8 },
-      // 좌하단 중 - 운행 목적별 배출량 (절반 너비)
-      { i: 'section5', x: 0, y: 22, w: 3, h: 8 },
-      // 좌하단 하 - 최근 저감 활동 5건 (절반 너비)
-      { i: 'section6', x: 3, y: 22, w: 3, h: 8 },
+      // 상단 좌측 - 목표/올해/달성도 텍스트
+      { i: 'textSummary', x: 0, y: 0, w: 6, h: 5 },
+      // 상단 우측 - 2025년 배출량 현황 그래프
+      { i: 'chartSummary', x: 6, y: 0, w: 6, h: 5 },
+      // 중단 좌측 - 연간 탄소 배출량 (최근 5년)
+      { i: 'yearly', x: 0, y: 7, w: 6, h: 12 },
+      // 중단 우측 - 올해 월별 배출량
+      { i: 'monthly', x: 6, y: 7, w: 6, h: 12 },
+      // 하단 좌측 상 - 운행 목적별 배출량
+      { i: 'purpose', x: 0, y: 19, w: 3, h: 11 },
+      // 하단 좌측 하 - 최근 저감 활동
+      { i: 'reduction', x: 3, y: 19, w: 3, h: 11 },
+      // 하단 우측 - 협력사 지역별 배출량
+      { i: 'map', x: 6, y: 19, w: 6, h: 11 },
     ],
     md: [
-      // md에서도 상단은 좌7:우5 비율 유지
-      { i: 'section1', x: 0, y: 0, w: 7, h: 14 },
-      { i: 'section2', x: 7, y: 0, w: 5, h: 14 },
-      // 하단 동일 비율 유지: 좌측 3개, 우측 지도
-      { i: 'section3', x: 7, y: 14, w: 5, h: 16 },
-      { i: 'section4', x: 0, y: 14, w: 7, h: 8 },
-      { i: 'section5', x: 0, y: 22, w: 3, h: 8 },
-      { i: 'section6', x: 3, y: 22, w: 4, h: 8 },
+      { i: 'textSummary', x: 0, y: 0, w: 6, h: 5 },
+      { i: 'chartSummary', x: 6, y: 0, w: 6, h: 5 },
+      { i: 'yearly', x: 0, y: 7, w: 6, h: 12 },
+      { i: 'monthly', x: 6, y: 7, w: 6, h: 12 },
+      { i: 'purpose', x: 0, y: 19, w: 3, h: 11 },
+      { i: 'reduction', x: 3, y: 19, w: 3, h: 11 },
+      { i: 'map', x: 6, y: 19, w: 6, h: 11 },
     ],
   };
 
@@ -89,34 +91,39 @@ const DashboardPage: React.FC = () => {
         isResizable={true}
         margin={[10, 10]}
       >
-        {/* 좌상단 - 2025년 탄소 배출량 (요약) */}
-        <div key="section1">
-          <SummarySection />
+        {/* 상단 좌측 - 목표/올해/달성도 */}
+        <div key="textSummary">
+          <TextSummarySection />
         </div>
 
-        {/* 우상단 - 올해 월별 탄소 배출량 (Scope) */}
-        <div key="section2">
-          <MonthlyScopeSection />
+        {/* 상단 우측 - 2025년 배출량 현황 */}
+        <div key="chartSummary">
+          <ChartSummarySection />
         </div>
 
-        {/* 우하단 - 협력사 지역별 배출량 현황 */}
-        <div key="section3">
-          <PartnerMapSection theme="dark" />
-        </div>
-
-        {/* 우하단 상 - 최근 5년 탄소 배출량 */}
-        <div key="section4">
+        {/* 중단 좌측 - 연간 탄소 배출량 */}
+        <div key="yearly">
           <YearlyHistorySection />
         </div>
 
-        {/* 우하단 중 - 운행 목적별 배출량 */}
-        <div key="section5">
+        {/* 중단 우측 - 올해 월별 배출량 */}
+        <div key="monthly">
+          <MonthlyScopeSection />
+        </div>
+
+        {/* 하단 좌측 상 - 운행 목적별 배출량 */}
+        <div key="purpose">
           <PurposePieSection />
         </div>
 
-        {/* 우하단 하 - 최근 저감 활동 */}
-        <div key="section6">
+        {/* 하단 좌측 하 - 최근 저감 활동 */}
+        <div key="reduction">
           <ReductionListSection />
+        </div>
+
+        {/* 하단 우측 - 협력사 지역별 배출량 */}
+        <div key="map">
+          <PartnerMapSection theme="dark" />
         </div>
       </ResponsiveGridLayout>
     </div>

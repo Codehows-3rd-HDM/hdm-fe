@@ -99,9 +99,9 @@ const KoreaMapChart: React.FC<KoreaMapChartProps> = ({ data: propData, large = f
     }
   }, [maxValue, theme]);
 
-  const containerHeight = large ? 'h-[850px]' : 'h-[535px]';
-  const projectionScale = defaultFitAll ? 6500 : (large ? 8500 : 7000);
-  const projectionCenter = defaultFitAll ? [127.5, 36.4] : [127.8, 36.4];
+  const containerHeight = large ? 'h-[550px]' : 'h-[535px]';
+  const projectionScale = defaultFitAll ? 6000 : (large ? 8500 : 7000);
+  const projectionCenter = defaultFitAll ? [127.5, 36.3] : [127.8, 36.4];
 
   // 지역 데이터를 정렬하여 좌측에 표시 (실제 데이터 값 기준 상위 10개)
   const sortedRegions = useMemo(() => {
@@ -112,7 +112,7 @@ const KoreaMapChart: React.FC<KoreaMapChartProps> = ({ data: propData, large = f
         value: item.value
       }))
       .sort((a, b) => b.value - a.value)
-      .slice(0, 10);
+      .slice(0, 9);
   }, [data]);
 
   const leftRegions = sortedRegions;
@@ -130,7 +130,7 @@ const KoreaMapChart: React.FC<KoreaMapChartProps> = ({ data: propData, large = f
           ? 'border-r border-white/20 bg-white/5 text-white'
           : 'border-r border-gray-200 bg-gradient-to-b from-gray-50 to-white text-gray-800'
       }`}>
-        <h4 className={`text-4xl font-extrabold mb-5 ${
+        <h4 className={`text-3xl font-extrabold mb-5 ${
           theme === 'dark' ? 'text-white' : 'text-gray-800'
         }`}>
           지역별 배출량
@@ -138,12 +138,12 @@ const KoreaMapChart: React.FC<KoreaMapChartProps> = ({ data: propData, large = f
         <div className="space-y-4">
           {leftRegions.map(({ regionName, value }) => (
             <div key={regionName} className="flex justify-between items-center gap-3">
-              <span className={`font-extrabold text-3xl ${
+              <span className={`font-extrabold text-2xl ${
                 theme === 'dark' ? 'text-white' : 'text-gray-700'
               }`}>
                 {regionName}
               </span>
-              <span className={`font-extrabold text-3xl whitespace-nowrap ${
+              <span className={`font-extrabold text-2xl whitespace-nowrap ${
                 theme === 'dark' ? 'text-sky-400' : 'text-gray-900'
               }`}>
                 {value.toLocaleString()}

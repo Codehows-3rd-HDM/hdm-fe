@@ -41,10 +41,10 @@ export const fetchDashboardSummary = async (): Promise<DashboardSummaryData> => 
   // TODO: 실제 API 호출로 변경
   return Promise.resolve({
     currentYear,
-    scope1Current: 4200,
-    scope3Current: 3800,
-    scope1Target: 5000,
-    scope3Target: 5000,
+    scope1Current: 42000,
+    scope3Current: 38000,
+    scope1Target: 50000,
+    scope3Target: 50000,
   });
 };
 

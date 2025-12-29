@@ -36,9 +36,9 @@ const formatNumber = (v: number) => {
 };
 
 // -----------------------------------------------------------------------
-// [Summary Section - 2025년 배출량 현황 (좌우 1:2 분할)]
+// [Text Summary Section - 목표/올해/달성도 텍스트]
 // -----------------------------------------------------------------------
-export const SummarySection = () => {
+export const TextSummarySection = () => {
   const [data, setData] = useState<DashboardSummaryData | null>(null);
 
   useEffect(() => {
@@ -53,76 +53,83 @@ export const SummarySection = () => {
   const diffPercent = ((diff / target) * 100).toFixed(1);
   const isGood = diff >= 0;
 
-  // 데이터 순서: '목표' 먼저, 그 다음 '올해'
+  return (
+    <div className={`${cardBase}`}>
+      <div className="flex justify-around items-center gap-6 h-full px-4">
+        {/* 목표 배출량 */}
+        <div className="text-center flex-1 border-r-2 border-emerald-400/30 py-4">
+          <div className="text-2xl text-emerald-300 font-bold mb-2 tracking-wide uppercase">목표 배출량</div>
+          <div className="text-7xl font-extrabold text-white leading-tight drop-shadow-lg">
+            {target.toLocaleString()}
+          </div>
+          <div className="text-base text-emerald-200 mt-2 font-semibold">tCO₂eq</div>
+        </div>
+
+        {/* 올해 총 배출량 */}
+        <div className="text-center flex-1 border-r-2 border-emerald-400/30 py-4">
+          <div className="text-2xl text-gray-300 font-bold mb-2 tracking-wide uppercase">올해 총 배출량</div>
+          <div className={`text-7xl font-extrabold leading-tight drop-shadow-lg transition-all ${isGood ? 'text-emerald-300' : 'text-rose-400'}`}>
+            {total.toLocaleString()}
+          </div>
+          <div className="text-base text-gray-300 mt-2 font-semibold">tCO₂eq</div>
+        </div>
+
+        {/* 목표 달성도 */}
+        <div className="text-center flex-1 py-4">
+          <div className="text-2xl text-gray-300 font-bold mb-2 tracking-wide uppercase">목표 달성도</div>
+          <div className={`text-7xl font-extrabold leading-tight drop-shadow-lg transition-all ${isGood ? 'text-emerald-400' : 'text-rose-400'}`}>
+            {isGood ? '✓' : '✕'} {Math.abs(Number(diffPercent))}%
+          </div>
+          <div className={`text-base mt-2 font-semibold ${isGood ? 'text-emerald-300' : 'text-rose-300'}`}>
+            {isGood ? '목표 달성 경로' : '목표 초과'}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// -----------------------------------------------------------------------
+// [Chart Summary Section - 2025년 배출량 현황 막대그래프]
+// -----------------------------------------------------------------------
+export const ChartSummarySection = () => {
+  const [data, setData] = useState<DashboardSummaryData | null>(null);
+
+  useEffect(() => {
+    fetchDashboardSummary().then(setData);
+  }, []);
+
+  if (!data) return <div className={cardBase}>로딩 중...</div>;
+
   const summaryBarData = [
     { name: '목표', scope1: data.scope1Target, scope3: data.scope3Target },
     { name: '올해', scope1: data.scope1Current, scope3: data.scope3Current },
   ];
 
   return (
-    <div className={`${cardBase}`}>
-      <h3 className="text-4xl font-extrabold text-white text-center mb-6">{currentYear}년 배출량 현황</h3>
-      
-      {/* 좌우 1:2 비율 분할 */}
-      <div className="grid grid-cols-3 gap-8 flex-1 h-full">
-        {/* 좌측 (col-span-1) - 텍스트 영역 */}
-        <div className="col-span-1 flex flex-col justify-around gap-0 pr-8 border-r-2 border-emerald-400/50">
-          {/* 목표 배출량 */}
-          <div className="text-center py-6 border-b-2 border-emerald-400/30">
-            <div className="text-lg text-emerald-300 font-bold mb-2 tracking-wide uppercase">목표 배출량</div>
-            <div className="text-5xl font-extrabold text-white leading-tight drop-shadow-lg">
-              {target.toLocaleString()}
-            </div>
-            <div className="text-sm text-emerald-200 mt-2 font-semibold">tCO₂eq</div>
-          </div>
-
-          {/* 올해 총 배출량 */}
-          <div className="text-center py-6 border-b-2 border-emerald-400/30">
-            <div className="text-lg text-gray-300 font-bold mb-2 tracking-wide uppercase">올해 총 배출량</div>
-            <div className={`text-5xl font-extrabold leading-tight drop-shadow-lg transition-all ${isGood ? 'text-emerald-300' : 'text-rose-400'}`}>
-              {total.toLocaleString()}
-            </div>
-            <div className="text-sm text-gray-300 mt-2 font-semibold">tCO₂eq</div>
-          </div>
-
-          {/* 목표 달성도 */}
-          <div className="text-center py-6">
-            <div className="text-lg text-gray-300 font-bold mb-2 tracking-wide uppercase">목표 달성도</div>
-            <div className={`text-5xl font-extrabold leading-tight drop-shadow-lg transition-all ${isGood ? 'text-emerald-400' : 'text-rose-400'}`}>
-              {isGood ? '✓' : '✕'} {Math.abs(Number(diffPercent))}%
-            </div>
-            <div className={`text-sm mt-2 font-semibold ${isGood ? 'text-emerald-300' : 'text-rose-300'}`}>
-              {isGood ? '목표 달성 경로' : '목표 초과'}
-            </div>
-          </div>
-        </div>
-
-        {/* 우측 (col-span-2) - 막대그래프 */}
-        <div className="col-span-2 flex flex-col">
-          <h4 className="text-3xl font-extrabold text-white text-center mb-6 text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-emerald-400">배출량 비교</h4>
-          <div className="flex-1 min-h-[240px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={summaryBarData} barCategoryGap={60} barSize={120} margin={{ top: 15, right: 30, left: 30, bottom: 15 }}>
-                <CartesianGrid strokeDasharray="5 5" stroke="#ffffff22" strokeWidth={2} />
-                <XAxis dataKey="name" tick={{ fill: '#fff', fontSize: 24, fontWeight: 800 }} axisLine={axisStyle} tickLine={axisStyle} />
-                <YAxis tick={{ fill: '#fff', fontSize: 24, fontWeight: 800 }} axisLine={axisStyle} tickLine={axisStyle} width={60} tickFormatter={formatNumber} />
-                <Tooltip
-                  contentStyle={tooltipStyle}
-                  labelStyle={{ color: '#fff', fontWeight: 800, fontSize: 18 }}
-                  itemStyle={{ color: '#fff', fontWeight: 800, fontSize: 16 }}
-                  formatter={(value: number, name: string) => [formatNumber(value), name]}
-                />
-                <Legend wrapperStyle={{ fontSize: 24, color: '#fff', fontWeight: 800, paddingTop: 12 }} formatter={(v) => <span style={{ color: '#fff', fontWeight: 800 }}>{v}</span>} />
-                <Bar dataKey="scope1" name="Scope 1" stackId="a" fill="#60a5fa" radius={[2, 2, 0, 0]}>
-                  <LabelList dataKey="scope1" position="insideTop" fill="#0f172a" fontSize={24} fontWeight={800} />
-                </Bar>
-                <Bar dataKey="scope3" name="Scope 3" stackId="a" fill="#22d3ee" radius={[2, 2, 0, 0]}>
-                  <LabelList dataKey="scope3" position="insideTop" fill="#0f172a" fontSize={24} fontWeight={800} />
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
+    <div className={cardBase}>
+      <h3 className="text-3xl font-extrabold text-white text-center mb-3">{currentYear}년 배출량 현황</h3>
+      <div className="flex-1 min-h-[150px]">
+        <ResponsiveContainer width="100%" height="100%">
+          <BarChart data={summaryBarData} barCategoryGap={60} barSize={160} margin={{ top: 15, right: 30, left: 30, bottom: 15 }}>
+            <CartesianGrid strokeDasharray="5 5" stroke="#ffffff22" strokeWidth={2} />
+            <XAxis dataKey="name" tick={{ fill: '#fff', fontSize: 24, fontWeight: 800 }} axisLine={axisStyle} tickLine={axisStyle} />
+            <YAxis tick={{ fill: '#fff', fontSize: 24, fontWeight: 800 }} axisLine={axisStyle} tickLine={axisStyle} width={90} tickFormatter={formatNumber} />
+            <Tooltip
+              contentStyle={tooltipStyle}
+              labelStyle={{ color: '#fff', fontWeight: 800, fontSize: 18 }}
+              itemStyle={{ color: '#fff', fontWeight: 800, fontSize: 16 }}
+              formatter={(value: number, name: string) => [formatNumber(value), name]}
+            />
+            <Legend wrapperStyle={{ fontSize: 24, color: '#fff', fontWeight: 800, paddingTop: 12 }} formatter={(v) => <span style={{ color: '#fff', fontWeight: 800 }}>{v}</span>} />
+            <Bar dataKey="scope1" name="Scope 1" stackId="a" fill="#60a5fa" radius={[2, 2, 0, 0]}>
+              <LabelList dataKey="scope1" position="insideTop" fill="#0f172a" fontSize={24} fontWeight={800} formatter={(v: number) => formatNumber(v)} />
+            </Bar>
+            <Bar dataKey="scope3" name="Scope 3" stackId="a" fill="#22d3ee" radius={[2, 2, 0, 0]}>
+              <LabelList dataKey="scope3" position="insideTop" fill="#0f172a" fontSize={24} fontWeight={800} formatter={(v: number) => formatNumber(v)} />
+            </Bar>
+          </BarChart>
+        </ResponsiveContainer>
       </div>
     </div>
   );
@@ -163,11 +170,11 @@ export const MonthlyScopeSection = () => {
               formatter={(value: number, name: string) => [formatNumber(value), name]}
             />
             <Legend wrapperStyle={{ fontSize: 24, color: '#fff', fontWeight: 800, paddingTop: 15 }} formatter={(v) => <span style={{ color: '#fff', fontWeight: 800 }}>{v}</span>} />
-            <Bar dataKey="scope1" name="Scope 1" stackId="a" fill="#60a5fa" barSize={52} radius={[2, 2, 0, 0]}>
-              <LabelList dataKey="scope1" position="insideTop" fill="#0f172a" fontSize={24} fontWeight={800} />
+            <Bar dataKey="scope1" name="Scope 1" stackId="a" fill="#60a5fa" barSize={72} radius={[2, 2, 0, 0]}>
+              <LabelList dataKey="scope1" position="insideTop" fill="#0f172a" fontSize={24} fontWeight={800} formatter={(v: number) => formatNumber(v)} />
             </Bar>
-            <Bar dataKey="scope3" name="Scope 3" stackId="a" fill="#22d3ee" barSize={52} radius={[2, 2, 0, 0]}>
-              <LabelList dataKey="scope3" position="insideTop" fill="#0f172a" fontSize={24} fontWeight={800} />
+            <Bar dataKey="scope3" name="Scope 3" stackId="a" fill="#22d3ee" barSize={72} radius={[2, 2, 0, 0]}>
+              <LabelList dataKey="scope3" position="insideTop" fill="#0f172a" fontSize={24} fontWeight={800} formatter={(v: number) => formatNumber(v)} />
             </Bar>
             <Line type="monotone" dataKey="target" name="목표" stroke="#fbbf24" strokeWidth={6} dot={{ r: 8, fill: '#fbbf24' }} />
           </ComposedChart>
@@ -217,11 +224,11 @@ export const YearlyHistorySection = () => {
               formatter={(value: number, name: string) => [formatNumber(value), name]}
             />
             <Legend wrapperStyle={{ fontSize: 24, color: '#fff', fontWeight: 800, paddingTop: 12 }} formatter={(v) => <span style={{ color: '#fff', fontWeight: 800 }}>{v}</span>} />
-            <Bar dataKey="scope1" name="Scope 1" stackId="a" fill="#60a5fa" barSize={60} radius={[2, 2, 0, 0]}>
-              <LabelList dataKey="scope1" position="insideTop" fill="#0f172a" fontSize={24} fontWeight={800} />
+            <Bar dataKey="scope1" name="Scope 1" stackId="a" fill="#60a5fa" barSize={120} radius={[2, 2, 0, 0]}>
+              <LabelList dataKey="scope1" position="insideTop" fill="#0f172a" fontSize={24} fontWeight={800} formatter={(v: number) => formatNumber(v)} />
             </Bar>
-            <Bar dataKey="scope3" name="Scope 3" stackId="a" fill="#22d3ee" barSize={60} radius={[2, 2, 0, 0]}>
-              <LabelList dataKey="scope3" position="insideTop" fill="#0f172a" fontSize={24} fontWeight={800} />
+            <Bar dataKey="scope3" name="Scope 3" stackId="a" fill="#22d3ee" barSize={120} radius={[2, 2, 0, 0]}>
+              <LabelList dataKey="scope3" position="insideTop" fill="#0f172a" fontSize={24} fontWeight={800} formatter={(v: number) => formatNumber(v)} />
             </Bar>
             <Line type="monotone" dataKey="target" name="목표" stroke="#fbbf24" strokeWidth={6} dot={{ r: 6, fill: '#fbbf24' }} />
           </BarChart>
@@ -313,14 +320,16 @@ export const ReductionListSection = () => {
 
   return (
     <div className={cardBase}>
-      <h3 className="text-4xl font-extrabold mb-6 text-white text-center">최근 저감 활동 5건</h3>
-      <ul className="space-y-0 text-white text-2xl font-bold h-full flex flex-col justify-between">
+      <h3 className="text-4xl font-extrabold mb-10 text-white text-center">최근 저감 활동 5건</h3>
+      <ul className="space-y-0 text-white h-full flex flex-col justify-center">
         {activities.map((item) => (
-          <li key={item.id} className="flex items-start gap-4 py-3 px-4 border-b border-white/10 hover:bg-white/5 transition-colors rounded">
+          <li key={item.id} className="flex items-start gap-3 py-8 px-4 border-b border-white/10 hover:bg-white/5 transition-colors rounded">
             <span className="mt-1 block w-4 h-4 rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 flex-shrink-0 shadow-lg" />
             <div className="flex-1">
-              <div className="font-bold text-white leading-snug text-lg">{item.description}</div>
-              {item.date && <div className="text-xs text-gray-400 mt-1 font-semibold">{formatDate(item.date)}</div>}
+              <div className="font-bold text-white leading-snug text-2xl">
+                {item.date && <span className="text-gray-400 mr-3">{formatDate(item.date)}</span>}
+                {item.description}
+              </div>
             </div>
           </li>
         ))}
