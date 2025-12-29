@@ -61,7 +61,7 @@ export const SummarySection = () => {
 
   return (
     <div className={`${cardBase}`}>
-      <h3 className="text-4xl font-extrabold text-white text-center mb-6">2025년 배출량 현황</h3>
+      <h3 className="text-4xl font-extrabold text-white text-center mb-6">{currentYear}년 배출량 현황</h3>
       
       {/* 좌우 1:2 비율 분할 */}
       <div className="grid grid-cols-3 gap-8 flex-1 h-full">
