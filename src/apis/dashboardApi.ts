@@ -41,34 +41,46 @@ export const fetchDashboardSummary = async (): Promise<DashboardSummaryData> => 
   // TODO: 실제 API 호출로 변경
   return Promise.resolve({
     currentYear,
-    scope1Current: 42000,
-    scope3Current: 38000,
-    scope1Target: 50000,
-    scope3Target: 50000,
+    scope1Current: 28000,
+    scope3Current: 95000,
+    scope1Target: 30000,
+    scope3Target: 100000,
   });
 };
 
 export const fetchMonthlyData = async (): Promise<MonthlyData[]> => {
   // TODO: 실제 API 호출로 변경
+  // 1년 약 13~15만: 월평균 10,833~12,500 (scope1+scope3)
   return Promise.resolve(
-    Array.from({ length: 12 }, (_, i) => ({
-      month: i + 1,
-      scope1: Math.floor(Math.random() * 400) + 350,
-      scope3: Math.floor(Math.random() * 400) + 300,
-      target: Math.floor(Math.random() * 200) + 1150,
-    }))
+    Array.from({ length: 12 }, (_, i) => {
+      const base = 11000 + Math.random() * 1500; // 11,000 ~ 12,500
+      const scope1 = Math.floor(base * 0.2); // 약 20%
+      const scope3 = Math.floor(base * 0.8); // 약 80%
+      return {
+        month: i + 1,
+        scope1,
+        scope3,
+        target: Math.floor(base * 1.05),
+      };
+    })
   );
 };
 
 export const fetchYearlyData = async (): Promise<YearlyData[]> => {
   // TODO: 실제 API 호출로 변경
+  // 1년 약 13~15만
   return Promise.resolve(
-    Array.from({ length: 5 }, (_, i) => ({
-      year: currentYear - 5 + i,
-      scope1: Math.floor(Math.random() * 1200) + 600,
-      scope3: Math.floor(Math.random() * 1200) + 700,
-      target: Math.floor(Math.random() * 2400) + 1500,
-    }))
+    Array.from({ length: 5 }, (_, i) => {
+      const base = 130000 + Math.random() * 20000; // 130,000 ~ 150,000
+      const scope1 = Math.floor(base * 0.2); // 약 20%
+      const scope3 = Math.floor(base * 0.8); // 약 80%
+      return {
+        year: currentYear - 4 + i,
+        scope1,
+        scope3,
+        target: Math.floor(base * 1.05),
+      };
+    })
   );
 };
 

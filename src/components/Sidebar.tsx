@@ -75,7 +75,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggleSidebar }) => {
           <img 
             src="/rogo.png" 
             alt="HDM Logo" 
-            className="max-w-[140px] background-color: transparent block h-auto cursor-pointer bg-transparent select-none" 
+            className="max-w-[140px] block h-auto cursor-pointer bg-transparent select-none" 
             onClick={() => navigate('/main')}
             draggable={false}
           />

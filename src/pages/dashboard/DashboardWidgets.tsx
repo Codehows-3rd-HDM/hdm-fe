@@ -58,30 +58,30 @@ export const TextSummarySection = () => {
       <div className="flex justify-around items-center gap-6 h-full px-4">
         {/* 목표 배출량 */}
         <div className="text-center flex-1 border-r-2 border-emerald-400/30 py-4">
-          <div className="text-2xl text-emerald-300 font-bold mb-2 tracking-wide uppercase">목표 배출량</div>
+          <div className="text-5xl text-emerald-300 font-bold mb-2 tracking-wide uppercase">목표 배출량</div>
           <div className="text-7xl font-extrabold text-white leading-tight drop-shadow-lg">
             {target.toLocaleString()}
           </div>
-          <div className="text-base text-emerald-200 mt-2 font-semibold">tCO₂eq</div>
+          <div className="text-3xl text-emerald-200 mt-2 font-semibold">tCO₂eq</div>
         </div>
 
         {/* 올해 총 배출량 */}
         <div className="text-center flex-1 border-r-2 border-emerald-400/30 py-4">
-          <div className="text-2xl text-gray-300 font-bold mb-2 tracking-wide uppercase">올해 총 배출량</div>
+          <div className="text-5xl text-gray-300 font-bold mb-2 tracking-wide uppercase">올해 총 배출량</div>
           <div className={`text-7xl font-extrabold leading-tight drop-shadow-lg transition-all ${isGood ? 'text-emerald-300' : 'text-rose-400'}`}>
             {total.toLocaleString()}
           </div>
-          <div className="text-base text-gray-300 mt-2 font-semibold">tCO₂eq</div>
+          <div className="text-3xl text-gray-300 mt-2 font-semibold">tCO₂eq</div>
         </div>
 
         {/* 목표 달성도 */}
         <div className="text-center flex-1 py-4">
-          <div className="text-2xl text-gray-300 font-bold mb-2 tracking-wide uppercase">목표 달성도</div>
+          <div className="text-5xl text-gray-300 font-bold mb-2 tracking-wide uppercase">목표 달성도</div>
           <div className={`text-7xl font-extrabold leading-tight drop-shadow-lg transition-all ${isGood ? 'text-emerald-400' : 'text-rose-400'}`}>
             {isGood ? '✓' : '✕'} {Math.abs(Number(diffPercent))}%
           </div>
-          <div className={`text-base mt-2 font-semibold ${isGood ? 'text-emerald-300' : 'text-rose-300'}`}>
-            {isGood ? '목표 달성 경로' : '목표 초과'}
+          <div className={`text-3xl mt-2 font-semibold ${isGood ? 'text-emerald-300' : 'text-rose-300'}`}>
+            {isGood ? '목표 달성 정도' : '목표 초과'}
           </div>
         </div>
       </div>
@@ -108,10 +108,10 @@ export const ChartSummarySection = () => {
 
   return (
     <div className={cardBase}>
-      <h3 className="text-3xl font-extrabold text-white text-center mb-3">{currentYear}년 배출량 현황</h3>
-      <div className="flex-1 min-h-[150px]">
+      <h3 className="text-4xl font-extrabold text-white text-center mb-0">{currentYear}년 배출량 현황</h3>
+      <div className="flex-1 min-h-[140px]">
         <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={summaryBarData} barCategoryGap={60} barSize={160} margin={{ top: 15, right: 30, left: 30, bottom: 15 }}>
+          <BarChart data={summaryBarData} barCategoryGap={60} barSize={160} margin={{ top: 8, right: 30, left: 30, bottom:0 }}>
             <CartesianGrid strokeDasharray="5 5" stroke="#ffffff22" strokeWidth={2} />
             <XAxis dataKey="name" tick={{ fill: '#fff', fontSize: 24, fontWeight: 800 }} axisLine={axisStyle} tickLine={axisStyle} />
             <YAxis tick={{ fill: '#fff', fontSize: 24, fontWeight: 800 }} axisLine={axisStyle} tickLine={axisStyle} width={90} tickFormatter={formatNumber} />
@@ -121,7 +121,7 @@ export const ChartSummarySection = () => {
               itemStyle={{ color: '#fff', fontWeight: 800, fontSize: 16 }}
               formatter={(value: number, name: string) => [formatNumber(value), name]}
             />
-            <Legend wrapperStyle={{ fontSize: 24, color: '#fff', fontWeight: 800, paddingTop: 12 }} formatter={(v) => <span style={{ color: '#fff', fontWeight: 800 }}>{v}</span>} />
+            <Legend layout="vertical" verticalAlign="middle" align="right" wrapperStyle={{ fontSize: 24, color: '#fff', fontWeight: 800, paddingLeft: '20px' }} formatter={(v) => <span style={{ color: '#fff', fontWeight: 800 }}>{v}</span>} />
             <Bar dataKey="scope1" name="Scope 1" stackId="a" fill="#60a5fa" radius={[2, 2, 0, 0]}>
               <LabelList dataKey="scope1" position="insideTop" fill="#0f172a" fontSize={24} fontWeight={800} formatter={(v: number) => formatNumber(v)} />
             </Bar>
@@ -213,10 +213,10 @@ export const YearlyHistorySection = () => {
       <h4 className="text-4xl font-extrabold text-white text-center mb-5">연간 탄소 배출량 (최근 5년)</h4>
       <div className="flex-1 min-h-[240px]">
         <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={data} margin={{ top: 15, right: 15, left: 0, bottom: 0 }}>
+          <BarChart data={data} margin={{ top: 15, right: 15, left: 10, bottom: 0 }}>
             <CartesianGrid strokeDasharray="5 5" stroke="#ffffff22" strokeWidth={2} />
             <XAxis dataKey="year" tick={{ fill: '#fff', fontSize: 24, fontWeight: 800 }} axisLine={axisStyle} tickLine={axisStyle} />
-            <YAxis tick={{ fill: '#fff', fontSize: 24, fontWeight: 800 }} axisLine={axisStyle} tickLine={axisStyle} width={70} tickFormatter={formatNumber} />
+            <YAxis tick={{ fill: '#fff', fontSize: 24, fontWeight: 800 }} axisLine={axisStyle} tickLine={axisStyle} width={100} tickFormatter={formatNumber} />
             <Tooltip
               contentStyle={tooltipStyle}
               labelStyle={{ color: '#fff', fontWeight: 800, fontSize: 20 }}
@@ -258,9 +258,12 @@ export const PurposePieSection = () => {
     <div className={cardBase}>
       <h3 className="text-4xl font-extrabold mb-5 text-white text-center">{currentYear}년 운행 목적별 배출량</h3>
       <div className="flex-1 relative w-full h-full">
-        <div className="absolute top-1/2 left-[30%] -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none z-10">
-          <div className="text-6xl font-extrabold text-white">100%</div>
-          <div className="text-2xl text-gray-200 font-bold">Total</div>
+        {/* 중앙 텍스트 - 절대 위치 */}
+        <div className="absolute inset-0 flex items-center justify-start pointer-events-none" style={{ paddingLeft: '20.00%' }}>
+          <div className="text-center">
+            <div className="text-5xl font-extrabold text-white">100%</div>
+            <div className="text-1xl text-gray-200 font-bold">Total</div>
+          </div>
         </div>
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
@@ -268,8 +271,8 @@ export const PurposePieSection = () => {
               data={pieData}
               cx="40%"
               cy="50%"
-              innerRadius={95}
-              outerRadius={160}
+              innerRadius="45%"
+              outerRadius="80%"
               paddingAngle={2}
               dataKey="value"
             >
