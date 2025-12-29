@@ -142,7 +142,7 @@ const KoreaMapChart: React.FC<KoreaMapChartProps> = ({
         }`}
       >
         <h4
-          className={`text-6xl font-extrabold mb-5 ${
+          className={`text-4xl font-extrabold mb-5 ${
             theme === "dark" ? "text-white" : "text-gray-800"
           }`}
         >

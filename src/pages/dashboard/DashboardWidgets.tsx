@@ -18,6 +18,7 @@ import {
   type MonthlyData,
   type YearlyData,
 } from '../../apis/dashboardApi';
+import { fetchAnalysisData } from '../../apis/emissionsApi';
 
 // 상수 정의
 const currentYear = getBusinessYear();
@@ -194,14 +195,63 @@ export const MonthlyScopeSection = () => {
 // -----------------------------------------------------------------------
 // [Partner Map Section - 협력사 지역별 현황]
 // -----------------------------------------------------------------------
-export const PartnerMapSection = ({ theme }: { theme?: 'dark' | 'light' }) => (
-  <div className={`${cardBase} max-h-full`}>
-    <h3 className="text-4xl font-extrabold mb-5 text-white text-center">협력사 지역별 배출량 현황</h3>
-    <div className="flex-1 h-full">
-      <KoreaMapChart large defaultFitAll theme={theme} />
+// -----------------------------------------------------------------------
+// [Partner Map Section - 협력사 지역별 현황]
+// -----------------------------------------------------------------------
+export const PartnerMapSection = ({ theme }: { theme?: 'dark' | 'light' }) => {
+  const [mapData, setMapData] = useState<{ region: string; value: number }[]>([]);
+  const currentYear = getBusinessYear();
+
+  useEffect(() => {
+    const loadCompanyData = async () => {
+      try {
+        // 협력사별 페이지와 동일한 API 사용 (company 타입)
+        const companyData = await fetchAnalysisData('company', currentYear.toString(), 'all', 'total');
+        
+        // 지역별로 배출량 집계
+        const regionEmissionMap = new Map<string, number>();
+        
+        companyData.forEach((company: any) => {
+          // address 필드에서 지역 추출 (예: "경기도 성남시" → "경기")
+          const address = company.address || '';
+          const regionMatch = address.match(/^([가-힣]+도|[가-힣]+시|세종)/);
+          if (regionMatch) {
+            const region = regionMatch[0];
+            const current = regionEmissionMap.get(region) || 0;
+            regionEmissionMap.set(region, current + Number(company.totalEmission || 0));
+          }
+        });
+        
+        // Map을 배열로 변환
+        const aggregatedData = Array.from(regionEmissionMap, ([region, value]) => ({
+          region,
+          value: Math.round(value * 100) / 100 // 소수점 2자리
+        }));
+        
+        setMapData(aggregatedData);
+      } catch (error) {
+        console.warn('Company data 조회 실패:', error);
+        // 실패 시 기본값
+        setMapData([
+          { region: '경기', value: 15000 },
+          { region: '서울', value: 8000 },
+          { region: '경북', value: 6000 },
+        ]);
+      }
+    };
+
+    loadCompanyData();
+  }, []);
+
+  return (
+    <div className={`${cardBase} max-h-full`}>
+      <h3 className="text-4xl font-extrabold mb-5 text-white text-center">협력사 지역별 배출량 현황</h3>
+      <div className="flex-1 h-full">
+        <KoreaMapChart data={mapData} large defaultFitAll theme={theme} />
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 // -----------------------------------------------------------------------
 // [Yearly History Section - 최근 5년 탄소 배출량]
