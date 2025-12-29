@@ -1,4 +1,5 @@
 import React from "react";
+import ReactDOM from "react-dom";
 import { CheckCircle, XCircle, X } from "lucide-react";
 
 interface ModalProps {
@@ -30,11 +31,11 @@ const Modal: React.FC<ModalProps> = ({
   const iconColor = isSuccess ? "text-green-500" : "text-red-500";
   const Icon = isSuccess ? CheckCircle : XCircle;
 
-  return (
+  const modalContent = (
     // 배경 오버레이
-    <div className="fixed inset-0 bg-opacity-50 z-50 flex items-center justify-center">
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center">
       {/* 모달 본체 */}
-      <div className="bg-white ml-[300px] rounded-lg shadow-xl p-6 w-11/12 max-w-sm transform transition-all duration-300 scale-100">
+      <div className="bg-white rounded-lg shadow-xl p-6 w-11/12 max-w-sm transform transition-all duration-300 scale-100">
         {/* 헤더 및 닫기 버튼 */}
         <div className="flex justify-between items-start border-b pb-3 mb-4">
           <h3 className="text-xl font-bold text-gray-800">{title}</h3>
@@ -74,6 +75,8 @@ const Modal: React.FC<ModalProps> = ({
       </div>
     </div>
   );
+  // 2. document.body로 렌더링 위치를 옮깁니다. (사이드바 영향 탈출!)
+  return ReactDOM.createPortal(modalContent, document.body);
 };
 
 export default Modal;
