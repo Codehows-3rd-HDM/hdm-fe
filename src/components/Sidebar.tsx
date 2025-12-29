@@ -62,22 +62,22 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggleSidebar }) => {
 
   return (
     // 너비를 isOpen 상태에 따라 동적으로 변경 (w-[260px] <-> w-[80px])
-    <div 
-      className={`
-        fixed left-0 top-0 h-screen bg-white border-r border-gray-200 flex flex-col font-sans z-50 transition-all duration-300 ease-in-out
-        ${isOpen ? 'w-[260px]' : 'w-[80px]'}
-      `}
-    >
+    <div
+  className={`
+    fixed left-0 top-0 h-screen border-r border-gray-200 flex flex-col font-sans z-50 transition-all duration-300 ease-in-out
+    ${isOpen ? 'w-[260px]' : 'w-[80px]'}
+  `}
+>
       
       {/* 헤더 영역: 로고 및 토글 버튼 */}
-      <div className={`flex items-center ${isOpen ? 'justify-between px-5' : 'justify-center'} pt-6 pb-4 border-b border-gray-100 mb-2 transition-all`}>
-        {/* 로고: 펼쳐졌을 때만 표시 */}
+      <div className={`flex items-center ${isOpen ? 'justify-between px-5' : 'justify-center px-3'} pt-6 pb-4 border-b border-gray-100 mb-2 transition-all`}>
         {isOpen && (
           <img 
             src="/rogo.png" 
             alt="HDM Logo" 
-            className="max-w-[140px] block h-auto cursor-pointer" 
+            className="max-w-[140px] background-color: transparent block h-auto cursor-pointer bg-transparent select-none" 
             onClick={() => navigate('/main')}
+            draggable={false}
           />
         )}
         

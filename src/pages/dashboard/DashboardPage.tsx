@@ -50,24 +50,33 @@ const DashboardPage: React.FC = () => {
   const [layouts, _setLayouts] = useState(initialLayouts);
 
   return (
-    <div className="p-5 bg-gradient-to-br from-gray-900 to-gray-800 min-h-screen box-border text-white">
+    <div className="p-5 bg-gradient-to-br bg-tr from-gray-900 to-gray-800 min-h-screen box-border text-white">
       {/* 메인 페이지 스타일의 큰 타이틀 */}
       <div className="relative flex items-center justify-center mb-8">
+        {/* 로고: 왼쪽 절대 배치, 투명 배경 유지 */}
+        <img
+          src="/rogo.png"
+          alt="HDM Logo"
+          className="absolute left-0 top-1/2 -translate-y-1/2 h-14 w-auto bg-transparent select-none object-contain"
+          draggable={false}
+        />
+        {/* 중앙 제목 */}
+        <h1 className="text-6xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-teal-400 text-center">
+          HDM Carbon Monitor
+        </h1>
+        {/* 우측 메인 버튼 */}
         <button
           onClick={() => navigate('/main')}
-          className="absolute left-0 flex items-center px-3 py-2 bg-white/10 backdrop-blur-sm text-white rounded-md shadow-sm hover:bg-white/20 font-bold text-sm border border-white/20"
+          className="absolute right-0 flex items-center px-3 py-2 bg-white/10 backdrop-blur-sm text-white rounded-md shadow-sm hover:bg-white/20 font-bold text-sm border border-white/20"
         >
           <ArrowLeft size={16} className="mr-1" /> 메인으로
         </button>
-        <h1 className="text-6xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-teal-400">
-          HDM Carbon Monitor
-        </h1>
       </div>
-      <div className="text-center mb-8">
+      {/* <div className="text-center mb-8">
         <p className="text-2xl text-gray-300">
           실시간 탄소 배출량 현황 및 분석 데이터 ({currentYear}년)
         </p>
-      </div>
+      </div> */}
 
       <ResponsiveGridLayout
         className="layout"

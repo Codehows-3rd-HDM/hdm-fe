@@ -130,7 +130,7 @@ const KoreaMapChart: React.FC<KoreaMapChartProps> = ({ data: propData, large = f
           ? 'border-r border-white/20 bg-white/5 text-white'
           : 'border-r border-gray-200 bg-gradient-to-b from-gray-50 to-white text-gray-800'
       }`}>
-        <h4 className={`text-6xl font-extrabold mb-5 ${
+        <h4 className={`text-4xl font-extrabold mb-5 ${
           theme === 'dark' ? 'text-white' : 'text-gray-800'
         }`}>
           지역별 배출량
@@ -138,12 +138,12 @@ const KoreaMapChart: React.FC<KoreaMapChartProps> = ({ data: propData, large = f
         <div className="space-y-4">
           {leftRegions.map(({ regionName, value }) => (
             <div key={regionName} className="flex justify-between items-center gap-3">
-              <span className={`font-extrabold text-5xl ${
+              <span className={`font-extrabold text-3xl ${
                 theme === 'dark' ? 'text-white' : 'text-gray-700'
               }`}>
                 {regionName}
               </span>
-              <span className={`font-extrabold text-5xl whitespace-nowrap ${
+              <span className={`font-extrabold text-3xl whitespace-nowrap ${
                 theme === 'dark' ? 'text-sky-400' : 'text-gray-900'
               }`}>
                 {value.toLocaleString()}

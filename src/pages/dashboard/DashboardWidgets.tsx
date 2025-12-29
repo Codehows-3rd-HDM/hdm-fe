@@ -105,19 +105,19 @@ export const SummarySection = () => {
               <BarChart data={summaryBarData} barCategoryGap={60} barSize={120} margin={{ top: 15, right: 30, left: 30, bottom: 15 }}>
                 <CartesianGrid strokeDasharray="5 5" stroke="#ffffff22" strokeWidth={2} />
                 <XAxis dataKey="name" tick={{ fill: '#fff', fontSize: 24, fontWeight: 800 }} axisLine={axisStyle} tickLine={axisStyle} />
-                <YAxis tick={{ fill: '#fff', fontSize: 20, fontWeight: 800 }} axisLine={axisStyle} tickLine={axisStyle} width={60} tickFormatter={formatNumber} />
+                <YAxis tick={{ fill: '#fff', fontSize: 24, fontWeight: 800 }} axisLine={axisStyle} tickLine={axisStyle} width={60} tickFormatter={formatNumber} />
                 <Tooltip
                   contentStyle={tooltipStyle}
                   labelStyle={{ color: '#fff', fontWeight: 800, fontSize: 18 }}
                   itemStyle={{ color: '#fff', fontWeight: 800, fontSize: 16 }}
                   formatter={(value: number, name: string) => [formatNumber(value), name]}
                 />
-                <Legend wrapperStyle={{ fontSize: 18, color: '#fff', fontWeight: 800, paddingTop: 12 }} formatter={(v) => <span style={{ color: '#fff', fontWeight: 800 }}>{v}</span>} />
+                <Legend wrapperStyle={{ fontSize: 24, color: '#fff', fontWeight: 800, paddingTop: 12 }} formatter={(v) => <span style={{ color: '#fff', fontWeight: 800 }}>{v}</span>} />
                 <Bar dataKey="scope1" name="Scope 1" stackId="a" fill="#60a5fa" radius={[2, 2, 0, 0]}>
-                  <LabelList dataKey="scope1" position="insideTop" fill="#0f172a" fontSize={16} fontWeight={800} />
+                  <LabelList dataKey="scope1" position="insideTop" fill="#0f172a" fontSize={24} fontWeight={800} />
                 </Bar>
                 <Bar dataKey="scope3" name="Scope 3" stackId="a" fill="#22d3ee" radius={[2, 2, 0, 0]}>
-                  <LabelList dataKey="scope3" position="insideTop" fill="#0f172a" fontSize={16} fontWeight={800} />
+                  <LabelList dataKey="scope3" position="insideTop" fill="#0f172a" fontSize={24} fontWeight={800} />
                 </Bar>
               </BarChart>
             </ResponsiveContainer>
@@ -154,17 +154,21 @@ export const MonthlyScopeSection = () => {
         <ResponsiveContainer width="100%" height="100%">
           <ComposedChart data={monthlyChartData} margin={{ top: 15, right: 15, left: 10, bottom: 10 }}>
             <CartesianGrid strokeDasharray="5 5" stroke="#ffffff22" strokeWidth={2} />
-            <XAxis dataKey="name" tick={{ fill: '#fff', fontSize: 22, fontWeight: 800 }} axisLine={axisStyle} tickLine={axisStyle} />
-            <YAxis tick={{ fill: '#fff', fontSize: 22, fontWeight: 800 }} axisLine={axisStyle} tickLine={axisStyle} width={70} tickFormatter={formatNumber} />
+            <XAxis dataKey="name" tick={{ fill: '#fff', fontSize: 24, fontWeight: 800 }} axisLine={axisStyle} tickLine={axisStyle} />
+            <YAxis tick={{ fill: '#fff', fontSize: 24, fontWeight: 800 }} axisLine={axisStyle} tickLine={axisStyle} width={70} tickFormatter={formatNumber} />
             <Tooltip
               contentStyle={tooltipStyle}
               labelStyle={{ color: '#fff', fontWeight: 800, fontSize: 20 }}
               itemStyle={{ color: '#fff', fontWeight: 800, fontSize: 19 }}
               formatter={(value: number, name: string) => [formatNumber(value), name]}
             />
-            <Legend wrapperStyle={{ fontSize: 22, color: '#fff', fontWeight: 800, paddingTop: 15 }} formatter={(v) => <span style={{ color: '#fff', fontWeight: 800 }}>{v}</span>} />
-            <Bar dataKey="scope1" name="Scope 1" stackId="a" fill="#60a5fa" barSize={52} radius={[2, 2, 0, 0]} />
-            <Bar dataKey="scope3" name="Scope 3" stackId="a" fill="#22d3ee" barSize={52} radius={[2, 2, 0, 0]} />
+            <Legend wrapperStyle={{ fontSize: 24, color: '#fff', fontWeight: 800, paddingTop: 15 }} formatter={(v) => <span style={{ color: '#fff', fontWeight: 800 }}>{v}</span>} />
+            <Bar dataKey="scope1" name="Scope 1" stackId="a" fill="#60a5fa" barSize={52} radius={[2, 2, 0, 0]}>
+              <LabelList dataKey="scope1" position="insideTop" fill="#0f172a" fontSize={24} fontWeight={800} />
+            </Bar>
+            <Bar dataKey="scope3" name="Scope 3" stackId="a" fill="#22d3ee" barSize={52} radius={[2, 2, 0, 0]}>
+              <LabelList dataKey="scope3" position="insideTop" fill="#0f172a" fontSize={24} fontWeight={800} />
+            </Bar>
             <Line type="monotone" dataKey="target" name="목표" stroke="#fbbf24" strokeWidth={6} dot={{ r: 8, fill: '#fbbf24' }} />
           </ComposedChart>
         </ResponsiveContainer>
@@ -212,12 +216,12 @@ export const YearlyHistorySection = () => {
               itemStyle={{ color: '#fff', fontWeight: 800, fontSize: 19 }}
               formatter={(value: number, name: string) => [formatNumber(value), name]}
             />
-            <Legend wrapperStyle={{ fontSize: 22, color: '#fff', fontWeight: 800, paddingTop: 12 }} formatter={(v) => <span style={{ color: '#fff', fontWeight: 800 }}>{v}</span>} />
+            <Legend wrapperStyle={{ fontSize: 24, color: '#fff', fontWeight: 800, paddingTop: 12 }} formatter={(v) => <span style={{ color: '#fff', fontWeight: 800 }}>{v}</span>} />
             <Bar dataKey="scope1" name="Scope 1" stackId="a" fill="#60a5fa" barSize={60} radius={[2, 2, 0, 0]}>
-              <LabelList dataKey="scope1" position="insideTop" fill="#0f172a" fontSize={18} fontWeight={800} />
+              <LabelList dataKey="scope1" position="insideTop" fill="#0f172a" fontSize={24} fontWeight={800} />
             </Bar>
             <Bar dataKey="scope3" name="Scope 3" stackId="a" fill="#22d3ee" barSize={60} radius={[2, 2, 0, 0]}>
-              <LabelList dataKey="scope3" position="insideTop" fill="#0f172a" fontSize={18} fontWeight={800} />
+              <LabelList dataKey="scope3" position="insideTop" fill="#0f172a" fontSize={24} fontWeight={800} />
             </Bar>
             <Line type="monotone" dataKey="target" name="목표" stroke="#fbbf24" strokeWidth={6} dot={{ r: 6, fill: '#fbbf24' }} />
           </BarChart>
@@ -271,9 +275,9 @@ export const PurposePieSection = () => {
               layout="vertical"
               verticalAlign="middle"
               align="right"
-              wrapperStyle={{ fontSize: 20, color: '#fff', fontWeight: 800, paddingRight: '20px' }}
+              wrapperStyle={{ fontSize: 24, color: '#fff', fontWeight: 800, paddingRight: '20px' }}
               formatter={(value, entry: any) => (
-                <span className="text-white ml-2 font-extrabold text-lg">
+                <span className="text-white ml-2 font-extrabold text-2xl">
                   {value} : <b>{entry.payload.value}%</b>
                 </span>
               )}
