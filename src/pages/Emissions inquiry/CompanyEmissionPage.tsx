@@ -1,4 +1,5 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
+import axios from "axios";
 import {
   BarChart,
   Bar,
@@ -16,27 +17,42 @@ import KoreaMapChart from "../../components/analysis/KoreaMapChart";
 // Note: Map data is now fetched from mapApi automatically
 
 // 2. 협력사 데이터 (전체 데이터)
-const MOCK_COMPANY_DATA = Array.from({ length: 30 }, (_, i) => ({
-  id: i + 1,
-  name: `협력사 ${String.fromCharCode(65 + (i % 26))}${i}`,
-  value: Math.floor(Math.random() * 5000) + 500,
-  address: i % 2 === 0 ? "경기도 성남시" : "울산광역시 북구",
-  ratio: 0,
-})).sort((a, b) => b.value - a.value);
+// const MOCK_COMPANY_DATA = Array.from({ length: 30 }, (_, i) => ({
+//   id: i + 1,
+//   name: `협력사 ${String.fromCharCode(65 + (i % 26))}${i}`,
+//   value: Math.floor(Math.random() * 5000) + 500,
+//   address: i % 2 === 0 ? "경기도 성남시" : "울산광역시 북구",
+//   ratio: 0,
+// })).sort((a, b) => b.value - a.value);
 
 // 3. 그래프용 Top5 데이터
-const TOP5_COMPANY_DATA = MOCK_COMPANY_DATA.slice(0, 5);
+//const TOP5_COMPANY_DATA = MOCK_COMPANY_DATA.slice(0, 5);
 
 // 총합 → 비율 계산
-const totalEmission = MOCK_COMPANY_DATA.reduce(
-  (acc, curr) => acc + curr.value,
-  0
-);
-MOCK_COMPANY_DATA.forEach(
-  (d) => (d.ratio = parseFloat(((d.value / totalEmission) * 100).toFixed(1)))
-);
+// const totalEmission = MOCK_COMPANY_DATA.reduce(
+//   (acc, curr) => acc + curr.value,
+//   0
+// );
+// MOCK_COMPANY_DATA.forEach(
+//   (d) => (d.ratio = parseFloat(((d.value / totalEmission) * 100).toFixed(1)))
+// );
+
+//==================================================================
+// 타입 정의 (DTO와 프론트 맞춤)
+interface CompanyData {
+  id: number;
+  name: string; // 백엔드: companyName
+  value: number; // 백엔드: totalEmission
+  address: string; // 백엔드: address
+  ratio: number; // 비율
+}
+
+const BASE_URL = import.meta.env.VITE_API_URL || "/api";
 
 const CompanyEmissionPage: React.FC = () => {
+  const [companyData, setCompanyData] = useState<CompanyData[]>([]); // API 원본 데이터
+  const [loading, setLoading] = useState(false);
+
   const [selectedMonth, setSelectedMonth] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [searchColumn, setSearchColumn] = useState<string>("all");
@@ -60,22 +76,99 @@ const CompanyEmissionPage: React.FC = () => {
     return options;
   }, [currentYear]);
 
-  // 필터링 및 정렬
+  // =================================================================
+  // [1] API 데이터 호출 (백엔드 연동)
+  // =================================================================
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        const params: any = {
+          year: parseInt(selectedYear),
+        };
+        // 백엔드 로직: 'all'이면 0, 아니면 해당 월 숫자 전송
+        if (selectedMonth !== "all") {
+          params.month = parseInt(selectedMonth);
+        } else {
+          params.month = 0;
+        }
+
+        console.log("API 요청 시작:", "/view/company", params);
+
+        // ★ API 호출 (본인 서버 주소/포트 확인 필요, 프록시 설정 되어있으면 /view/company 만 써도 됨)
+        const response = await axios.get(`${BASE_URL}/view/company`, {
+          params,
+        });
+
+        console.log("API 응답 성공:", response.data);
+
+        // 백엔드 DTO -> 프론트엔드 형식 매핑
+        const mappedData = response.data.map((item: any, index: number) => ({
+          id: item.id || index,
+          name: item.companyName, // 백엔드 변수명 매핑
+          value: item.totalEmission, // 백엔드 변수명 매핑
+          address: item.address,
+          ratio: item.ratio,
+        }));
+
+        setCompanyData(mappedData);
+      } catch (error) {
+        console.error("데이터 로드 실패:", error);
+        setCompanyData([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [selectedYear, selectedMonth]);
+
+  // =================================================================
+  // [2] 지역별 합계 계산 (지도용 데이터 가공)
+  // 주소(address)를 쪼개서 'region' 키값으로 만듦 -> KoreaMapChart로 전달
+  // =================================================================
+  const regionData = useMemo(() => {
+    const regionMap: { [key: string]: number } = {};
+
+    companyData.forEach((item) => {
+      if (!item.address) return;
+
+      // ★ 핵심: 주소의 첫 어절만 추출 (예: "경기도 성남시" -> "경기도")
+      const region = item.address.split(" ")[0];
+
+      if (regionMap[region]) {
+        regionMap[region] += item.value;
+      } else {
+        regionMap[region] = item.value;
+      }
+    });
+
+    // 지도 컴포넌트가 원하는 { region, value } 형태로 변환
+    return Object.keys(regionMap).map((key) => ({
+      region: key,
+      value: regionMap[key],
+    }));
+  }, [companyData]);
+
+  // =================================================================
+  // [3] 필터링 & 정렬 (테이블용)
+  // =================================================================
   const filteredData = useMemo(() => {
-    let processed = [...MOCK_COMPANY_DATA];
+    let processed = [...companyData];
 
     // 검색
     if (searchQuery) {
       processed = processed.filter((d) => {
+        const q = searchQuery.toLowerCase();
         if (searchColumn === "all") {
           return (
-            d.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            d.address.toLowerCase().includes(searchQuery.toLowerCase())
+            d.name.toLowerCase().includes(q) ||
+            d.address.toLowerCase().includes(q)
           );
         } else if (searchColumn === "name") {
-          return d.name.toLowerCase().includes(searchQuery.toLowerCase());
+          return d.name.toLowerCase().includes(q);
         } else if (searchColumn === "address") {
-          return d.address.toLowerCase().includes(searchQuery.toLowerCase());
+          return d.address.toLowerCase().includes(q);
         }
         return true;
       });
@@ -101,18 +194,21 @@ const CompanyEmissionPage: React.FC = () => {
     }
 
     return processed;
-  }, [searchQuery, searchColumn, sortConfig]);
+  }, [companyData, searchQuery, searchColumn, sortConfig]);
 
   // 가로 스크롤 차트 width 계산 (사용하지 않음)
   // const chartWidth = Math.max(filteredData.length * 60, 900);
 
-  // 정렬 핸들러
+  // Top 5 데이터 (전체 데이터 기준 상위 5개)
+  const top5Data = companyData.slice(0, 5);
+
   const handleSort = (key: string) => {
     setSortConfig((prev) => ({
       key,
       direction: prev?.key === key && prev.direction === "asc" ? "desc" : "asc",
     }));
   };
+
   const handleDownloadExcel = () => {
     if (filteredData.length === 0) return;
     const headers = [
@@ -214,7 +310,7 @@ const CompanyEmissionPage: React.FC = () => {
             지역별 탄소 배출량
           </h3>
           <div className="h-[600px]">
-            <KoreaMapChart />
+            <KoreaMapChart data={regionData} />
           </div>
         </div>
 
@@ -226,11 +322,15 @@ const CompanyEmissionPage: React.FC = () => {
           <div className="h-[500px]">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart
-                data={TOP5_COMPANY_DATA}
+                data={top5Data}
                 margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
                 layout="vertical"
               >
-                <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} />
+                <CartesianGrid
+                  strokeDasharray="3 3"
+                  horizontal={true}
+                  vertical={false}
+                />
                 <XAxis type="number" />
                 <YAxis
                   dataKey="name"
@@ -239,10 +339,12 @@ const CompanyEmissionPage: React.FC = () => {
                   width={80}
                 />
                 <Tooltip
-                  formatter={(val: string | number) => val?.toLocaleString()}
+                  formatter={(val: string | number | undefined) =>
+                    val?.toLocaleString()
+                  }
                 />
                 <Bar dataKey="value" radius={[0, 4, 4, 0]}>
-                  {TOP5_COMPANY_DATA.map((_, index) => (
+                  {top5Data.map((_, index) => (
                     <Cell
                       key={index}
                       // fill={index === 0 ? "#1E3A8A" : index === 1 ? "#ea580c" : index === 2 ? "#ca8a04" : ""}
@@ -351,7 +453,13 @@ const CompanyEmissionPage: React.FC = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
-              {filteredData.length > 0 ? (
+              {loading ? (
+                <tr>
+                  <td colSpan={5} className="px-6 py-10 text-center">
+                    데이터를 불러오는 중입니다...
+                  </td>
+                </tr>
+              ) : filteredData.length > 0 ? (
                 filteredData.map((row, idx) => (
                   <tr
                     key={row.id}
