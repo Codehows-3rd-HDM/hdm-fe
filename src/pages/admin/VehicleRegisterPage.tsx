@@ -42,6 +42,7 @@ const INITIAL_FORM_DATA: IntegratedFormData = {
   fuelType: '',
   carModel: '',
   remark: '',
+  calcBaseDate: '',
   supplyTypeId: null,
   supplyTypeName: '',
   customerId: null,
@@ -231,6 +232,7 @@ const VehicleBasicRegisterPage: React.FC = () => {
           purposeId: formData.purposeId,
           distance: formData.distance,
           employeeId: formData.employeeId,
+          calcBaseDate: formData.calcBaseDate,
           remark: formData.remark,
         };
         console.log('Vehicle payload:', payload);
@@ -362,6 +364,7 @@ const VehicleBasicRegisterPage: React.FC = () => {
             }} className={twInput} /><datalist id="company-list">{options.COMPANY_LIST?.map(c => <option key={c.id} value={c.name}/>)}</datalist></div>
             <SelectField name="purposeName" idName="purposeId" label="운행목적" options={options.PURPOSE_OPTIONS} isRequired value={formData.purposeName} />
             <div className="flex flex-col gap-1"><RequiredLabel isRequired>편도거리(km)</RequiredLabel><input type="number" name="distance" value={formData.distance} onChange={handleChange} className={twInput} /></div>
+            <div className="flex flex-col gap-1"><RequiredLabel>차량등록일</RequiredLabel><input type="date" name="calcBaseDate" value={formData.calcBaseDate} onChange={handleChange} className={twInput} /></div>
             <SelectField name="categoryLarge" idName="categoryLargeId" label="차종 대분류" options={options.CAT_LARGE_OPTIONS} isRequired value={formData.categoryLarge} />
             <SelectField name="categorySmall" idName="categorySmallId" label="차종 소분류" options={options.CAR_CATEGORY_MAP?.[formData.categoryLarge] ?? options.CAT_SMALL_OPTIONS} isRequired value={formData.categorySmall} />
             <SelectField name="fuelType" idName="fuelTypeId" label="연료종류" options={options.FUEL_OPTIONS} isRequired value={formData.fuelType} />

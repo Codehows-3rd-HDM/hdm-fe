@@ -2,6 +2,7 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
   Line, ComposedChart, PieChart, Pie, Cell, LabelList
 } from 'recharts';
+import type { LegendPayload } from 'recharts';
 import { useState, useEffect } from 'react';
 import { getBusinessYear } from '../../utils/dateUtils';
 import 'react-grid-layout/css/styles.css';
@@ -33,6 +34,12 @@ const formatNumber = (v: number) => {
   } catch {
     return String(v);
   }
+};
+
+const labelFormatter = (value: unknown) => {
+  if (typeof value === 'number') return formatNumber(value);
+  const parsed = Number(value);
+  return Number.isNaN(parsed) ? String(value ?? '') : formatNumber(parsed);
 };
 
 // -----------------------------------------------------------------------
@@ -123,10 +130,10 @@ export const ChartSummarySection = () => {
             />
             <Legend layout="vertical" verticalAlign="middle" align="right" wrapperStyle={{ fontSize: 24, color: '#fff', fontWeight: 800, paddingLeft: '40px' }} formatter={(v) => <span style={{ color: '#fff', fontWeight: 800 }}>{v}</span>} />
             <Bar dataKey="scope1" name="Scope 1" stackId="a" fill="#60a5fa" radius={[2, 2, 0, 0]}>
-              <LabelList dataKey="scope1" position="insideTop" fill="#0f172a" fontSize={24} fontWeight={800} formatter={(v: number) => formatNumber(v)} />
+              <LabelList dataKey="scope1" position="insideTop" fill="#0f172a" fontSize={24} fontWeight={800} formatter={labelFormatter} />
             </Bar>
             <Bar dataKey="scope3" name="Scope 3" stackId="a" fill="#22d3ee" radius={[2, 2, 0, 0]}>
-              <LabelList dataKey="scope3" position="insideTop" fill="#0f172a" fontSize={24} fontWeight={800} formatter={(v: number) => formatNumber(v)} />
+              <LabelList dataKey="scope3" position="insideTop" fill="#0f172a" fontSize={24} fontWeight={800} formatter={labelFormatter} />
             </Bar>
           </BarChart>
         </ResponsiveContainer>
@@ -171,10 +178,10 @@ export const MonthlyScopeSection = () => {
             />
             <Legend wrapperStyle={{ fontSize: 24, color: '#fff', fontWeight: 800, paddingTop: 15 }} formatter={(v) => <span style={{ color: '#fff', fontWeight: 800 }}>{v}</span>} />
             <Bar dataKey="scope1" name="Scope 1" stackId="a" fill="#60a5fa" barSize={72} radius={[2, 2, 0, 0]}>
-              <LabelList dataKey="scope1" position="insideTop" fill="#0f172a" fontSize={24} fontWeight={800} formatter={(v: number) => formatNumber(v)} />
+              <LabelList dataKey="scope1" position="insideTop" fill="#0f172a" fontSize={24} fontWeight={800} formatter={labelFormatter} />
             </Bar>
             <Bar dataKey="scope3" name="Scope 3" stackId="a" fill="#22d3ee" barSize={72} radius={[2, 2, 0, 0]}>
-              <LabelList dataKey="scope3" position="insideTop" fill="#0f172a" fontSize={24} fontWeight={800} formatter={(v: number) => formatNumber(v)} />
+              <LabelList dataKey="scope3" position="insideTop" fill="#0f172a" fontSize={24} fontWeight={800} formatter={labelFormatter} />
             </Bar>
             <Line type="monotone" dataKey="target" name="목표" stroke="#fbbf24" strokeWidth={6} dot={{ r: 8, fill: '#fbbf24' }} />
           </ComposedChart>
@@ -211,7 +218,7 @@ export const YearlyHistorySection = () => {
   return (
     <div className={cardBase}>
       <h4 className="text-4xl font-extrabold text-white text-center mb-5">연간 탄소 배출량 (최근 5년)</h4>
-      <div className="flex-1 min-h-[240px]">
+      <div className="flex-1 min-h-60">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={data} margin={{ top: 15, right: 15, left: 10, bottom: 0 }}>
             <CartesianGrid strokeDasharray="5 5" stroke="#ffffff22" strokeWidth={2} />
@@ -225,10 +232,10 @@ export const YearlyHistorySection = () => {
             />
             <Legend wrapperStyle={{ fontSize: 24, color: '#fff', fontWeight: 800, paddingTop: 12 }} formatter={(v) => <span style={{ color: '#fff', fontWeight: 800 }}>{v}</span>} />
             <Bar dataKey="scope1" name="Scope 1" stackId="a" fill="#60a5fa" barSize={120} radius={[2, 2, 0, 0]}>
-              <LabelList dataKey="scope1" position="insideTop" fill="#0f172a" fontSize={24} fontWeight={800} formatter={(v: number) => formatNumber(v)} />
+              <LabelList dataKey="scope1" position="insideTop" fill="#0f172a" fontSize={24} fontWeight={800} formatter={labelFormatter} />
             </Bar>
             <Bar dataKey="scope3" name="Scope 3" stackId="a" fill="#22d3ee" barSize={120} radius={[2, 2, 0, 0]}>
-              <LabelList dataKey="scope3" position="insideTop" fill="#0f172a" fontSize={24} fontWeight={800} formatter={(v: number) => formatNumber(v)} />
+              <LabelList dataKey="scope3" position="insideTop" fill="#0f172a" fontSize={24} fontWeight={800} formatter={labelFormatter} />
             </Bar>
             <Line type="monotone" dataKey="target" name="목표" stroke="#fbbf24" strokeWidth={6} dot={{ r: 6, fill: '#fbbf24' }} />
           </BarChart>
@@ -286,11 +293,14 @@ export const PurposePieSection = () => {
               verticalAlign="middle"
               align="right"
               wrapperStyle={{ fontSize: 24, color: '#fff', fontWeight: 800, paddingRight: '20px' }}
-              formatter={(value, entry: any) => (
-                <span className="text-white ml-2 font-extrabold text-2xl">
-                  {value} : <b>{entry.payload.value}%</b>
-                </span>
-              )}
+              formatter={(value, entry: LegendPayload) => {
+                const payloadValue = entry?.payload && 'value' in entry.payload ? entry.payload.value : undefined;
+                return (
+                  <span className="text-white ml-2 font-extrabold text-2xl">
+                    {value} : <b>{payloadValue ?? '-'}%</b>
+                  </span>
+                );
+              }}
             />
           </PieChart>
         </ResponsiveContainer>
@@ -327,7 +337,7 @@ export const ReductionListSection = () => {
       <ul className="space-y-0 text-white h-full flex flex-col justify-center">
         {activities.map((item) => (
           <li key={item.id} className="flex items-start gap-3 py-8 px-4 border-b border-white/10 hover:bg-white/5 transition-colors rounded">
-            <span className="mt-1 block w-4 h-4 rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 flex-shrink-0 shadow-lg" />
+            <span className="mt-1 block w-4 h-4 rounded-full bg-linear-to-br from-emerald-400 to-teal-500 shrink-0 shadow-lg" />
             <div className="flex-1">
               <div className="font-bold text-white leading-snug text-2xl">
                 {item.date && <span className="text-gray-400 mr-3">{formatDate(item.date)}</span>}

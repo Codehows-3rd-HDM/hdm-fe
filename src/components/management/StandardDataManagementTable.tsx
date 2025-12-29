@@ -4,6 +4,7 @@ import {
   ArrowUp, ArrowDown, ArrowUpDown, Search, Save, Trash2, X, CheckSquare, Edit2, Loader2 
 } from 'lucide-react'; 
 // import ExcelUploadModal from '../common/ExcelUploadModal';
+import Modal from '../Modal';
 //API 모듈 임포트
 import axiosInstance from '../../apis/axiosInstance';
 
@@ -35,6 +36,11 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
   // --- 상태 관리 ---
   const [data, setData] = useState<T[]>([]); // 초기값은 빈 배열
   const [loading, setLoading] = useState(false); // 로딩 상태 추가
+  
+  // 에러 모달 상태
+  const [isErrorModalOpen, setIsErrorModalOpen] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
+  const [errorTitle, setErrorTitle] = useState('오류');
   
   const [currentSort, setCurrentSort] = useState<{ key: keyof T; direction: 'asc' | 'desc' } | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -330,6 +336,16 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
           setData(rawData);
         } catch (error) {
           console.error(`[${title}] 검색 데이터 로딩 중 오류 발생:`, error);
+          let errorMsg = '데이터 로딩 중 오류가 발생했습니다.';
+          if (error instanceof Error) {
+            errorMsg = error.message;
+          } else if (typeof error === 'object' && error !== null && 'response' in error) {
+            const axiosError = error as any;
+            errorMsg = axiosError.response?.data?.message || errorMsg;
+          }
+          setErrorTitle('데이터 로딩 오류');
+          setErrorMessage(errorMsg);
+          setIsErrorModalOpen(true);
         } finally {
           setLoading(false);
         }
@@ -580,9 +596,22 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
             alert("이 데이터는 삭제할 수 없습니다.");
             return;
           }
-          await axiosInstance.delete(endpoint);
-          setData(prev => prev.filter(row => row.id !== rowId));
-          alert("삭제되었습니다.");
+          try {
+            await axiosInstance.delete(endpoint);
+            setData(prev => prev.filter(row => row.id !== rowId));
+            setErrorTitle('삭제 완료');
+            setErrorMessage('데이터가 삭제되었습니다.');
+            setIsErrorModalOpen(true);
+          } catch (error) {
+            let errorMsg = '삭제 중 오류가 발생했습니다.';
+            if (typeof error === 'object' && error !== null && 'response' in error) {
+              const axiosError = error as any;
+              errorMsg = axiosError.response?.data?.message || errorMsg;
+            }
+            setErrorTitle('삭제 오류');
+            setErrorMessage(errorMsg);
+            setIsErrorModalOpen(true);
+          }
       }
   };
   // [API] 개별 저장
@@ -657,9 +686,22 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
         return;
       }
       console.log(`[${title}] 개별 저장 요청 - ID: ${rowId}, 페이로드:`, payload);
-      await axiosInstance.put(endpoint, payload);
-      alert("저장되었습니다.");
-      toggleEditMode(rowId);
+      try {
+        await axiosInstance.put(endpoint, payload);
+        setErrorTitle('저장 완료');
+        setErrorMessage('데이터가 저장되었습니다.');
+        setIsErrorModalOpen(true);
+        toggleEditMode(rowId);
+      } catch (error) {
+        let errorMsg = '저장 중 오류가 발생했습니다.';
+        if (typeof error === 'object' && error !== null && 'response' in error) {
+          const axiosError = error as any;
+          errorMsg = axiosError.response?.data?.message || errorMsg;
+        }
+        setErrorTitle('저장 오류');
+        setErrorMessage(errorMsg);
+        setIsErrorModalOpen(true);
+      }
   };
 
   // [일괄 수정]
@@ -705,10 +747,19 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
           
           setData(prev => prev.filter(row => !selectedRows.includes(row.id)));
           setSelectedRows([]);
-          alert("일괄 삭제가 완료되었습니다.");
+          setErrorTitle('일괄 삭제 완료');
+          setErrorMessage('데이터가 일괄 삭제되었습니다.');
+          setIsErrorModalOpen(true);
         } catch (error) {
           console.error(`[${title}] 일괄 삭제 실패:`, error);
-          alert("일괄 삭제 중 오류가 발생했습니다.");
+          let errorMsg = '일괄 삭제 중 오류가 발생했습니다.';
+          if (typeof error === 'object' && error !== null && 'response' in error) {
+            const axiosError = error as any;
+            errorMsg = axiosError.response?.data?.message || errorMsg;
+          }
+          setErrorTitle('일괄 삭제 오류');
+          setErrorMessage(errorMsg);
+          setIsErrorModalOpen(true);
         }
     }
   };
@@ -804,7 +855,9 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
 
       await axiosInstance.patch(endpoint, payload);
       
-      alert("일괄 저장이 완료되었습니다.");
+      setErrorTitle('일괄 저장 완료');
+      setErrorMessage('데이터가 일괄 저장되었습니다.');
+      setIsErrorModalOpen(true);
       setIsBatchEditing(false);
       setSelectedRows([]);
       setOriginalData([]);
@@ -814,7 +867,14 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
       
     } catch (error) {
       console.error(`[${title}] 일괄 저장 실패:`, error);
-      alert("일괄 저장 중 오류가 발생했습니다.");
+      let errorMsg = '일괄 저장 중 오류가 발생했습니다.';
+      if (typeof error === 'object' && error !== null && 'response' in error) {
+        const axiosError = error as any;
+        errorMsg = axiosError.response?.data?.message || errorMsg;
+      }
+      setErrorTitle('일괄 저장 오류');
+      setErrorMessage(errorMsg);
+      setIsErrorModalOpen(true);
     }
   };
   
@@ -1298,6 +1358,15 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
         </div>
       </div>
     </div>
+    
+    {/* 에러/성공 모달 */}
+    <Modal
+      isOpen={isErrorModalOpen}
+      onClose={() => setIsErrorModalOpen(false)}
+      message={errorMessage}
+      title={errorTitle}
+      isSuccess={errorTitle.includes('완료')}
+    />
     </div>
   );
 };

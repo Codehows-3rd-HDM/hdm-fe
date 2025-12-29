@@ -73,7 +73,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggleSidebar }) => {
       <div className={`flex items-center ${isOpen ? 'justify-between px-5' : 'justify-center px-3'} pt-6 pb-4 border-b border-gray-100 mb-2 transition-all`}>
         {isOpen && (
           <img 
-            src="/rogo.png" 
+            src="/rogo1.png" 
             alt="HDM Logo" 
             className="max-w-[140px] block h-auto cursor-pointer bg-transparent select-none" 
             onClick={() => navigate('/main')}

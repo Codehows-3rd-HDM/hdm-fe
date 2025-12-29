@@ -33,6 +33,7 @@ export interface IntegratedFormData {
   fuelType: string;
   carModel: string;
   remark: string;
+  calcBaseDate: string;
   supplyTypeId: number | null;
   supplyTypeName: string;
   customerId: number | null;
@@ -169,6 +170,7 @@ export const registerVehicle = async (data: IntegratedFormData) => {
       driverMemberId: data.employeeId,
       operationDistance: data.distance,
       remark: data.remark,
+      calcBaseDate: data.calcBaseDate,
     };
     
     console.log('Register Vehicle Payload:', payload);

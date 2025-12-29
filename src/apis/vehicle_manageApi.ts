@@ -1,11 +1,19 @@
 import type { VehicleData, CompanyData, CarModelData, ProcessData, PurposeData, ProductData } from '../types/data';
 
+type ManagementData =
+  | VehicleData
+  | CompanyData
+  | CarModelData
+  | ProcessData
+  | PurposeData
+  | ProductData;
+
 // ----------------------------------------------------------------------
 // [API Functions] 컴포넌트에서 호출할 함수들
 // ----------------------------------------------------------------------
 // 1. 조회 (GET)
 // endpoint 파라미터에 따라 다른 데이터를 반환하도록 분기 처리 (Router 역할)
-export const fetchManagementData = async (endpoint: string): Promise<any[]> => {
+export const fetchManagementData = async (endpoint: string): Promise<ManagementData[]> => {
   return new Promise((resolve) => {
     setTimeout(() => {
       console.log(`[API] GET request to ${endpoint}`);
@@ -34,7 +42,11 @@ export const deleteManagementItem = async (endpoint: string, id: number): Promis
 };
 
 // 3. 수정 (PUT)
-export const updateManagementItem = async (endpoint: string, id: number, data: any): Promise<boolean> => {
+export const updateManagementItem = async (
+  endpoint: string,
+  id: number,
+  data: Partial<ManagementData>
+): Promise<boolean> => {
   return new Promise((resolve) => {
     setTimeout(() => {
       console.log(`[API] PUT request to ${endpoint}/${id}`, data);
@@ -69,7 +81,8 @@ const MOCK_VEHICLE_DATA: VehicleData[] = [
     carCategoryName: '중형',
     carModelName: '쏘나타',
     fuelType: '가솔린',
-    remark: '기본 등록 데이터' 
+    remark: '기본 등록 데이터',
+    calcBaseDate: '2024-01-01'
   },
   { 
     id: 2, 
@@ -83,7 +96,8 @@ const MOCK_VEHICLE_DATA: VehicleData[] = [
     carCategoryName: '대형',
     carModelName: '볼보트럭',
     fuelType: '디젤',
-    remark: '장거리 운행' 
+    remark: '장거리 운행',
+    calcBaseDate: '2023-06-15'
   },
   // ... 추가 더미 데이터 생성
   ...Array.from({ length: 20 }, (_, i) => ({
@@ -98,7 +112,8 @@ const MOCK_VEHICLE_DATA: VehicleData[] = [
     carCategoryName: '소형',
     carModelName: '아반떼',
     fuelType: '가솔린',
-    remark: '-'
+    remark: '-',
+    calcBaseDate: `2024-${String((i % 12) + 1).padStart(2, '0')}-${String((i % 28) + 1).padStart(2, '0')}`
   }))
 ];
 

@@ -38,6 +38,7 @@ export interface VehicleData {
   fuelType: string;       // 연료종류
   remark: string;           // 비고
   defaultScope?: string;         // Scope (운행목적 연동)
+  calcBaseDate?: string;       // 차량 등록일 (차를 탄 시작 날짜)
   isEditing?: boolean;
 }
 
@@ -100,6 +101,7 @@ export const VEHICLE_COLUMNS: ColumnDefinition<VehicleData>[] = [
   { id: 'operationPurposeName', header: '운행목적', searchable: true, sortable: true, editable: true, width: '8%', inputType: 'dynamic-select' },
   { id: 'defaultScope', header: 'Scope', searchable: false, sortable: true, editable: false, width: '8%' }, 
   { id: 'operationDistance', header: '편도거리(km)', searchable: false, sortable: true, editable: true, width: '8%', inputType: 'number' },
+  { id: 'calcBaseDate', header: '차량등록일', searchable: false, sortable: true, editable: false, width: '10%', inputType: 'text' },
   { id: 'parentCategoryName', header: '대분류', searchable: false, sortable: true, editable: true, width: '8%', inputType: 'dynamic-select' },
   { id: 'carCategoryName', header: '소분류', searchable: false, sortable: true, editable: true, width: '8%', inputType: 'dynamic-select' },
   { id: 'fuelType', header: '연료', searchable: false, sortable: true, editable: true, width: '8%', inputType: 'dynamic-select' },

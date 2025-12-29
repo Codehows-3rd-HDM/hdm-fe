@@ -9,7 +9,6 @@ import {
   PurposePieSection, 
   ReductionListSection 
 } from './DashboardWidgets';
-import { getBusinessYear } from '../../utils/dateUtils';
 import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
 import { ArrowLeft } from 'lucide-react';
@@ -18,7 +17,6 @@ import { useNavigate } from 'react-router-dom';
 const ResponsiveGridLayout = WidthProvider(Responsive);
 
 const DashboardPage: React.FC = () => {
-  const currentYear = getBusinessYear();
   const navigate = useNavigate();
 
   const initialLayouts = {
@@ -49,10 +47,10 @@ const DashboardPage: React.FC = () => {
     ],
   };
 
-  const [layouts, _setLayouts] = useState(initialLayouts);
+  const [layouts] = useState(initialLayouts);
 
   return (
-    <div className="p-5 bg-gradient-to-br bg-tr from-gray-900 to-gray-800 min-h-screen box-border text-white">
+    <div className="p-5 bg-linear-to-br bg-tr from-gray-900 to-gray-800 min-h-screen box-border text-white">
       {/* 메인 페이지 스타일의 큰 타이틀 */}
       <div className="relative flex items-center justify-center mb-8">
         {/* 로고: 왼쪽 절대 배치, 투명 배경 유지 */}
@@ -63,7 +61,7 @@ const DashboardPage: React.FC = () => {
           draggable={false}
         />
         {/* 중앙 제목 */}
-        <h1 className="text-6xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-teal-400 text-center">
+        <h1 className="text-6xl font-extrabold text-transparent bg-clip-text bg-linear-to-r from-blue-400 to-teal-400 text-center">
           HDM Carbon Monitor
         </h1>
         {/* 우측 메인 버튼 */}
@@ -74,11 +72,6 @@ const DashboardPage: React.FC = () => {
           <ArrowLeft size={16} className="mr-1" /> 메인으로
         </button>
       </div>
-      {/* <div className="text-center mb-8">
-        <p className="text-2xl text-gray-300">
-          실시간 탄소 배출량 현황 및 분석 데이터 ({currentYear}년)
-        </p>
-      </div> */}
 
       <ResponsiveGridLayout
         className="layout"
