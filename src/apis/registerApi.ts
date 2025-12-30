@@ -216,6 +216,17 @@ export const registerCarModel = async (data: IntegratedFormData) => {
     return response.data;
   } catch (error) {
     console.error('API Error:', error);
+    
+    // 백엔드에서 반환한 에러 메시지 추출
+    const axiosError = error as any;
+    if (axiosError.response?.data?.message) {
+      throw new Error(axiosError.response.data.message);
+    }
+    if (axiosError.response?.data) {
+      const data = axiosError.response.data;
+      throw new Error(typeof data === 'string' ? data : axiosError.message);
+    }
+    
     throw error;
   }
 };
