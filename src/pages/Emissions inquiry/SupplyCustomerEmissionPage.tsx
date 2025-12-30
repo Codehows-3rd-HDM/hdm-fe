@@ -17,7 +17,7 @@ const SupplyCustomerEmissionPage: React.FC = () => {
       title="공급 고객별 탄소 배출량"
       hasScopeTabs={false}
       columns={COLUMNS}
-      dataType='product'
+      dataType='supplycustomer'
     />
   );
 };
