@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import axios from "axios";
 import {
   BarChart,
@@ -15,7 +15,9 @@ import {
   Calendar as CalendarIcon,
   TrendingDown,
   TrendingUp,
+  Search,
 } from "lucide-react";
+import LoadingSpinner from "../../components/LoadingSpinner";
 
 const BASE_URL = import.meta.env.VITE_API_URL || "/api";
 
@@ -57,61 +59,60 @@ const PeriodEmissionPage: React.FC = () => {
     prevTotal: 0,
     distance: 0,
   });
+  const [loading, setLoading] = useState(false);
+  const [hasSearched, setHasSearched] = useState(false);
 
   // const distance = Math.floor(Math.random() * 500000) + 1000000;
 
-  // 3. API 호출 (useEffect)
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        // DTO 변수명(startDate, endDate)과 파라미터 키값을 정확히 일치시킴
-        const response = await axios.get(`${BASE_URL}/view/period`, {
-          params: {
-            startDate: startDate,
-            endDate: endDate,
-          },
-        });
+  // 3. API 호출 (수동 버튼 클릭)
+  const fetchData = async () => {
+    setLoading(true);
+    setHasSearched(true);
+    try {
+      // DTO 변수명(startDate, endDate)과 파라미터 키값을 정확히 일치시킴
+      const response = await axios.get(`${BASE_URL}/view/period`, {
+        params: {
+          startDate: startDate,
+          endDate: endDate,
+        },
+      });
 
-        const { current, lastYear } = response.data;
+      const { current, lastYear } = response.data;
 
-        // ✅ 백엔드 데이터를 차트용 포맷으로 변환
-        // (Recharts는 배열 형태의 데이터를 좋아함)
-        const mappedChartData = [
-          {
-            name: "선택기간",
-            scope1: parseFloat(formatEmission(current.scope1 || 0)),
-            scope3: parseFloat(formatEmission(current.scope3 || 0)),
-            total: parseFloat(formatEmission(current.totalEmission || 0)),
-          },
-          {
-            name: "전년도 동기간",
-            scope1: parseFloat(formatEmission(lastYear.scope1 || 0)),
-            scope3: parseFloat(formatEmission(lastYear.scope3 || 0)),
-            total: parseFloat(formatEmission(lastYear.totalEmission || 0)),
-          },
-        ];
+      // ✅ 백엔드 데이터를 차트용 포맷으로 변환
+      // (Recharts는 배열 형태의 데이터를 좋아함)
+      const mappedChartData = [
+        {
+          name: "선택기간",
+          scope1: parseFloat(formatEmission(current.scope1 || 0)),
+          scope3: parseFloat(formatEmission(current.scope3 || 0)),
+          total: parseFloat(formatEmission(current.totalEmission || 0)),
+        },
+        {
+          name: "전년도 동기간",
+          scope1: parseFloat(formatEmission(lastYear.scope1 || 0)),
+          scope3: parseFloat(formatEmission(lastYear.scope3 || 0)),
+          total: parseFloat(formatEmission(lastYear.totalEmission || 0)),
+        },
+      ];
 
-        setChartData(mappedChartData);
+      setChartData(mappedChartData);
 
-        // 하단 카드용 요약 데이터 저장 (소수점 2자리 반올림)
-        setSummary({
-          currentTotal: parseFloat(formatEmission(current.totalEmission || 0)),
-          prevTotal: parseFloat(formatEmission(lastYear.totalEmission || 0)),
-          distance: parseFloat(formatEmission(current.totalDistance || 0)),
-        });
-      } catch (error) {
-        console.error("탄소배출량 데이터 조회 실패:", error);
-        // 에러 시 0으로 초기화하거나 알림 처리
-        setChartData([]);
-        setSummary({ currentTotal: 0, prevTotal: 0, distance: 0 });
-      }
-    };
-
-    // 날짜가 모두 있을 때만 호출
-    if (startDate && endDate) {
-      fetchData();
+      // 하단 카드용 요약 데이터 저장 (소수점 2자리 반올림)
+      setSummary({
+        currentTotal: parseFloat(formatEmission(current.totalEmission || 0)),
+        prevTotal: parseFloat(formatEmission(lastYear.totalEmission || 0)),
+        distance: parseFloat(formatEmission(current.totalDistance || 0)),
+      });
+    } catch (error) {
+      console.error("탄소배출량 데이터 조회 실패:", error);
+      // 에러 시 0으로 초기화하거나 알림 처리
+      setChartData([]);
+      setSummary({ currentTotal: 0, prevTotal: 0, distance: 0 });
+    } finally {
+      setLoading(false);
     }
-  }, [startDate, endDate]); // 날짜 변경 시 자동 재호출
+  };
 
   // 4. 증감률 계산 (summary 상태값 기준)
   const diff = summary.currentTotal - summary.prevTotal;
@@ -164,6 +165,16 @@ const PeriodEmissionPage: React.FC = () => {
               className="w-40 px-3 py-2 text-sm font-bold border rounded-md cursor-pointer bg-gray-50"
             />
           </div>
+
+          {/* 조회 버튼 */}
+          <button
+            onClick={fetchData}
+            disabled={loading}
+            className="flex items-center gap-2 px-6 py-2 bg-blue-600 text-white font-bold rounded-md hover:bg-blue-700 disabled:bg-gray-400 cursor-pointer transition"
+          >
+            <Search size={18} />
+            조회
+          </button>
         </div>
       </div>
 
@@ -171,76 +182,96 @@ const PeriodEmissionPage: React.FC = () => {
       <div className="flex items-stretch gap-6">
         {/* 차트 */}
         <div className="bg-white rounded-xl shadow-md p-6 flex-1 min-h-[800px] flex flex-col">
-          <h3 className="mb-6 text-3xl font-semibold text-center text-gray-600">
-            기간별 탄소배출량
-          </h3>
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart
-              data={chartData}
-              margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
-              barSize={122}
-            >
-              <CartesianGrid strokeDasharray="3 3" vertical={false} />
-              <XAxis
-                dataKey="name"
-                tick={{ fontSize: 21, fontWeight: "bold" }}
-              />
-              <YAxis tick={{ fontSize: 18 }} />
-              <Tooltip
-                formatter={(val: any) => [formatEmissionWithComma(val), ""]}
-                cursor={{ fill: "transparent" }}
-              />
-              <Legend wrapperStyle={{ fontSize: '19px' }} />
-              <Bar
-                dataKey="scope1"
-                name="Scope 1"
-                stackId="a"
-                fill={COLORS.scope1}
-              >
-                <LabelList
-                  dataKey="scope1"
-                  position="center"
-                  fill="white"
-                  fontSize={19}
-                  fontWeight="bold"
-                  formatter={(val: any) =>
-                    typeof val === "number" && val > 0
-                      ? formatEmissionWithComma(val)
-                      : ""
-                  }
-                />
-              </Bar>
-              <Bar
-                dataKey="scope3"
-                name="Scope 3"
-                stackId="a"
-                fill={COLORS.scope3}
-              >
-                <LabelList
-                  dataKey="scope3"
-                  position="center"
-                  fill="white"
-                  fontSize={19}
-                  fontWeight="bold"
-                  formatter={(val: any) =>
-                    typeof val === "number" && val > 0
-                      ? formatEmissionWithComma(val)
-                      : ""
-                  }
-                />
-                <LabelList
-                  dataKey="total"
-                  position="top"
-                  fill="#333"
-                  fontSize={20}
-                  fontWeight="bold"
-                  formatter={(val: any) =>
-                    typeof val === "number" ? formatEmissionWithComma(val) : ""
-                  }
-                />
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
+          {loading ? (
+            <div className="flex-1 flex items-center justify-center">
+              <LoadingSpinner />
+            </div>
+          ) : hasSearched && chartData.length === 0 ? (
+            <div className="flex-1 flex items-center justify-center">
+              <div className="text-center">
+                <p className="text-xl font-semibold text-gray-600">조회된 데이터가 없습니다</p>
+              </div>
+            </div>
+          ) : hasSearched && chartData[0]?.total === 0 ? (
+            <div className="flex-1 flex items-center justify-center">
+              <div className="text-center">
+                <p className="text-xl font-semibold text-gray-600">선택기간의 조회된 데이터가 없습니다</p>
+              </div>
+            </div>
+          ) : (
+            <>
+              <h3 className="mb-6 text-3xl font-semibold text-center text-gray-600">
+                기간별 탄소배출량
+              </h3>
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart
+                  data={chartData}
+                  margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+                  barSize={122}
+                >
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                  <XAxis
+                    dataKey="name"
+                    tick={{ fontSize: 21, fontWeight: "bold" }}
+                  />
+                  <YAxis tick={{ fontSize: 18 }} />
+                  <Tooltip
+                    formatter={(val: any) => [formatEmissionWithComma(val), ""]}
+                    cursor={{ fill: "transparent" }}
+                  />
+                  <Legend wrapperStyle={{ fontSize: '19px' }} />
+                  <Bar
+                    dataKey="scope1"
+                    name="Scope 1"
+                    stackId="a"
+                    fill={COLORS.scope1}
+                  >
+                    <LabelList
+                      dataKey="scope1"
+                      position="center"
+                      fill="white"
+                      fontSize={19}
+                      fontWeight="bold"
+                      formatter={(val: any) =>
+                        typeof val === "number" && val > 0
+                          ? formatEmissionWithComma(val)
+                          : ""
+                      }
+                    />
+                  </Bar>
+                  <Bar
+                    dataKey="scope3"
+                    name="Scope 3"
+                    stackId="a"
+                    fill={COLORS.scope3}
+                  >
+                    <LabelList
+                      dataKey="scope3"
+                      position="center"
+                      fill="white"
+                      fontSize={19}
+                      fontWeight="bold"
+                      formatter={(val: any) =>
+                        typeof val === "number" && val > 0
+                          ? formatEmissionWithComma(val)
+                          : ""
+                      }
+                    />
+                    <LabelList
+                      dataKey="total"
+                      position="top"
+                      fill="#333"
+                      fontSize={20}
+                      fontWeight="bold"
+                      formatter={(val: any) =>
+                        typeof val === "number" ? formatEmissionWithComma(val) : ""
+                      }
+                    />
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </>
+          )}
         </div>
 
         {/* 정보 카드 */}
