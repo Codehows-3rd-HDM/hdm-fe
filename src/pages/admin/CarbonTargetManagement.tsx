@@ -13,23 +13,76 @@ import carbonTargetApi, { type EmissionCategory, type FullTargetState, type Mont
 type RegistrationType = 'ratio' | 'manual';
 type DistributionType = 'actual' | 'equal';
 
+const START_YEAR = 1979;
+const FUTURE_YEARS = 10;
+
+type YearSelectProps = {
+  value: number;
+  onChange: (year: number) => void;
+  options: number[];
+  displayText?: (year: number) => string;
+  buttonClassName?: string;
+};
+
+const YearSelect = ({ value, onChange, options, displayText, buttonClassName }: YearSelectProps) => {
+  const [open, setOpen] = useState(false);
+  const renderText = displayText ?? ((y: number) => `${y}년`);
+
+  return (
+    <div className="relative w-full">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        onBlur={() => setOpen(false)}
+        className={buttonClassName ?? 'w-full bg-white border-2 border-slate-200 rounded-2xl px-6 py-4 font-black text-xl text-slate-700 outline-none focus:border-sky-500 focus:ring-4 focus:ring-sky-100 transition-all flex items-center justify-between'}
+      >
+        <span>{renderText(value)}</span>
+        <span className="text-slate-400 text-sm">▼</span>
+      </button>
+      {open && (
+        <div className="absolute z-30 mt-2 w-full max-h-135 overflow-y-auto rounded-2xl border border-slate-200 bg-white shadow-2xl shadow-slate-200/70">
+          {options.map((y) => (
+            <button
+              key={y}
+              type="button"
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={() => { onChange(y); setOpen(false); }}
+              className={`w-full text-left px-5 py-3 text-slate-700 hover:bg-sky-50 hover:text-sky-700 transition-colors ${y === value ? 'bg-sky-50 text-sky-700 font-bold' : ''}`}
+            >
+              {renderText(y)}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
 // =============================================================================
 // [4] Main App Component
 // =============================================================================
 
 export default function App() {
+  const currentYear = useMemo(() => new Date().getFullYear(), []);
+  const yearOptions = useMemo(() => {
+    const endYear = currentYear + FUTURE_YEARS;
+    const total = endYear - START_YEAR + 1;
+    // 내림차순으로 정렬해 현재 연도 주변을 바로 스크롤할 수 있도록 구성
+    return Array.from({ length: total }, (_, idx) => endYear - idx);
+  }, [currentYear]);
+
   const [view, setView] = useState<'list' | 'register'>('list');
   const [activeTab, setActiveTab] = useState<EmissionCategory>('Total');
   const [isLoading, setIsLoading] = useState(false);
   
   // -- 조회 페이지 상태 --
-  const [listYear, setListYear] = useState<number>(new Date().getFullYear());
+  const [listYear, setListYear] = useState<number>(currentYear);
   const [targetState, setTargetState] = useState<FullTargetState | null>(null);
   const [isEditMode, setIsEditMode] = useState(false);
 
   // -- 신규 등록 페이지 상태 --
-  const [regYear, setRegYear] = useState<number>(new Date().getFullYear() + 1);
-  const [baseYear, setBaseYear] = useState<number>(new Date().getFullYear() - 1);
+  const [regYear, setRegYear] = useState<number>(currentYear);
+  const [baseYear, setBaseYear] = useState<number>(currentYear - 1);
   const [availableBaseYears, setAvailableBaseYears] = useState<number[]>([]);
   const [baseActuals, setBaseActuals] = useState<MonthlyData[]>([]);
   const [regType, setRegType] = useState<RegistrationType>('ratio');
@@ -394,15 +447,13 @@ export default function App() {
                     <div className="space-y-6 w-full md:w-auto text-center md:text-left">
                       <div className="space-y-1">
                         <p className="text-slate-500 font-black text-xs uppercase tracking-widest">Target Year Selection</p>
-                        <select 
+                        <YearSelect
                           value={listYear}
-                          onChange={(e) => setListYear(Number(e.target.value))}
-                          className="bg-transparent border-none text-3xl font-black text-sky-400 outline-none cursor-pointer hover:text-sky-300 transition-colors scrollbar-hide"
-                        >
-                          {Array.from({length: 21}, (_, i) => 2015 + i).map(y => (
-                            <option key={y} value={y} className="text-slate-900">{y}년도 목표</option>
-                          ))}
-                        </select>
+                          onChange={setListYear}
+                          options={yearOptions}
+                          displayText={(y) => `${y}년`}
+                          buttonClassName="bg-transparent border-none text-3xl font-black text-sky-400 outline-none cursor-pointer hover:text-sky-300 transition-colors"
+                        />
                       </div>
                       
                       <div className="space-y-1">
@@ -534,15 +585,12 @@ export default function App() {
                       <div className="space-y-4">
                         <div className="space-y-2">
                           <label className="text-xs font-black text-slate-400 uppercase tracking-widest">등록 대상 연도</label>
-                          <select 
+                          <YearSelect
                             value={regYear}
-                            onChange={(e) => setRegYear(Number(e.target.value))}
-                            className="w-full bg-white border-2 border-slate-200 rounded-2xl px-6 py-4 font-black text-xl outline-none focus:border-sky-500 transition-all"
-                          >
-                            {Array.from({length: 10}, (_, i) => new Date().getFullYear() + i).map(y => (
-                              <option key={y} value={y}>{y}년 신규 목표</option>
-                            ))}
-                          </select>
+                            onChange={setRegYear}
+                            options={yearOptions}
+                            displayText={(y) => `${y}년 신규 목표`}
+                          />
                         </div>
 
                         <div className="flex flex-col gap-3">
@@ -568,13 +616,12 @@ export default function App() {
                       <div className="space-y-8 pt-8 border-t border-slate-200 animate-in fade-in slide-in-from-top-4 duration-500">
                         <div className="space-y-2">
                           <label className="text-xs font-black text-slate-400 uppercase tracking-widest">비교 기준 연도 실적 (DB 조회)</label>
-                          <select 
+                          <YearSelect
                             value={baseYear}
-                            onChange={(e) => setBaseYear(Number(e.target.value))}
-                            className="w-full bg-white border-2 border-slate-200 rounded-2xl px-6 py-4 font-black text-xl outline-none focus:border-sky-500 transition-all"
-                          >
-                            {availableBaseYears.map(y => <option key={y} value={y}>{y}년 실적 데이터</option>)}
-                          </select>
+                            onChange={setBaseYear}
+                            options={availableBaseYears.length ? availableBaseYears : yearOptions}
+                            displayText={(y) => `${y}년 실적 데이터`}
+                          />
                         </div>
 
                         <div className="space-y-3">
