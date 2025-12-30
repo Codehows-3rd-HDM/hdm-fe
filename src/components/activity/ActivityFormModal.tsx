@@ -7,7 +7,7 @@ interface ActivityFormModalProps {
   onClose: () => void;
   mode: "create" | "edit" | "view";
   initialData?: ReductionActivity | null;
-  onSave: (data: ReductionActivity, file: File[] | null) => void;
+  onSave: (data: ReductionActivity, file: File[] | null) => Promise<void> | void;
 }
 
 const ActivityFormModal: React.FC<ActivityFormModalProps> = ({
@@ -30,6 +30,7 @@ const ActivityFormModal: React.FC<ActivityFormModalProps> = ({
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   // const [preview, setPreview] = useState<string[]>([]);
   const [imageFiles, setImageFiles] = useState<File[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
@@ -49,6 +50,7 @@ const ActivityFormModal: React.FC<ActivityFormModalProps> = ({
         });
         // setPreview(null);
       }
+      setImageFiles([]);
     }
   }, [isOpen, mode, initialData]);
 
@@ -113,10 +115,19 @@ const ActivityFormModal: React.FC<ActivityFormModalProps> = ({
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!validate()) return;
-    onSave(formData, imageFiles);
-    onClose();
+
+    try {
+      setIsSubmitting(true);
+      await onSave(formData, imageFiles.length > 0 ? imageFiles : null);
+      onClose();
+    } catch (error) {
+      console.error("Activity save error", error);
+      alert("저장 중 오류가 발생했습니다. 다시 시도해주세요.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -332,9 +343,14 @@ const ActivityFormModal: React.FC<ActivityFormModalProps> = ({
           {!isReadOnly && (
             <button
               onClick={handleSubmit}
-              className="cursor-pointer flex-1 py-3 bg-green-600 text-white rounded font-bold text-lg hover:bg-green-700"
+              disabled={isSubmitting}
+              className="cursor-pointer flex-1 py-3 bg-green-600 text-white rounded font-bold text-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {mode === "create" ? "등록하기" : "수정완료"}
+              {isSubmitting
+                ? "저장 중..."
+                : mode === "create"
+                ? "등록하기"
+                : "수정완료"}
             </button>
           )}
           <button
