@@ -14,6 +14,11 @@ export default defineConfig({
         rewrite: (path) => path.replace(/^\/api/, ""),
         changeOrigin: true,
       },
+      // 정적 사진(/photos/**)도 백엔드로 프록시
+      "/photos": {
+        target: "http://localhost:8080",
+        changeOrigin: true,
+      },
     },
   },
 });
