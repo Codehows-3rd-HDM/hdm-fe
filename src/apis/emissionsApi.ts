@@ -39,48 +39,6 @@ interface FuelTypeInquiryResponse {
   monthlyTrend: number[];
 }
 
-// 백엔드 응답을 AnalysisData로 변환하는 함수들
-const transformOperationPurposeData = (data: OperationPurposeInquiryResponse[], index: number): AnalysisData => ({
-  id: index,
-  name: data[index]?.purposeName || '',
-  totalEmission: parseFloat(String(data[index]?.totalEmission || 0)),
-  ratio: parseFloat(String(data[index]?.ratio || 0)),
-  distance: parseFloat(String(data[index]?.totalDistance || 0)),
-  count: data[index]?.tripCount || 0,
-  avgEmission: parseFloat(String(data[index]?.avgEmission || 0)),
-  monthlyTrend: data[index]?.monthlyTrend || Array(12).fill(0),
-});
-
-const transformSupplyTypeData = (data: SupplyTypeInquiryResponse[], index: number): AnalysisData => ({
-  id: index,
-  name: data[index]?.supplyTypeName || '',
-  totalEmission: parseFloat(String(data[index]?.totalEmission || 0)),
-  ratio: parseFloat(String(data[index]?.ratio || 0)),
-  distance: parseFloat(String(data[index]?.totalDistance || 0)),
-  count: data[index]?.tripCount || 0,
-  avgEmission: parseFloat(String(data[index]?.avgEmission || 0)),
-  monthlyTrend: data[index]?.monthlyTrend || Array(12).fill(0),
-});
-
-const transformSupplyCustomerData = (data: SupplyCustomerInquiryResponse[], index: number): AnalysisData => ({
-  id: index,
-  name: data[index]?.customerName || '',
-  totalEmission: parseFloat(String(data[index]?.totalEmission || 0)),
-  ratio: parseFloat(String(data[index]?.ratio || 0)),
-  distance: parseFloat(String(data[index]?.totalDistance || 0)),
-  count: data[index]?.tripCount || 0,
-  avgEmission: parseFloat(String(data[index]?.avgEmission || 0)),
-  monthlyTrend: data[index]?.monthlyTrend || Array(12).fill(0),
-});
-
-const transformFuelTypeData = (data: FuelTypeInquiryResponse[], index: number): AnalysisData => ({
-  id: index,
-  name: data[index]?.fuelType || '',
-  totalEmission: parseFloat(String(data[index]?.totalEmission || 0)),
-  ratio: parseFloat(String(data[index]?.ratio || 0)),
-  monthlyTrend: data[index]?.monthlyTrend || Array(12).fill(0),
-});
-
 // Mock 더미 데이터 (API 실패 시 사용)
 const getPurposeData = (): AnalysisData[] => [
   { id: 1, name: '출퇴근', totalEmission: 20000, ratio: 50, distance: 15000, count: 125, avgEmission: 160, monthlyTrend: [1500, 1600, 1550, 1700, 1800, 1750, 1600, 1500, 1650, 1700, 1800, 1850] },
@@ -134,13 +92,10 @@ export const fetchAnalysisData = async (
       defaultScope: scope === 'scope1' ? 1 : scope === 'scope3' ? 3 : scope === '기타' ? 4 : undefined,
     };
 
-    let apiResponse: any;
-
     switch (type) {
       case 'operationpurpose': {
         const response = await axiosInstance.get('/view/operation-purpose', { params });
-        apiResponse = response.data;
-        return apiResponse.map((item: OperationPurposeInquiryResponse, idx: number) => ({
+        return response.data.map((item: OperationPurposeInquiryResponse, idx: number) => ({
           id: idx,
           name: item.purposeName,
           totalEmission: parseFloat(String(item.totalEmission)),
@@ -154,8 +109,7 @@ export const fetchAnalysisData = async (
 
       case 'supplytype': {
         const response = await axiosInstance.get('/view/supply-type', { params });
-        apiResponse = response.data;
-        return apiResponse.map((item: SupplyTypeInquiryResponse, idx: number) => ({
+        return response.data.map((item: SupplyTypeInquiryResponse, idx: number) => ({
           id: idx,
           name: item.supplyTypeName,
           totalEmission: parseFloat(String(item.totalEmission)),
@@ -169,8 +123,7 @@ export const fetchAnalysisData = async (
 
       case 'supplycustomer': {
         const response = await axiosInstance.get('/view/supply-customer', { params });
-        apiResponse = response.data;
-        return apiResponse.map((item: SupplyCustomerInquiryResponse, idx: number) => ({
+        return response.data.map((item: SupplyCustomerInquiryResponse, idx: number) => ({
           id: idx,
           name: item.customerName,
           totalEmission: parseFloat(String(item.totalEmission)),
@@ -184,8 +137,7 @@ export const fetchAnalysisData = async (
 
       case 'fuel': {
         const response = await axiosInstance.get('/view/fuel', { params });
-        apiResponse = response.data;
-        return apiResponse.map((item: FuelTypeInquiryResponse, idx: number) => ({
+        return response.data.map((item: FuelTypeInquiryResponse, idx: number) => ({
           id: idx,
           name: item.fuelType,
           totalEmission: parseFloat(String(item.totalEmission)),

@@ -40,6 +40,7 @@ export interface VehicleData {
   defaultScope?: string;         // Scope (운행목적 연동)
   calcBaseDate?: string;       // 차량 등록일 (차를 탄 시작 날짜)
   isEditing?: boolean;
+  [key: string]: unknown;
 }
 
 // 2. 협력사명 및 주소지 정보 데이터 타입
@@ -53,6 +54,7 @@ export interface CompanyData {
   detailAddress: string; // 상세주소
   remark: string;       // 비고
   isEditing?: boolean;
+  [key: string]: unknown;
 }
 
 // 3. 차종 및 연비 정보 데이터 타입
@@ -63,6 +65,7 @@ export interface CarModelData {
   fuelType: string;      // 연료종류
   customEfficiency: string;// 연비
   isEditing?: boolean;
+  [key: string]: unknown;
 }
 
 // 4. 공급 유형 정보 데이터 타입
@@ -70,6 +73,7 @@ export interface ProcessData {
   id: number;
   supplyType: string; // 공급 유형
   isEditing?: boolean;
+  [key: string]: unknown;
 }
 
 // 5. 운행 목적 정보 데이터 타입
@@ -78,6 +82,7 @@ export interface PurposeData {
   purpose: string; // 운행 목적
   scope: string;   // Scope
   isEditing?: boolean;
+  [key: string]: unknown;
 }
 
 // 6. 공급 고객 정보 데이터 타입
@@ -86,6 +91,7 @@ export interface ProductData {
   customerName: string; // 공급 고객명
   note: string;         // 비고
   isEditing?: boolean;
+  [key: string]: unknown;
 }
 
 // ----------------------------------------------------------------------

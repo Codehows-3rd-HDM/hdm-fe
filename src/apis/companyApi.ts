@@ -12,7 +12,7 @@ export interface AnalysisData {
   monthlyTrend?: number[]; // length 12
   address?: string;
   region?: string; // e.g. '서울', '경기'
-  [k: string]: any;
+  [k: string]: unknown;
 }
 
 export async function fetchAnalysisData(

@@ -127,7 +127,10 @@ export const ChartSummarySection = () => {
               contentStyle={tooltipStyle}
               labelStyle={{ color: '#fff', fontWeight: 800, fontSize: 18 }}
               itemStyle={{ color: '#fff', fontWeight: 800, fontSize: 16 }}
-              formatter={(value: number, name: string) => [formatNumber(value), name]}
+              formatter={(value: number | undefined, name: string | undefined) => [
+                value !== undefined ? formatNumber(value) : '0',
+                name ?? ''
+              ]}
             />
             <Legend layout="vertical" verticalAlign="middle" align="right" wrapperStyle={{ fontSize: 24, color: '#fff', fontWeight: 800, paddingLeft: '40px' }} formatter={(v) => <span style={{ color: '#fff', fontWeight: 800 }}>{v}</span>} />
             <Bar dataKey="scope1" name="Scope 1" stackId="a" fill="#60a5fa" radius={[2, 2, 0, 0]}>
@@ -175,7 +178,10 @@ export const MonthlyScopeSection = () => {
               contentStyle={tooltipStyle}
               labelStyle={{ color: '#fff', fontWeight: 800, fontSize: 20 }}
               itemStyle={{ color: '#fff', fontWeight: 800, fontSize: 19 }}
-              formatter={(value: number, name: string) => [formatNumber(value), name]}
+              formatter={(value: number | undefined, name: string | undefined) => [
+                value !== undefined ? formatNumber(value) : '0',
+                name ?? ''
+              ]}
             />
             <Legend wrapperStyle={{ fontSize: 24, color: '#fff', fontWeight: 800, paddingTop: 15 }} formatter={(v) => <span style={{ color: '#fff', fontWeight: 800 }}>{v}</span>} />
             <Bar dataKey="scope1" name="Scope 1" stackId="a" fill="#60a5fa" barSize={72} radius={[2, 2, 0, 0]}>
@@ -278,7 +284,10 @@ export const YearlyHistorySection = () => {
               contentStyle={tooltipStyle}
               labelStyle={{ color: '#fff', fontWeight: 800, fontSize: 20 }}
               itemStyle={{ color: '#fff', fontWeight: 800, fontSize: 19 }}
-              formatter={(value: number, name: string) => [formatNumber(value), name]}
+              formatter={(value: number | undefined, name: string | undefined) => [
+                value !== undefined ? formatNumber(value) : '0',
+                name ?? ''
+              ]}
             />
             <Legend wrapperStyle={{ fontSize: 24, color: '#fff', fontWeight: 800, paddingTop: 12 }} formatter={(v) => <span style={{ color: '#fff', fontWeight: 800 }}>{v}</span>} />
             <Bar dataKey="scope1" name="Scope 1" stackId="a" fill="#60a5fa" barSize={120} radius={[2, 2, 0, 0]}>

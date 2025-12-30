@@ -129,7 +129,7 @@ const KoreaMapChart: React.FC<KoreaMapChartProps> = ({
     <div
       className={`w-full ${containerHeight} relative rounded-xl shadow-md overflow-hidden flex ${
         theme === "dark"
-          ? "bg-gradient-to-br from-gray-900 to-gray-800"
+          ? "bg-linear-to-br from-gray-900 to-gray-800"
           : "bg-white"
       }`}
     >
@@ -138,7 +138,7 @@ const KoreaMapChart: React.FC<KoreaMapChartProps> = ({
         className={`w-[500px] p-8 overflow-y-auto ${
           theme === "dark"
             ? "border-r border-white/20 bg-white/5 text-white"
-            : "border-r border-gray-200 bg-gradient-to-b from-gray-50 to-white text-gray-800"
+            : "border-r border-gray-200 bg-linear-to-b from-gray-50 to-white text-gray-800"
         }`}
       >
         <h4

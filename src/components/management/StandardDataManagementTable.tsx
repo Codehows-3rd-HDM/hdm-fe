@@ -29,7 +29,7 @@ type ManagementOptions = {
 
 const EMPTY_OPTIONS: ManagementOptions = Object.freeze({});
 
-const StandardDataManagementTable = <T extends { id: number, [key: string]: any }>({ 
+const StandardDataManagementTable = <T extends { id: number; [key: string]: unknown }>({ 
   title, 
   columns, 
   apiEndpoint,
@@ -154,20 +154,21 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
 
         // 데이터 변환 로직
         if (endpoint.includes('car-model')) {
-          rawData = rawData.map((item: any) => ({
+          rawData = rawData.map((item: Partial<T>) => ({
             ...item,
-            parentCategoryName: item.parentCategoryName || '',
-            carCategoryName: item.carCategoryName || '',
-            customEfficiency: item.customEfficiency || '',
-            fuelType: item.fuelType || '',
-            carCategoryId: item.carCategoryId
+            parentCategoryName: (item as Record<string, unknown>).parentCategoryName || '',
+            carCategoryName: (item as Record<string, unknown>).carCategoryName || '',
+            customEfficiency: (item as Record<string, unknown>).customEfficiency || '',
+            fuelType: (item as Record<string, unknown>).fuelType || '',
+            carCategoryId: (item as Record<string, unknown>).carCategoryId
           }));
         } else if (endpoint.includes('company')) {
-          rawData = rawData.map((item: any) => {
-            let region = item.region || '';
-            let addressDetail = item.detailAddress || item.addressDetail || '';
-            if (!region && !addressDetail && item.address) {
-              const addressParts = item.address.split(' ');
+          rawData = rawData.map((item: Partial<T>) => {
+            const itemData = item as Record<string, unknown>;
+            let region = (itemData.region as string) || '';
+            let addressDetail = ((itemData.detailAddress || itemData.addressDetail) as string) || '';
+            if (!region && !addressDetail && itemData.address) {
+              const addressParts = (itemData.address as string).split(' ');
               if (addressParts.length >= 2) {
                 region = addressParts[0];
                 addressDetail = addressParts.slice(1).join(' ');
@@ -177,58 +178,68 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
               ...item,
               region,
               addressDetail,
-              companyName: item.companyName || '',
-              supplyTypeId: item.supplyTypeId || '',
-              customerId: item.customerId || '',
-              oneWayDistance: item.oneWayDistance || '',
-              remark: item.remark || ''
+              companyName: itemData.companyName || '',
+              supplyTypeId: itemData.supplyTypeId || '',
+              customerId: itemData.customerId || '',
+              oneWayDistance: itemData.oneWayDistance || '',
+              remark: itemData.remark || ''
             };
           });
         } else if (endpoint.includes('vehicle')) {
-          rawData = rawData.map((item: any) => {
-            let fuelTypeId: any = '';
-            if (normalizedOptions.fuelTypes && item.fuelType) {
-              const fuelMatch = normalizedOptions.fuelTypes.find(f => f.name === item.fuelType);
+          rawData = rawData.map((item: Partial<T>) => {
+            const itemData = item as Record<string, unknown>;
+            let fuelTypeId: string | number = '';
+            if (normalizedOptions.fuelTypes && itemData.fuelType) {
+              const fuelMatch = normalizedOptions.fuelTypes.find(f => f.name === itemData.fuelType);
               fuelTypeId = fuelMatch ? fuelMatch.id : '';
             }
             return {
               ...item,
-              carNumber: item.carNumber || '',
-              purposeId: item.purposeId || '',
-              companyId: item.companyId || '',
-              driverMemberId: item.driverMemberId || '',
-              parentCategoryId: item.parentCategoryId || item.carCategoryParentId || '',
-              carCategoryId: item.carCategoryId || '',
-              carModelId: item.carModelId || '',
-              carModelName: item.carName || item.carModelName || '',
-              fuelType: item.fuelType || '',
+              carNumber: itemData.carNumber || '',
+              purposeId: itemData.purposeId || '',
+              companyId: itemData.companyId || '',
+              driverMemberId: itemData.driverMemberId || '',
+              parentCategoryId: itemData.parentCategoryId || itemData.carCategoryParentId || '',
+              carCategoryId: itemData.carCategoryId || '',
+              carModelId: itemData.carModelId || '',
+              carModelName: itemData.carName || itemData.carModelName || '',
+              fuelType: itemData.fuelType || '',
               fuelTypeId: fuelTypeId,
-              operationDistance: item.operationDistance || '',
-              remark: item.remark || '',
-              operationPurposeName: item.operationPurposeName || '',
-              companyName: item.companyName || '',
-              parentCategoryName: item.parentCategoryName || '',
-              carCategoryName: item.carCategoryName || ''
+              operationDistance: itemData.operationDistance || '',
+              remark: itemData.remark || '',
+              operationPurposeName: itemData.operationPurposeName || '',
+              companyName: itemData.companyName || '',
+              parentCategoryName: itemData.parentCategoryName || '',
+              carCategoryName: itemData.carCategoryName || ''
             };
           });
         } else if (endpoint.includes('supply-type')) {
-          rawData = rawData.map((item: any) => ({
-            ...item,
-            supplyType: item.supplyTypeName || '',
-            note: item.remark || ''
-          }));
+          rawData = rawData.map((item: Partial<T>) => {
+            const itemData = item as Record<string, unknown>;
+            return {
+              ...item,
+              supplyType: itemData.supplyTypeName || '',
+              note: itemData.remark || ''
+            };
+          });
         } else if (endpoint.includes('operation-purpose')) {
-          rawData = rawData.map((item: any) => ({
-            ...item,
-            purpose: item.purposeName || '',
-            scope: item.defaultScope || ''
-          }));
+          rawData = rawData.map((item: Partial<T>) => {
+            const itemData = item as Record<string, unknown>;
+            return {
+              ...item,
+              purpose: itemData.purposeName || '',
+              scope: itemData.defaultScope || ''
+            };
+          });
         } else if (endpoint.includes('supply-customer')) {
-          rawData = rawData.map((item: any) => ({
-            ...item,
-            customerName: item.customerName || '',
-            note: item.remark || ''
-          }));
+          rawData = rawData.map((item: Partial<T>) => {
+            const itemData = item as Record<string, unknown>;
+            return {
+              ...item,
+              customerName: itemData.customerName || '',
+              note: itemData.remark || ''
+            };
+          });
         }
 
         setData(rawData);
@@ -238,7 +249,7 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
         if (error instanceof Error) {
           errorMsg = error.message;
         } else if (typeof error === 'object' && error !== null && 'response' in error) {
-          const axiosError = error as any;
+          const axiosError = error as { response?: { data?: { message?: string } } };
           errorMsg = axiosError.response?.data?.message || errorMsg;
         }
         setErrorTitle('데이터 로딩 오류');
@@ -329,20 +340,21 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
 
       // 데이터 변환 로직 (데이터 로딩과 동일)
       if (endpoint.includes('car-model')) {
-        rawData = rawData.map((item: any) => ({
+        rawData = rawData.map((item: Partial<T>) => ({
           ...item,
-          parentCategoryName: item.parentCategoryName || '',
-          carCategoryName: item.carCategoryName || '',
-          customEfficiency: item.customEfficiency || '',
-          fuelType: item.fuelType || '',
-          carCategoryId: item.carCategoryId
+          parentCategoryName: (item as Record<string, unknown>).parentCategoryName || '',
+          carCategoryName: (item as Record<string, unknown>).carCategoryName || '',
+          customEfficiency: (item as Record<string, unknown>).customEfficiency || '',
+          fuelType: (item as Record<string, unknown>).fuelType || '',
+          carCategoryId: (item as Record<string, unknown>).carCategoryId
         }));
       } else if (endpoint.includes('company')) {
-        rawData = rawData.map((item: any) => {
-          let region = item.region || '';
-          let addressDetail = item.detailAddress || item.addressDetail || '';
-          if (!region && !addressDetail && item.address) {
-            const addressParts = item.address.split(' ');
+        rawData = rawData.map((item: Partial<T>) => {
+          const itemData = item as Record<string, unknown>;
+          let region = (itemData.region as string) || '';
+          let addressDetail = ((itemData.detailAddress || itemData.addressDetail) as string) || '';
+          if (!region && !addressDetail && itemData.address) {
+            const addressParts = (itemData.address as string).split(' ');
             if (addressParts.length >= 2) {
               region = addressParts[0];
               addressDetail = addressParts.slice(1).join(' ');
@@ -352,58 +364,68 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
             ...item,
             region,
             addressDetail,
-            companyName: item.companyName || '',
-            supplyTypeId: item.supplyTypeId || '',
-            customerId: item.customerId || '',
-            oneWayDistance: item.oneWayDistance || '',
-            remark: item.remark || ''
+            companyName: itemData.companyName || '',
+            supplyTypeId: itemData.supplyTypeId || '',
+            customerId: itemData.customerId || '',
+            oneWayDistance: itemData.oneWayDistance || '',
+            remark: itemData.remark || ''
           };
         });
       } else if (endpoint.includes('vehicle')) {
-        rawData = rawData.map((item: any) => {
-          let fuelTypeId: any = '';
-          if (normalizedOptions.fuelTypes && item.fuelType) {
-            const fuelMatch = normalizedOptions.fuelTypes.find(f => f.name === item.fuelType);
+        rawData = rawData.map((item: Partial<T>) => {
+          const itemData = item as Record<string, unknown>;
+          let fuelTypeId: string | number = '';
+          if (normalizedOptions.fuelTypes && itemData.fuelType) {
+            const fuelMatch = normalizedOptions.fuelTypes.find(f => f.name === itemData.fuelType);
             fuelTypeId = fuelMatch ? fuelMatch.id : '';
           }
           return {
             ...item,
-            carNumber: item.carNumber || '',
-            purposeId: item.purposeId || '',
-            companyId: item.companyId || '',
-            driverMemberId: item.driverMemberId || '',
-            parentCategoryId: item.parentCategoryId || item.carCategoryParentId || '',
-            carCategoryId: item.carCategoryId || '',
-            carModelId: item.carModelId || '',
-            carModelName: item.carName || item.carModelName || '',
-            fuelType: item.fuelType || '',
+            carNumber: itemData.carNumber || '',
+            purposeId: itemData.purposeId || '',
+            companyId: itemData.companyId || '',
+            driverMemberId: itemData.driverMemberId || '',
+            parentCategoryId: itemData.parentCategoryId || itemData.carCategoryParentId || '',
+            carCategoryId: itemData.carCategoryId || '',
+            carModelId: itemData.carModelId || '',
+            carModelName: itemData.carName || itemData.carModelName || '',
+            fuelType: itemData.fuelType || '',
             fuelTypeId: fuelTypeId,
-            operationDistance: item.operationDistance || '',
-            remark: item.remark || '',
-            operationPurposeName: item.operationPurposeName || '',
-            companyName: item.companyName || '',
-            parentCategoryName: item.parentCategoryName || '',
-            carCategoryName: item.carCategoryName || ''
+            operationDistance: itemData.operationDistance || '',
+            remark: itemData.remark || '',
+            operationPurposeName: itemData.operationPurposeName || '',
+            companyName: itemData.companyName || '',
+            parentCategoryName: itemData.parentCategoryName || '',
+            carCategoryName: itemData.carCategoryName || ''
           };
         });
       } else if (endpoint.includes('supply-type')) {
-        rawData = rawData.map((item: any) => ({
-          ...item,
-          supplyType: item.supplyTypeName || '',
-          note: item.remark || ''
-        }));
+        rawData = rawData.map((item: Partial<T>) => {
+          const itemData = item as Record<string, unknown>;
+          return {
+            ...item,
+            supplyType: itemData.supplyTypeName || '',
+            note: itemData.remark || ''
+          };
+        });
       } else if (endpoint.includes('operation-purpose')) {
-        rawData = rawData.map((item: any) => ({
-          ...item,
-          purpose: item.purposeName || '',
-          scope: item.defaultScope || ''
-        }));
+        rawData = rawData.map((item: Partial<T>) => {
+          const itemData = item as Record<string, unknown>;
+          return {
+            ...item,
+            purpose: itemData.purposeName || '',
+            scope: itemData.defaultScope || ''
+          };
+        });
       } else if (endpoint.includes('supply-customer')) {
-        rawData = rawData.map((item: any) => ({
-          ...item,
-          customerName: item.customerName || '',
-          note: item.remark || ''
-        }));
+        rawData = rawData.map((item: Partial<T>) => {
+          const itemData = item as Record<string, unknown>;
+          return {
+            ...item,
+            customerName: itemData.customerName || '',
+            note: itemData.remark || ''
+          };
+        });
       }
 
       setData(rawData);
@@ -423,7 +445,7 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
       setOriginalRows(prev => ({ ...prev, [rowId]: { ...target } }));
       // 차량 관리에서 대분류 선택 상태 초기화
       if (apiEndpoint.includes('vehicle') && target.parentCategoryName) {
-        setSelectedParentCategories(prev => ({ ...prev, [rowId]: target.parentCategoryName }));
+        setSelectedParentCategories(prev => ({ ...prev, [rowId]: String((target as Record<string, unknown>).parentCategoryName) }));
       }
     } else {
       // 편집 종료 시 백업 제거
@@ -484,7 +506,7 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
           } catch (error) {
             let errorMsg = '삭제 중 오류가 발생했습니다.';
             if (typeof error === 'object' && error !== null && 'response' in error) {
-              const axiosError = error as any;
+              const axiosError = error as { response?: { data?: { message?: string } } };
               errorMsg = axiosError.response?.data?.message || errorMsg;
             }
             setErrorTitle('삭제 오류');
@@ -500,7 +522,7 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
 
       // API 호출
       let endpoint = apiEndpoint;
-      let payload: any = rowData;
+      let payload: Record<string, unknown> = rowData as Record<string, unknown>;
       
       if (endpoint.includes('car-model')) {
         endpoint = `/admin/car-model/${rowId}`;
@@ -508,7 +530,7 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
         payload = {
           carCategoryId: rowData.carCategoryId,
           fuelType: rowData.fuelType,
-          customEfficiency: parseFloat(rowData.customEfficiency || '0')
+          customEfficiency: parseFloat(String((rowData as Record<string, unknown>).customEfficiency || '0'))
         };
       } else if (endpoint.includes('company')) {
         endpoint = `/admin/company/${rowId}`;
@@ -536,7 +558,7 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
           carModelId: rowData.carModelId,
           carName: rowData.carModelName,
           fuelType: rowData.fuelType,
-          operationDistance: parseFloat(rowData.operationDistance || '0'),
+          operationDistance: parseFloat(String((rowData as Record<string, unknown>).operationDistance || '0')),
           remark: rowData.remark
         };
       } else if (endpoint.includes('supply-type')) {
@@ -574,7 +596,7 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
       } catch (error) {
         let errorMsg = '저장 중 오류가 발생했습니다.';
         if (typeof error === 'object' && error !== null && 'response' in error) {
-          const axiosError = error as any;
+          const axiosError = error as { response?: { data?: { message?: string } } };
           errorMsg = axiosError.response?.data?.message || errorMsg;
         }
         setErrorTitle('저장 오류');
@@ -633,7 +655,7 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
           console.error(`[${title}] 일괄 삭제 실패:`, error);
           let errorMsg = '일괄 삭제 중 오류가 발생했습니다.';
           if (typeof error === 'object' && error !== null && 'response' in error) {
-            const axiosError = error as any;
+            const axiosError = error as { response?: { data?: { message?: string } } };
             errorMsg = axiosError.response?.data?.message || errorMsg;
           }
           setErrorTitle('일괄 삭제 오류');
@@ -668,15 +690,15 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
       } else {
         endpoint = `${apiEndpoint}/bulk`;
       }
-      let payload: any[] = [];
+      let payload: Record<string, unknown>[] = [];
 
       if (apiEndpoint.includes('car-model')) {
         // 차종 데이터 변환
         payload = changedData.map(row => ({
           id: row.id,
-          carCategoryId: row.carCategoryId,
-          fuelType: row.fuelType,
-          customEfficiency: parseFloat(row.customEfficiency || '0')
+          carCategoryId: (row as Record<string, unknown>).carCategoryId,
+          fuelType: (row as Record<string, unknown>).fuelType,
+          customEfficiency: parseFloat(String((row as Record<string, unknown>).customEfficiency || '0'))
         }));
       } else if (apiEndpoint.includes('company')) {
         // 회사 데이터 변환
@@ -702,10 +724,10 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
           parentCategoryId: row.parentCategoryId,
           carCategoryId: row.carCategoryId,
           carModelId: row.carModelId,
-          carName: row.carModelName,
-          fuelType: row.fuelType,
-          operationDistance: parseFloat(row.operationDistance || '0'),
-          remark: row.remark
+          carName: (row as Record<string, unknown>).carModelName,
+          fuelType: (row as Record<string, unknown>).fuelType,
+          operationDistance: parseFloat(String((row as Record<string, unknown>).operationDistance || '0')),
+          remark: (row as Record<string, unknown>).remark
         }));
       } else if (apiEndpoint.includes('supply-type')) {
         // 공급유형 데이터 변환
@@ -748,7 +770,7 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
       console.error(`[${title}] 일괄 저장 실패:`, error);
       let errorMsg = '일괄 저장 중 오류가 발생했습니다.';
       if (typeof error === 'object' && error !== null && 'response' in error) {
-        const axiosError = error as any;
+        const axiosError = error as { response?: { data?: { message?: string } } };
         errorMsg = axiosError.response?.data?.message || errorMsg;
       }
       setErrorTitle('일괄 저장 오류');
@@ -757,7 +779,7 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
     }
   };
   
-  const handleDataChange = (rowId: number, key: keyof T, value: any) => {
+  const handleDataChange = (rowId: number, key: keyof T, value: unknown) => {
     setData(prev => prev.map(row => 
         row.id === rowId ? { ...row, [key]: value } : row
     ));
@@ -766,7 +788,7 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
     if (String(key) === 'parentCategoryName' && apiEndpoint.includes('vehicle')) {
       setSelectedParentCategories(prev => ({
         ...prev,
-        [rowId]: value
+        [rowId]: String(value)
       }));
       // 소분류도 초기화
       setData(prev => prev.map(row => 
@@ -861,24 +883,24 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
 
           // 소분류 필드의 경우 대분류에 따라 옵션 필터링 (차량 관리에서만)
           if (String(fieldKey) === 'carCategoryName' && apiEndpoint.includes('vehicle')) {
-              const selectedParentCategory = selectedParentCategories[rowId] || row.parentCategoryName || '';
+              const selectedParentCategory = selectedParentCategories[rowId] || String((row as Record<string, unknown>).parentCategoryName) || '';
               const filteredOptions = selectedParentCategory && normalizedOptions.carCategoryMap ? 
-                normalizedOptions.carCategoryMap[selectedParentCategory] || [] : [];
+                normalizedOptions.carCategoryMap[String(selectedParentCategory)] || [] : [];
               
               // 소분류 ID 계산
               const carCategoryCurrentId = (() => {
-                if (row.carCategoryId) return row.carCategoryId;
+                if ((row as Record<string, unknown>).carCategoryId) return (row as Record<string, unknown>).carCategoryId;
                 const nameVal = typeof value === 'string' ? value : '';
-                const match = filteredOptions.find(opt => opt.name === nameVal);
+                const match = filteredOptions.find((opt: { id: number; name: string }) => opt.name === nameVal);
                 return match ? match.id : '';
               })();
               
               return (
                   <select
-                      value={carCategoryCurrentId}
+                      value={String(carCategoryCurrentId)}
                       onChange={(e) => {
                           const selectedId = Number(e.target.value);
-                          const selected = filteredOptions.find(opt => opt.id === selectedId);
+                          const selected = filteredOptions.find((opt: { id: number; name: string }) => opt.id === selectedId);
                           if (selected) {
                               handleDataChange(rowId, 'carCategoryId' as keyof T, selected.id);
                               handleDataChange(rowId, fieldKey, selected.name);
@@ -888,7 +910,7 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
                       disabled={!selectedParentCategory}
                   >
                       <option value="">{selectedParentCategory ? '선택' : '대분류를 먼저 선택하세요'}</option>
-                      {filteredOptions.map(opt => <option key={opt.id} value={opt.id}>{opt.name}</option>)}
+                      {filteredOptions.map((opt: { id: number; name: string }) => <option key={opt.id} value={opt.id}>{opt.name}</option>)}
                   </select>
               );
           }
@@ -898,13 +920,13 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
           const computedSelectedId = (() => {
             if (currentId) return currentId;
             const nameVal = typeof value === 'string' ? value : '';
-            const match = dynamicOptions.find(opt => opt.name === nameVal);
+            const match = dynamicOptions.find((opt: { id: number; name: string }) => opt.name === nameVal);
             return match ? match.id : '';
           })();
 
           return (
             <select
-              value={computedSelectedId}
+              value={String(computedSelectedId)}
               onChange={(e) => {
                 const selectedId = Number(e.target.value);
                 const selected = dynamicOptions.find(opt => opt.id === selectedId);
@@ -1154,7 +1176,7 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
                                     )}
                                 </div>
                             ) : (
-                                (isRowEditing || isBatchEditing) && col.editable ? renderInput(row, col) : row[col.id as keyof T]
+                                (isRowEditing || isBatchEditing) && col.editable ? renderInput(row, col) : String(row[col.id as keyof T] ?? '')
                             )}
                             </td>
                         ))}

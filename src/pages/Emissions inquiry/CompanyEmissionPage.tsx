@@ -90,7 +90,7 @@ const CompanyEmissionPage: React.FC = () => {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const params: any = {
+        const params: { year: number; month?: number } = {
           year: parseInt(selectedYear),
         };
         // 백엔드 로직: 'all'이면 0, 아니면 해당 월 숫자 전송
@@ -110,7 +110,21 @@ const CompanyEmissionPage: React.FC = () => {
         console.log("API 응답 성공:", response.data);
 
         // 백엔드 DTO -> 프론트엔드 형식 매핑
-        const mappedData = response.data.map((item: any, index: number) => ({
+        interface CompanyResponse {
+          id?: number;
+          companyName: string;
+          totalEmission: number;
+          address: string;
+          ratio: number;
+        }
+        interface MappedData {
+          id: number;
+          name: string;
+          value: number;
+          address: string;
+          ratio: number;
+        }
+        const mappedData: MappedData[] = response.data.map((item: CompanyResponse, index: number) => ({
           id: item.id || index,
           name: item.companyName, // 백엔드 변수명 매핑
           value: roundEmission(item.totalEmission), // 반올림 적용
@@ -119,7 +133,7 @@ const CompanyEmissionPage: React.FC = () => {
         }));
 
         // 값이 큰 순으로 정렬
-        mappedData.sort((a, b) => b.value - a.value);
+        mappedData.sort((a: MappedData, b: MappedData) => b.value - a.value);
 
         setCompanyData(mappedData);
         
@@ -234,17 +248,22 @@ const CompanyEmissionPage: React.FC = () => {
       "비율 (%)",
       "주소",
     ].join(",");
+
+    const escapeCsv = (val: string | number) =>
+      `"${String(val).replace(/"/g, '""')}"`;
+
     const rows = filteredData
-      .map((d, idx) => [
-        idx + 1, 
-        d.name, 
-        parseFloat(roundEmission(d.value).toFixed(2)).toLocaleString(undefined, { 
-          minimumFractionDigits: 2, 
-          maximumFractionDigits: 2 
-        }), 
-        d.ratio, 
-        d.address
-      ].join(","))
+      .map((d, idx) => {
+        const emission = roundEmission(d.value).toFixed(2); // thousands separator 없이 고정 소수점
+        const ratio = Number(d.ratio ?? 0).toFixed(2);
+        return [
+          idx + 1,
+          escapeCsv(d.name),
+          emission,
+          ratio,
+          escapeCsv(d.address ?? ""),
+        ].join(",");
+      })
       .join("\n");
     const csvContent = `\ufeff${headers}\n${rows}`;
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });

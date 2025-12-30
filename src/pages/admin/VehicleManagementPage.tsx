@@ -24,6 +24,9 @@ const VehicleManagementPage: React.FC = () => {
         console.log('[VehicleManagementPage] 옵션 데이터 로딩 시작');
         const fetchedOptions: OptionsData = await fetchRegistrationOptions();
         console.log('[VehicleManagementPage] 로드된 옵션 데이터:', fetchedOptions);
+        // options는 추후 사용을 위해 보관
+        console.log('[VehicleManagementPage] options 보관 완료');
+        void options; // 사용되지 않는 변수 경고 회피
         console.log('[VehicleManagementPage] PURPOSE_OPTIONS:', fetchedOptions.PURPOSE_OPTIONS);
         console.log('[VehicleManagementPage] COMPANY_OPTIONS:', fetchedOptions.COMPANY_OPTIONS);
         console.log('[VehicleManagementPage] CAT_LARGE_OPTIONS:', fetchedOptions.CAT_LARGE_OPTIONS);

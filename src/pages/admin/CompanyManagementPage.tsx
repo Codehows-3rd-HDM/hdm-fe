@@ -18,6 +18,9 @@ const CompanyManagementPage: React.FC = () => {
         console.log('[CompanyManagementPage] 옵션 데이터 로딩 시작');
         const fetchedOptions: OptionsData = await fetchRegistrationOptions();
         console.log('[CompanyManagementPage] 로드된 옵션 데이터:', fetchedOptions);
+        // options는 추후 사용을 위해 보관
+        console.log('[CompanyManagementPage] options 보관 완료');
+        void options; // 사용되지 않는 변수 경고 회피
         console.log('[CompanyManagementPage] SUPPLY_TYPE_OPTIONS:', fetchedOptions.SUPPLY_TYPE_OPTIONS);
         console.log('[CompanyManagementPage] SUPPLY_CUSTOMER_OPTIONS:', fetchedOptions.SUPPLY_CUSTOMER_OPTIONS);
         
