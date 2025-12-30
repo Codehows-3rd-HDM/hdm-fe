@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { X, Upload } from "lucide-react";
+import Modal from "../Modal";
 import { type ReductionActivity } from "../../types/activity";
 
 interface ActivityFormModalProps {
@@ -26,11 +27,18 @@ const ActivityFormModal: React.FC<ActivityFormModalProps> = ({
     costAmount: 0,
     expectedEffect: "",
     imageUrl: "",
+    imageUrls: [],
   });
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   // const [preview, setPreview] = useState<string[]>([]);
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [notice, setNotice] = useState<{
+    open: boolean;
+    title: string;
+    message: string;
+    isSuccess: boolean;
+  }>({ open: false, title: "", message: "", isSuccess: true });
 
   useEffect(() => {
     if (isOpen) {
@@ -47,6 +55,7 @@ const ActivityFormModal: React.FC<ActivityFormModalProps> = ({
           costAmount: 0,
           expectedEffect: "",
           imageUrl: "",
+          imageUrls: [],
         });
         // setPreview(null);
       }
@@ -124,7 +133,12 @@ const ActivityFormModal: React.FC<ActivityFormModalProps> = ({
       onClose();
     } catch (error) {
       console.error("Activity save error", error);
-      alert("저장 중 오류가 발생했습니다. 다시 시도해주세요.");
+      setNotice({
+        open: true,
+        title: "저장 실패",
+        message: "저장 중 오류가 발생했습니다. 다시 시도해주세요.",
+        isSuccess: false,
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -326,6 +340,21 @@ const ActivityFormModal: React.FC<ActivityFormModalProps> = ({
                 ))}
               </ul>
             )}
+            {formData.imageUrls && formData.imageUrls.length > 0 && (
+              <div className="mt-3">
+                <p className="text-xs text-gray-500 mb-2">등록된 이미지</p>
+                <div className="grid grid-cols-2 gap-3">
+                  {formData.imageUrls.map((url, idx) => (
+                    <img
+                      key={`${url}-${idx}`}
+                      src={url}
+                      alt={`activity-${idx}`}
+                      className="w-full h-48 object-cover rounded border"
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
             {/* {preview && (
               <div className="mt-2">
                 <img
@@ -361,6 +390,14 @@ const ActivityFormModal: React.FC<ActivityFormModalProps> = ({
           </button>
         </div>
       </div>
+
+      <Modal
+        isOpen={notice.open}
+        onClose={() => setNotice((prev) => ({ ...prev, open: false }))}
+        isSuccess={notice.isSuccess}
+        title={notice.title}
+        message={notice.message}
+      />
     </div>
   );
 };

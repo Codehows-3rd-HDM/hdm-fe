@@ -18,22 +18,70 @@ axiosInstance.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-const normalizeActivity = (data: any): ReductionActivity => ({
-  id: Number(data?.id ?? 0),
-  periodStart: data?.periodStart ?? "",
-  periodEnd: data?.periodEnd ?? "",
-  activityName: data?.activityName ?? "",
-  activityDetails: data?.activityDetails ?? "",
-  costAmount: Number(
-    typeof data?.costAmount === "number"
-      ? data.costAmount
-      : data?.costAmount
-      ? parseFloat(data.costAmount)
-      : 0
-  ),
-  expectedEffect: data?.expectedEffect ?? "",
-  imageUrl: data?.imageUrl ?? data?.imageUrls?.[0],
-});
+const toAbsoluteUrl = (url?: string): string | undefined => {
+  if (!url) return undefined;
+  if (url.startsWith("http://") || url.startsWith("https://")) return url;
+
+  const envBase = import.meta.env.VITE_API_URL;
+  const origin = typeof window !== "undefined" ? window.location.origin : "";
+
+  // 사진 리소스는 백엔드(origin) 기준으로 처리
+  if (url.startsWith("/photos/")) {
+    if (envBase && envBase.startsWith("http")) {
+      try {
+        const api = new URL(envBase);
+        return `${api.origin}${url}`;
+      } catch {
+        return url;
+      }
+    }
+    // Vite 개발환경에서 /photos 프록시 사용 → 상대경로 그대로 둠
+    return url;
+  }
+
+  // 그 외 API 응답 상대경로 처리
+  const base = envBase
+    ? envBase.startsWith("http")
+      ? envBase
+      : `${origin}${envBase}`
+    : origin;
+
+  try {
+    return base ? new URL(url, base).toString() : url;
+  } catch {
+    return url;
+  }
+};
+
+const normalizeActivity = (data: any): ReductionActivity => {
+  const rawList = Array.isArray(data?.imageUrls)
+    ? data.imageUrls
+    : data?.imageUrl
+    ? [data.imageUrl]
+    : [];
+
+  const absoluteList = rawList
+    .map((u: string | undefined) => toAbsoluteUrl(u))
+    .filter((u): u is string => Boolean(u));
+
+  return {
+    id: Number(data?.id ?? 0),
+    periodStart: data?.periodStart ?? "",
+    periodEnd: data?.periodEnd ?? "",
+    activityName: data?.activityName ?? "",
+    activityDetails: data?.activityDetails ?? "",
+    costAmount: Number(
+      typeof data?.costAmount === "number"
+        ? data.costAmount
+        : data?.costAmount
+        ? parseFloat(data.costAmount)
+        : 0
+    ),
+    expectedEffect: data?.expectedEffect ?? "",
+    imageUrls: absoluteList,
+    imageUrl: absoluteList[0] ?? toAbsoluteUrl(data?.imageUrl),
+  };
+};
 
 const buildFormData = (
   payload: ReductionActivity,
@@ -44,7 +92,7 @@ const buildFormData = (
   files.forEach((file) => form.append("files", file));
 
   // ID는 서버에서 생성/경로로 전달되므로 본문에서 제외
-  const { id: _id, ...rest } = payload;
+  const { id: _id, imageUrls: _imageUrls, ...rest } = payload;
 
   Object.entries(rest).forEach(([key, value]) => {
     if (value !== undefined && value !== null) {

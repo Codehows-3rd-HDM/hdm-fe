@@ -1,9 +1,4 @@
-import React, {
-  useState,
-  useMemo,
-  useEffect,
-  useCallback,
-} from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   Download,
   Calendar,
@@ -14,10 +9,12 @@ import {
   Search,
   Loader2,
 } from "lucide-react";
+import Modal from "../Modal";
 import ActivityFormModal from "./ActivityFormModal";
 import { type ReductionActivity } from "../../types/activity";
 import {
   fetchActivities,
+  fetchActivity,
   createActivity,
   updateActivity,
   deleteActivity,
@@ -88,6 +85,20 @@ const ActivityListTemplate: React.FC<ActivityListTemplateProps> = ({
     useState<ReductionActivity | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<{
+    open: boolean;
+    title: string;
+    message: string;
+    isSuccess: boolean;
+  }>({ open: false, title: "", message: "", isSuccess: true });
+
+  const showNotice = (
+    title: string,
+    message: string,
+    isSuccess: boolean = true
+  ) => {
+    setNotice({ open: true, title, message, isSuccess });
+  };
 
   const loadActivities = useCallback(
     async (filters?: { periodStart?: string; periodEnd?: string }) => {
@@ -112,37 +123,33 @@ const ActivityListTemplate: React.FC<ActivityListTemplateProps> = ({
     loadActivities();
   }, [loadActivities]);
 
-  const filteredActivities = useMemo(() => {
-    return activities.filter((activity) => {
-      if (!filterPeriodStart && !filterPeriodEnd) return true;
-
-      const actStart = new Date(activity.periodStart);
-      const actEnd = new Date(activity.periodEnd);
-      const filterStart = filterPeriodStart
-        ? new Date(filterPeriodStart)
-        : null;
-      const filterEnd = filterPeriodEnd ? new Date(filterPeriodEnd) : null;
-
-      if (filterStart && actEnd < filterStart) return false;
-      if (filterEnd && actStart > filterEnd) return false;
-
-      return true;
-    });
-  }, [activities, filterPeriodStart, filterPeriodEnd]);
-
   const handleRegisterClick = () => {
     setModalMode("create");
     setSelectedActivity(null);
     setIsModalOpen(true);
   };
 
-  const handleCardClick = (activity: ReductionActivity) => {
+  const handleCardClick = async (activity: ReductionActivity) => {
     setModalMode("view");
     setSelectedActivity(activity);
     setIsModalOpen(true);
+
+    try {
+      const full = await fetchActivity(activity.id);
+      console.log("[Activity detail] fetched", {
+        id: activity.id,
+        imageUrls: full.imageUrls,
+        imageUrl: full.imageUrl,
+      });
+      setSelectedActivity(full);
+    } catch (err) {
+      console.error("활동 상세 조회 실패", err);
+      showNotice("조회 실패", "활동 상세를 불러오지 못했습니다.", false);
+      setIsModalOpen(false);
+    }
   };
 
-  const handleEditClick = (
+  const handleEditClick = async (
     e: React.MouseEvent,
     activity: ReductionActivity
   ) => {
@@ -150,6 +157,20 @@ const ActivityListTemplate: React.FC<ActivityListTemplateProps> = ({
     setModalMode("edit");
     setSelectedActivity(activity);
     setIsModalOpen(true);
+
+    try {
+      const full = await fetchActivity(activity.id);
+      console.log("[Activity edit] fetched", {
+        id: activity.id,
+        imageUrls: full.imageUrls,
+        imageUrl: full.imageUrl,
+      });
+      setSelectedActivity(full);
+    } catch (err) {
+      console.error("활동 상세 조회 실패", err);
+      showNotice("조회 실패", "활동 상세를 불러오지 못했습니다.", false);
+      setIsModalOpen(false);
+    }
   };
 
   const handleDeleteClick = async (e: React.MouseEvent, id: number) => {
@@ -160,10 +181,14 @@ const ActivityListTemplate: React.FC<ActivityListTemplateProps> = ({
     try {
       await deleteActivity(id);
       setActivities((prev) => prev.filter((item) => item.id !== id));
-      alert("삭제되었습니다.");
+      showNotice("삭제 완료", "삭제되었습니다.");
+      loadActivities({
+        periodStart: filterPeriodStart || undefined,
+        periodEnd: filterPeriodEnd || undefined,
+      });
     } catch (err) {
       console.error("활동 삭제 실패", err);
-      alert("삭제 중 오류가 발생했습니다. 다시 시도해주세요.");
+      showNotice("삭제 실패", "삭제 중 오류가 발생했습니다.", false);
     }
   };
 
@@ -176,7 +201,12 @@ const ActivityListTemplate: React.FC<ActivityListTemplateProps> = ({
     if (modalMode === "create") {
       const saved = await createActivity(data, files);
       setActivities((prev) => [saved, ...prev]);
-      alert("등록되었습니다.");
+      showNotice("등록 완료", "등록되었습니다.");
+      // 서버 기준 최신 데이터 재조회
+      loadActivities({
+        periodStart: filterPeriodStart || undefined,
+        periodEnd: filterPeriodEnd || undefined,
+      });
       return;
     }
 
@@ -184,7 +214,11 @@ const ActivityListTemplate: React.FC<ActivityListTemplateProps> = ({
     setActivities((prev) =>
       prev.map((item) => (item.id === updated.id ? updated : item))
     );
-    alert("수정되었습니다.");
+    showNotice("수정 완료", "수정되었습니다.");
+    loadActivities({
+      periodStart: filterPeriodStart || undefined,
+      periodEnd: filterPeriodEnd || undefined,
+    });
   };
 
   const handleSearch = () => {
@@ -201,13 +235,13 @@ const ActivityListTemplate: React.FC<ActivityListTemplateProps> = ({
   };
 
   const handleExcelDownload = () => {
-    if (filteredActivities.length === 0) {
-      alert("다운로드할 데이터가 없습니다.");
+    if (activities.length === 0) {
+      showNotice("다운로드", "다운로드할 데이터가 없습니다.", false);
       return;
     }
 
     const headers = "ID,활동명,시작일,종료일,소요금액,기대효과,활동내역\n";
-    const rows = filteredActivities
+    const rows = activities
       .map(
         (item) =>
           `${item.id},"${item.activityName}",${item.periodStart},${
@@ -239,7 +273,7 @@ const ActivityListTemplate: React.FC<ActivityListTemplateProps> = ({
             {isAdmin ? "저감활동 기록 관리" : "저감활동 기록 조회"}
           </h2>
           <p className="text-sm text-gray-500 mt-1">
-            총 {filteredActivities.length}건의 활동이 조회되었습니다.
+            총 {activities.length}건의 활동이 조회되었습니다.
           </p>
         </div>
 
@@ -327,14 +361,14 @@ const ActivityListTemplate: React.FC<ActivityListTemplateProps> = ({
           </div>
         )}
 
-        {!isLoading && filteredActivities.length === 0 && (
+        {!isLoading && activities.length === 0 && (
           <div className="px-4 py-10 text-center text-gray-500">
             조회된 활동이 없습니다.
           </div>
         )}
 
         {!isLoading &&
-          filteredActivities.map((activity) => (
+          activities.map((activity) => (
             <div
               key={activity.id}
               onClick={() => handleCardClick(activity)}
@@ -392,6 +426,14 @@ const ActivityListTemplate: React.FC<ActivityListTemplateProps> = ({
         mode={modalMode}
         initialData={selectedActivity}
         onSave={handleSave}
+      />
+
+      <Modal
+        isOpen={notice.open}
+        onClose={() => setNotice((prev) => ({ ...prev, open: false }))}
+        isSuccess={notice.isSuccess}
+        title={notice.title}
+        message={notice.message}
       />
     </div>
   );
