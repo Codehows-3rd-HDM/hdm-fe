@@ -1,4 +1,5 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useEffect } from "react";
+import axios from "axios";
 import {
   BarChart,
   Bar,
@@ -16,6 +17,8 @@ import {
   TrendingUp,
 } from "lucide-react";
 
+const BASE_URL = import.meta.env.VITE_API_URL || "/api";
+
 // --- 타입 및 Mock Data ---
 const COLORS = {
   scope1: "#4a90e2", // 파랑
@@ -23,6 +26,7 @@ const COLORS = {
 };
 
 const PeriodEmissionPage: React.FC = () => {
+  // 1. 날짜 상태 관리
   // 현재 날짜 기준 기본값 (1개월 전 ~ 오늘)
   const today = new Date();
   const oneMonthAgo = new Date();
@@ -33,38 +37,79 @@ const PeriodEmissionPage: React.FC = () => {
   const [startDate, setStartDate] = useState(formatDate(oneMonthAgo));
   const [endDate, setEndDate] = useState(formatDate(today));
 
-  // --- Mock Data 생성 로직 ---
-  const data = useMemo(() => {
-    const currentScope1 = Math.floor(Math.random() * 5000) + 10000;
-    const currentScope3 = Math.floor(Math.random() * 5000) + 15000;
-    const currentTotal = currentScope1 + currentScope3;
+  // 2. 차트 및 통계 데이터 상태 관리
+  const [chartData, setChartData] = useState<any[]>([]);
+  const [summary, setSummary] = useState({
+    currentTotal: 0,
+    prevTotal: 0,
+    distance: 0,
+  });
 
-    const prevScope1 = Math.floor(Math.random() * 5000) + 12000;
-    const prevScope3 = Math.floor(Math.random() * 5000) + 16000;
-    const prevTotal = prevScope1 + prevScope3;
+  // const distance = Math.floor(Math.random() * 500000) + 1000000;
 
-    const chartData = [
-      {
-        name: "선택기간",
-        scope1: currentScope1,
-        scope3: currentScope3,
-        total: currentTotal,
-      },
-      {
-        name: "전년도 동기간",
-        scope1: prevScope1,
-        scope3: prevScope3,
-        total: prevTotal,
-      },
-    ];
+  // 3. API 호출 (useEffect)
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        // DTO 변수명(startDate, endDate)과 파라미터 키값을 정확히 일치시킴
+        const response = await axios.get(`${BASE_URL}/view/period`, {
+          params: {
+            startDate: startDate,
+            endDate: endDate,
+          },
+        });
 
-    const distance = Math.floor(Math.random() * 500000) + 1000000;
+        const { current, lastYear } = response.data;
 
-    return { chartData, currentTotal, prevTotal, distance };
-  }, [startDate, endDate]);
+        // ✅ 백엔드 데이터를 차트용 포맷으로 변환
+        // (Recharts는 배열 형태의 데이터를 좋아함)
+        const mappedChartData = [
+          {
+            name: "선택기간",
+            scope1: current.scope1 || 0,
+            scope3: current.scope3 || 0,
+            total: current.totalEmission || 0,
+          },
+          {
+            name: "전년도 동기간",
+            scope1: lastYear.scope1 || 0,
+            scope3: lastYear.scope3 || 0,
+            total: lastYear.totalEmission || 0,
+          },
+        ];
 
-  const diff = data.currentTotal - data.prevTotal;
-  const percent = ((Math.abs(diff) / data.prevTotal) * 100).toFixed(1);
+        setChartData(mappedChartData);
+
+        // 하단 카드용 요약 데이터 저장
+        setSummary({
+          currentTotal: current.totalEmission || 0,
+          prevTotal: lastYear.totalEmission || 0,
+          distance: current.totalDistance || 0,
+        });
+      } catch (error) {
+        console.error("탄소배출량 데이터 조회 실패:", error);
+        // 에러 시 0으로 초기화하거나 알림 처리
+        setChartData([]);
+        setSummary({ currentTotal: 0, prevTotal: 0, distance: 0 });
+      }
+    };
+
+    // 날짜가 모두 있을 때만 호출
+    if (startDate && endDate) {
+      fetchData();
+    }
+  }, [startDate, endDate]); // 날짜 변경 시 자동 재호출
+
+  // 4. 증감률 계산 (summary 상태값 기준)
+  const diff = summary.currentTotal - summary.prevTotal;
+  // 분모가 0이면 계산 불가하므로 0 처리
+  const percent =
+    summary.prevTotal === 0
+      ? summary.currentTotal > 0
+        ? "100"
+        : "0"
+      : ((Math.abs(diff) / summary.prevTotal) * 100).toFixed(1);
+
   const isDecreased = diff < 0;
 
   return (
@@ -118,7 +163,7 @@ const PeriodEmissionPage: React.FC = () => {
           </h3>
           <ResponsiveContainer width="100%" height="100%">
             <BarChart
-              data={data.chartData}
+              data={chartData}
               margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
               barSize={60}
             >
@@ -129,7 +174,7 @@ const PeriodEmissionPage: React.FC = () => {
               />
               <YAxis />
               <Tooltip
-                formatter={(val: any) => [val?.toLocaleString(), '']}
+                formatter={(val: any) => [val?.toLocaleString(), ""]}
                 cursor={{ fill: "transparent" }}
               />
               <Legend />
@@ -144,6 +189,11 @@ const PeriodEmissionPage: React.FC = () => {
                   position="center"
                   fill="white"
                   fontSize={12}
+                  formatter={(val: any) =>
+                    typeof val === "number" && val > 0
+                      ? val.toLocaleString()
+                      : ""
+                  }
                 />
               </Bar>
               <Bar
@@ -157,6 +207,11 @@ const PeriodEmissionPage: React.FC = () => {
                   position="center"
                   fill="white"
                   fontSize={12}
+                  formatter={(val: any) =>
+                    typeof val === "number" && val > 0
+                      ? val.toLocaleString()
+                      : ""
+                  }
                 />
                 <LabelList
                   dataKey="total"
@@ -181,7 +236,7 @@ const PeriodEmissionPage: React.FC = () => {
                 전년도 동기간 배출량
               </div>
               <div className="text-2xl font-bold text-gray-800">
-                {data.prevTotal.toLocaleString()}{" "}
+                {summary.prevTotal.toLocaleString()}{" "}
                 <span className="text-lg">tCO2eq</span>
               </div>
             </div>
@@ -194,7 +249,7 @@ const PeriodEmissionPage: React.FC = () => {
                   isDecreased ? "text-green-600" : "text-red-600"
                 }`}
               >
-                {data.currentTotal.toLocaleString()}{" "}
+                {summary.currentTotal.toLocaleString()}{" "}
                 <span className="text-lg text-gray-800">tCO2eq</span>
               </div>
               <div
@@ -218,7 +273,7 @@ const PeriodEmissionPage: React.FC = () => {
               선택기간 총 운행거리
             </div>
             <div className="text-3xl font-bold text-gray-800">
-              {data.distance.toLocaleString()}{" "}
+              {summary.distance.toLocaleString()}{" "}
               <span className="text-lg">km</span>
             </div>
           </div>
