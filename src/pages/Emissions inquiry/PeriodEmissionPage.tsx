@@ -25,6 +25,19 @@ const COLORS = {
   scope3: "#f58220", // 주황
 };
 
+// 탄소 배출량 포맷: 소수점 3째자리에서 반올림하여 2째자리까지 표시
+const formatEmission = (value: number): string => {
+  return value.toFixed(2);
+};
+
+// 탄소 배출량을 천단위 구분자 + 소수점 2자리로 표시
+const formatEmissionWithComma = (value: number): string => {
+  const formatted = value.toFixed(2);
+  const parts = formatted.split('.');
+  parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  return parts.join('.');
+};
+
 const PeriodEmissionPage: React.FC = () => {
   // 1. 날짜 상태 관리
   // 현재 날짜 기준 기본값 (1개월 전 ~ 오늘)
@@ -66,25 +79,25 @@ const PeriodEmissionPage: React.FC = () => {
         const mappedChartData = [
           {
             name: "선택기간",
-            scope1: current.scope1 || 0,
-            scope3: current.scope3 || 0,
-            total: current.totalEmission || 0,
+            scope1: parseFloat(formatEmission(current.scope1 || 0)),
+            scope3: parseFloat(formatEmission(current.scope3 || 0)),
+            total: parseFloat(formatEmission(current.totalEmission || 0)),
           },
           {
             name: "전년도 동기간",
-            scope1: lastYear.scope1 || 0,
-            scope3: lastYear.scope3 || 0,
-            total: lastYear.totalEmission || 0,
+            scope1: parseFloat(formatEmission(lastYear.scope1 || 0)),
+            scope3: parseFloat(formatEmission(lastYear.scope3 || 0)),
+            total: parseFloat(formatEmission(lastYear.totalEmission || 0)),
           },
         ];
 
         setChartData(mappedChartData);
 
-        // 하단 카드용 요약 데이터 저장
+        // 하단 카드용 요약 데이터 저장 (소수점 2자리 반올림)
         setSummary({
-          currentTotal: current.totalEmission || 0,
-          prevTotal: lastYear.totalEmission || 0,
-          distance: current.totalDistance || 0,
+          currentTotal: parseFloat(formatEmission(current.totalEmission || 0)),
+          prevTotal: parseFloat(formatEmission(lastYear.totalEmission || 0)),
+          distance: parseFloat(formatEmission(current.totalDistance || 0)),
         });
       } catch (error) {
         console.error("탄소배출량 데이터 조회 실패:", error);
@@ -157,27 +170,27 @@ const PeriodEmissionPage: React.FC = () => {
       {/* 하단 콘텐츠 */}
       <div className="flex items-stretch gap-6">
         {/* 차트 */}
-        <div className="bg-white rounded-xl shadow-md p-5 flex-1 min-h-[400px] flex flex-col">
-          <h3 className="mb-6 font-semibold text-center text-gray-600">
+        <div className="bg-white rounded-xl shadow-md p-6 flex-1 min-h-[800px] flex flex-col">
+          <h3 className="mb-6 text-3xl font-semibold text-center text-gray-600">
             기간별 탄소배출량
           </h3>
           <ResponsiveContainer width="100%" height="100%">
             <BarChart
               data={chartData}
               margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
-              barSize={60}
+              barSize={122}
             >
               <CartesianGrid strokeDasharray="3 3" vertical={false} />
               <XAxis
                 dataKey="name"
-                tick={{ fontSize: 14, fontWeight: "bold" }}
+                tick={{ fontSize: 21, fontWeight: "bold" }}
               />
-              <YAxis />
+              <YAxis tick={{ fontSize: 18 }} />
               <Tooltip
-                formatter={(val: any) => [val?.toLocaleString(), ""]}
+                formatter={(val: any) => [formatEmissionWithComma(val), ""]}
                 cursor={{ fill: "transparent" }}
               />
-              <Legend />
+              <Legend wrapperStyle={{ fontSize: '19px' }} />
               <Bar
                 dataKey="scope1"
                 name="Scope 1"
@@ -188,10 +201,11 @@ const PeriodEmissionPage: React.FC = () => {
                   dataKey="scope1"
                   position="center"
                   fill="white"
-                  fontSize={12}
+                  fontSize={19}
+                  fontWeight="bold"
                   formatter={(val: any) =>
                     typeof val === "number" && val > 0
-                      ? val.toLocaleString()
+                      ? formatEmissionWithComma(val)
                       : ""
                   }
                 />
@@ -206,10 +220,11 @@ const PeriodEmissionPage: React.FC = () => {
                   dataKey="scope3"
                   position="center"
                   fill="white"
-                  fontSize={12}
+                  fontSize={19}
+                  fontWeight="bold"
                   formatter={(val: any) =>
                     typeof val === "number" && val > 0
-                      ? val.toLocaleString()
+                      ? formatEmissionWithComma(val)
                       : ""
                   }
                 />
@@ -217,9 +232,10 @@ const PeriodEmissionPage: React.FC = () => {
                   dataKey="total"
                   position="top"
                   fill="#333"
+                  fontSize={20}
                   fontWeight="bold"
                   formatter={(val: any) =>
-                    typeof val === "number" ? val.toLocaleString() : ""
+                    typeof val === "number" ? formatEmissionWithComma(val) : ""
                   }
                 />
               </Bar>
@@ -228,54 +244,55 @@ const PeriodEmissionPage: React.FC = () => {
         </div>
 
         {/* 정보 카드 */}
-        <div className="w-[350px] flex flex-col gap-6">
+        <div className="w-[420px] flex flex-col gap-6">
           {/* 카드 1 */}
-          <div className="flex flex-col justify-center p-5 bg-white shadow-md rounded-xl">
-            <div className="mb-6">
-              <div className="mb-1 text-sm text-gray-600">
+          <div className="flex flex-col justify-center p-6 bg-white shadow-md rounded-xl">
+            <div className="mb-8">
+              <div className="mb-3 text-lg font-semibold text-gray-700">
                 전년도 동기간 배출량
               </div>
-              <div className="text-2xl font-bold text-gray-800">
-                {summary.prevTotal.toLocaleString()}{" "}
-                <span className="text-lg">tCO2eq</span>
+              <div className="text-5xl font-bold text-gray-800 leading-tight">
+                {formatEmissionWithComma(summary.prevTotal)}
               </div>
+              <div className="mt-2 text-2xl font-medium text-gray-500">tCO2eq</div>
             </div>
             <div>
-              <div className="mb-1 text-sm text-gray-600">
+              <div className="mb-3 text-lg font-semibold text-gray-700">
                 선택기간 총 배출량
               </div>
               <div
-                className={`text-3xl font-bold ${
+                className={`text-6xl font-bold leading-tight ${
                   isDecreased ? "text-green-600" : "text-red-600"
                 }`}
               >
-                {summary.currentTotal.toLocaleString()}{" "}
-                <span className="text-lg text-gray-800">tCO2eq</span>
+                {formatEmissionWithComma(summary.currentTotal)}
               </div>
+              <div className="mt-2 text-2xl font-medium text-gray-500">tCO2eq</div>
               <div
-                className={`flex items-center mt-1 font-bold text-sm ${
+                className={`flex items-center mt-4 font-bold text-xl ${
                   isDecreased ? "text-green-600" : "text-red-600"
                 }`}
               >
                 {isDecreased ? (
-                  <TrendingDown size={18} className="mr-1" />
+                  <TrendingDown size={24} className="mr-2" />
                 ) : (
-                  <TrendingUp size={18} className="mr-1" />
+                  <TrendingUp size={24} className="mr-2" />
                 )}
-                {Math.abs(diff).toLocaleString()} tCO2eq ({percent}%)
+                <span>{formatEmissionWithComma(Math.abs(diff))} tCO2eq</span>
+                <span className="ml-2">({percent}%)</span>
               </div>
             </div>
           </div>
 
           {/* 카드 2 */}
-          <div className="bg-white rounded-xl shadow-md p-5 h-[150px] flex flex-col justify-center">
-            <div className="mb-2 text-sm text-gray-600">
+          <div className="bg-white rounded-xl shadow-md p-6 h-[200px] flex flex-col justify-center">
+            <div className="mb-3 text-lg font-semibold text-gray-700">
               선택기간 총 운행거리
             </div>
-            <div className="text-3xl font-bold text-gray-800">
-              {summary.distance.toLocaleString()}{" "}
-              <span className="text-lg">km</span>
+            <div className="text-6xl font-bold text-gray-800 leading-tight">
+              {formatEmissionWithComma(summary.distance)}
             </div>
+            <div className="mt-2 text-2xl font-medium text-gray-500">km</div>
           </div>
         </div>
       </div>
