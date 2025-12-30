@@ -393,9 +393,8 @@ const CompanyEmissionPage: React.FC = () => {
                 />
                 <Tooltip
                   formatter={(val: string | number | undefined) =>
-                    parseFloat(
-                      roundEmission(val as number).toFixed(2)
-                    ).toLocaleString(undefined, {
+                    // [수정] 숫자로 확실히 변환 후 포맷팅
+                    Number(val).toLocaleString(undefined, {
                       minimumFractionDigits: 2,
                       maximumFractionDigits: 2,
                     })

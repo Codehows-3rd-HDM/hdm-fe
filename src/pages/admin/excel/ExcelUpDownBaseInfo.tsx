@@ -141,7 +141,7 @@ const ExcelManagementPage: React.FC = () => {
   //   setUploadModalOpen(true);
   // };
 
-  // ✅ [핵심 로직] 엑셀 파싱 및 서버 전송
+  // [핵심 로직] 엑셀 파싱 및 서버 전송
   //const handleFileUpload = async (excelData: any[]) => {
   // 1. 모달 닫기
   //   setUploadModalOpen(false);
@@ -381,7 +381,7 @@ const ExcelManagementPage: React.FC = () => {
                       상태
                     </th>
 
-                    {/* ✅ 2. [추가] 기준일 헤더 (수동 추가) */}
+                    {/* 2. [추가] 기준일 헤더 (수동 추가) */}
                     <th className="px-4 py-3 text-center min-w-[140px] whitespace-nowrap bg-gray-100 font-bold text-blue-700">
                       차량등록일
                     </th>

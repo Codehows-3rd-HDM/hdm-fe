@@ -106,8 +106,8 @@ const KoreaMapChart: React.FC<KoreaMapChartProps> = ({
     }
   }, [maxValue, theme]);
 
-  const containerHeight = large ? 'h-[550px]' : 'h-[535px]';
-  const projectionScale = defaultFitAll ? 6000 : (large ? 8500 : 7000);
+  const containerHeight = large ? "h-[550px]" : "h-[535px]";
+  const projectionScale = defaultFitAll ? 6000 : large ? 8500 : 7000;
   const projectionCenter = defaultFitAll ? [127.5, 36.3] : [127.8, 36.4];
 
   // 지역 데이터를 정렬하여 좌측에 표시 (실제 데이터 값 기준 상위 10개)
@@ -150,16 +150,26 @@ const KoreaMapChart: React.FC<KoreaMapChartProps> = ({
         </h4>
         <div className="space-y-4">
           {leftRegions.map(({ regionName, value }) => (
-            <div key={regionName} className="flex justify-between items-center gap-3">
-              <span className={`font-extrabold text-2xl ${
-                theme === 'dark' ? 'text-white' : 'text-gray-700'
-              }`}>
+            <div
+              key={regionName}
+              className="flex justify-between items-center gap-3"
+            >
+              <span
+                className={`font-extrabold text-2xl ${
+                  theme === "dark" ? "text-white" : "text-gray-700"
+                }`}
+              >
                 {regionName}
               </span>
-              <span className={`font-extrabold text-2xl whitespace-nowrap ${
-                theme === 'dark' ? 'text-sky-400' : 'text-gray-900'
-              }`}>
-                {value.toLocaleString()}
+              <span
+                className={`font-extrabold text-2xl whitespace-nowrap ${
+                  theme === "dark" ? "text-sky-400" : "text-gray-900"
+                }`}
+              >
+                {value.toLocaleString(undefined, {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}
               </span>
             </div>
           ))}

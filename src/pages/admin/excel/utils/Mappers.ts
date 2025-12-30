@@ -46,14 +46,14 @@ const cleanString = (val: any): string => {
 
 export const mapToBaseInfoData = (data: any[]) => {
   return data.map((row) => ({
-    // ✅ 모든 문자열 필드에 cleanString 적용
+    // 모든 문자열 필드에 cleanString 적용
     purposeName: cleanString(row["운행목적"]),
     scope: cleanString(row["Scope"] || "4"), // scope는 기본값 주의
     fuelName: cleanString(row["연료종류"]),
 
     emissionFactor: row["탄소배출계수"] ?? 0, // 숫자는 그대로
 
-    companyName: cleanString(row["업체"]),
+    companyName: cleanString(row["협력사명"]),
     address: cleanString(row["주소"]), // 주소에 엔터나 특수공백 많음
     supplyTypeName: cleanString(row["공급유형"]),
     supplyCustomerName: cleanString(row["공급고객"]),
