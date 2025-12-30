@@ -40,6 +40,13 @@ const ActivityFormModal: React.FC<ActivityFormModalProps> = ({
     isSuccess: boolean;
   }>({ open: false, title: "", message: "", isSuccess: true });
 
+  const displayImages =
+    formData.imageUrls?.length > 0
+      ? formData.imageUrls
+      : formData.imageUrl
+      ? [formData.imageUrl]
+      : [];
+
   useEffect(() => {
     if (isOpen) {
       if (initialData && (mode === "edit" || mode === "view")) {
@@ -340,18 +347,21 @@ const ActivityFormModal: React.FC<ActivityFormModalProps> = ({
                 ))}
               </ul>
             )}
-            {formData.imageUrls && formData.imageUrls.length > 0 && (
+            {displayImages.length > 0 && (
               <div className="mt-3">
                 <p className="text-xs text-gray-500 mb-2">등록된 이미지</p>
-                <div className="grid grid-cols-2 gap-3">
-                  {formData.imageUrls.map((url, idx) => (
-                    <img
-                      key={`${url}-${idx}`}
-                      src={url}
-                      alt={`activity-${idx}`}
-                      className="w-full h-48 object-cover rounded border"
-                    />
-                  ))}
+                <div className="max-h-80 overflow-y-auto pr-1">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {displayImages.map((url, idx) => (
+                      <img
+                        key={`${url}-${idx}`}
+                        src={url}
+                        alt={`activity-${idx}`}
+                        loading="lazy"
+                        className="w-full h-52 object-cover rounded border"
+                      />
+                    ))}
+                  </div>
                 </div>
               </div>
             )}

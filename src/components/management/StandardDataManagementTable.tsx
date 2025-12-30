@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useCallback } from 'react';
+import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import type { ColumnDefinition } from '../../types/data';
 import { 
   ArrowUp, ArrowDown, ArrowUpDown, Search, Save, Trash2, X, CheckSquare, Edit2, Loader2 
@@ -38,6 +38,7 @@ const StandardDataManagementTable = <T extends { id: number; [key: string]: unkn
 }: StandardDataManagementTableProps<T>) => {
   // options가 없는 페이지에서는 새 객체가 렌더마다 생성되어 useEffect가 반복되지 않도록 메모이제이션
   const normalizedOptions: ManagementOptions = useMemo(() => options ?? EMPTY_OPTIONS, [options]);
+  const lastLoadKeyRef = useRef<string | null>(null);
   
   // --- 상태 관리 ---
   const [data, setData] = useState<T[]>([]); // 초기값은 빈 배열
@@ -109,6 +110,21 @@ const StandardDataManagementTable = <T extends { id: number; [key: string]: unkn
 
   // --- [API] 통합 데이터 로딩 ---
   useEffect(() => {
+    const loadKey = JSON.stringify({
+      apiEndpoint,
+      currentPage,
+      currentSort,
+      pageSize,
+      searchQuery,
+      title,
+      options: normalizedOptions
+    });
+
+    if (lastLoadKeyRef.current === loadKey) {
+      return; // skip duplicate run (e.g., StrictMode re-render) when dependencies are identical
+    }
+    lastLoadKeyRef.current = loadKey;
+
     const loadData = async () => {
       setLoading(true);
       try {

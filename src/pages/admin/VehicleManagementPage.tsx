@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import StandardDataManagementTable from '../../components/management/StandardDataManagementTable';
 import { type VehicleData, VEHICLE_COLUMNS } from '../../types/data';
 import { fetchRegistrationOptions } from '../../apis/registerApi';
@@ -20,8 +20,12 @@ const VehicleManagementPage: React.FC = () => {
     carCategoryMap: {},
     fuelTypes: []
   });
+  const optionsLoadedRef = useRef(false);
 
   useEffect(() => {
+    if (optionsLoadedRef.current) return;
+    optionsLoadedRef.current = true;
+
     const loadOptions = async () => {
       try {
         console.log('[VehicleManagementPage] 옵션 데이터 로딩 시작');
