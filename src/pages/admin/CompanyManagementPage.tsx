@@ -1,47 +1,56 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import StandardDataManagementTable from '../../components/management/StandardDataManagementTable';
 import { type CompanyData, COMPANY_COLUMNS } from '../../types/data';
 import { fetchRegistrationOptions, type OptionsData } from '../../apis/registerApi';
 
+type CompanyOptions = {
+  supplyTypes: { id: number; name: string }[];
+  supplyCustomers: { id: number; name: string }[];
+};
+
+// StrictMode의 이중 마운트로 인한 중복 호출 방지용 모듈 캐시
+let companyOptionsCache: CompanyOptions | null = null;
+let companyOptionsPromise: Promise<CompanyOptions> | null = null;
+
+const loadCompanyOptions = async (): Promise<CompanyOptions> => {
+  if (companyOptionsCache) return companyOptionsCache;
+  if (!companyOptionsPromise) {
+    companyOptionsPromise = fetchRegistrationOptions()
+      .then((fetchedOptions: OptionsData) => {
+        const prepared: CompanyOptions = {
+          supplyTypes: fetchedOptions.SUPPLY_TYPE_OPTIONS || [],
+          supplyCustomers: fetchedOptions.SUPPLY_CUSTOMER_OPTIONS || []
+        };
+        companyOptionsCache = prepared;
+        return prepared;
+      })
+      .finally(() => {
+        companyOptionsPromise = null;
+      });
+  }
+
+  return companyOptionsPromise;
+};
+
 const CompanyManagementPage: React.FC = () => {
-  const [options, setOptions] = useState<{
-    supplyTypes: { id: number; name: string }[];
-    supplyCustomers: { id: number; name: string }[];
-  }>({
+  const [options, setOptions] = useState<CompanyOptions>({
     supplyTypes: [],
     supplyCustomers: []
   });
-  const optionsLoadedRef = useRef(false);
 
   useEffect(() => {
-    if (optionsLoadedRef.current) return;
-    optionsLoadedRef.current = true;
-
-    const loadOptions = async () => {
-      try {
-        console.log('[CompanyManagementPage] 옵션 데이터 로딩 시작');
-        const fetchedOptions: OptionsData = await fetchRegistrationOptions();
-        console.log('[CompanyManagementPage] 로드된 옵션 데이터:', fetchedOptions);
-        // options는 추후 사용을 위해 보관
-        console.log('[CompanyManagementPage] options 보관 완료');
-        void options; // 사용되지 않는 변수 경고 회피
-        console.log('[CompanyManagementPage] SUPPLY_TYPE_OPTIONS:', fetchedOptions.SUPPLY_TYPE_OPTIONS);
-        console.log('[CompanyManagementPage] SUPPLY_CUSTOMER_OPTIONS:', fetchedOptions.SUPPLY_CUSTOMER_OPTIONS);
-        
-        setOptions({
-          supplyTypes: fetchedOptions.SUPPLY_TYPE_OPTIONS || [],
-          supplyCustomers: fetchedOptions.SUPPLY_CUSTOMER_OPTIONS || []
-        });
-        
-        console.log('[CompanyManagementPage] 설정된 옵션 상태:', {
-          supplyTypes: fetchedOptions.SUPPLY_TYPE_OPTIONS || [],
-          supplyCustomers: fetchedOptions.SUPPLY_CUSTOMER_OPTIONS || []
-        });
-      } catch (error) {
+    let mounted = true;
+    loadCompanyOptions()
+      .then(data => {
+        if (mounted) setOptions(data);
+      })
+      .catch(error => {
         console.error('[CompanyManagementPage] 옵션 데이터 로딩 실패:', error);
-      }
+      });
+
+    return () => {
+      mounted = false;
     };
-    loadOptions();
   }, []);
 
   return (

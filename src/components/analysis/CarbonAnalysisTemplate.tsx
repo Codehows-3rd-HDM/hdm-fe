@@ -40,6 +40,9 @@ const COLORS = [
   "#82ca9d",
   "#ffc658",
 ];
+const LEGEND_MAX_ITEMS = 5;
+const LEGEND_ITEM_HEIGHT = 22; // px per legend row
+const LEGEND_HEIGHT = LEGEND_MAX_ITEMS * LEGEND_ITEM_HEIGHT; // keep pie chart height stable
 const DB_START_YEAR = 2018; // [설정] DB 데이터 시작 연도
 
 // --- 유틸리티 함수 ---
@@ -242,10 +245,13 @@ const CarbonAnalysisTemplate: React.FC<CarbonAnalysisTemplateProps> = ({
     if (!payload) return null;
     const sorted = [...payload]
       .sort((a, b) => b.payload.totalEmission - a.payload.totalEmission)
-      .slice(0, 5);
+      .slice(0, LEGEND_MAX_ITEMS);
 
     return (
-      <ul className="w-full p-0 m-0 text-sm list-none">
+      <ul
+        className="w-full p-0 m-0 text-sm list-none"
+        style={{ minHeight: LEGEND_HEIGHT }}
+      >
         {sorted.map((entry: any, index: number) => (
           <li
             key={`legend-item-${index}`}
@@ -391,7 +397,7 @@ const CarbonAnalysisTemplate: React.FC<CarbonAnalysisTemplateProps> = ({
                   dataKey="totalEmission"
                   nameKey="name"
                   cx="50%"
-                  cy="55%"
+                  cy="52.5%"
                   innerRadius={80}
                   outerRadius={120}
                   paddingAngle={2}
@@ -407,6 +413,7 @@ const CarbonAnalysisTemplate: React.FC<CarbonAnalysisTemplateProps> = ({
                   layout="horizontal"
                   verticalAlign="bottom"
                   align="center"
+                  wrapperStyle={{ height: LEGEND_HEIGHT, paddingTop: 8 }}
                   content={<CustomLegend />}
                 />
                 <RechartsTooltip
