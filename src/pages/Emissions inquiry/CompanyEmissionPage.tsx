@@ -124,23 +124,25 @@ const CompanyEmissionPage: React.FC = () => {
           address: string;
           ratio: number;
         }
-        const mappedData: MappedData[] = response.data.map((item: CompanyResponse, index: number) => ({
-          id: item.id || index,
-          name: item.companyName, // 백엔드 변수명 매핑
-          value: roundEmission(item.totalEmission), // 반올림 적용
-          address: item.address,
-          ratio: item.ratio,
-        }));
+        const mappedData: MappedData[] = response.data.map(
+          (item: CompanyResponse, index: number) => ({
+            id: item.id || index,
+            name: item.companyName, // 백엔드 변수명 매핑
+            value: roundEmission(item.totalEmission), // 반올림 적용
+            address: item.address,
+            ratio: item.ratio,
+          })
+        );
 
         // 값이 큰 순으로 정렬
         mappedData.sort((a: MappedData, b: MappedData) => b.value - a.value);
 
         setCompanyData(mappedData);
-        
+
         // 기본 정렬 설정 (값이 큰 순서)
         setSortConfig({
-          key: 'value',
-          direction: 'desc',
+          key: "value",
+          direction: "desc",
         });
       } catch (error) {
         console.error("데이터 로드 실패:", error);
@@ -160,18 +162,20 @@ const CompanyEmissionPage: React.FC = () => {
   const regionData = useMemo(() => {
     const regionMap: { [key: string]: number } = {};
 
-    companyData.forEach((item) => {
-      if (!item.address) return;
+    companyData
+      .filter((item) => !item.name.includes("현대정밀"))
+      .forEach((item) => {
+        if (!item.address) return;
 
-      // ★ 핵심: 주소의 첫 어절만 추출 (예: "경기도 성남시" -> "경기도")
-      const region = item.address.split(" ")[0];
+        // 주소의 첫 어절만 추출 (예: "경기도 성남시" -> "경기도")
+        const region = item.address.split(" ")[0];
 
-      if (regionMap[region]) {
-        regionMap[region] += item.value;
-      } else {
-        regionMap[region] = item.value;
-      }
-    });
+        if (regionMap[region]) {
+          regionMap[region] += item.value;
+        } else {
+          regionMap[region] = item.value;
+        }
+      });
 
     // 지도 컴포넌트가 원하는 { region, value } 형태로 변환
     return Object.keys(regionMap).map((key) => ({
@@ -230,7 +234,12 @@ const CompanyEmissionPage: React.FC = () => {
   // const chartWidth = Math.max(filteredData.length * 60, 900);
 
   // Top 5 데이터 (전체 데이터 기준 상위 5개)
-  const top5Data = companyData.slice(0, 5);
+  // [수정] 전체 데이터 중 현대정밀을 제외한 순수 협력사들로만 Top 5 구성
+  const top5Data = useMemo(() => {
+    return companyData
+      .filter((item) => !item.name.includes("현대정밀"))
+      .slice(0, 5);
+  }, [companyData]);
 
   const handleSort = (key: string) => {
     setSortConfig((prev) => ({
@@ -384,9 +393,11 @@ const CompanyEmissionPage: React.FC = () => {
                 />
                 <Tooltip
                   formatter={(val: string | number | undefined) =>
-                    parseFloat(roundEmission(val as number).toFixed(2)).toLocaleString(undefined, { 
-                      minimumFractionDigits: 2, 
-                      maximumFractionDigits: 2 
+                    parseFloat(
+                      roundEmission(val as number).toFixed(2)
+                    ).toLocaleString(undefined, {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
                     })
                   }
                 />
@@ -519,9 +530,11 @@ const CompanyEmissionPage: React.FC = () => {
                       {row.name}
                     </td>
                     <td className="px-4 py-3 text-center text-gray-800">
-                      {parseFloat(roundEmission(row.value).toFixed(2)).toLocaleString(undefined, { 
-                        minimumFractionDigits: 2, 
-                        maximumFractionDigits: 2 
+                      {parseFloat(
+                        roundEmission(row.value).toFixed(2)
+                      ).toLocaleString(undefined, {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
                       })}
                     </td>
                     <td className="px-4 py-3 text-center text-gray-800">
