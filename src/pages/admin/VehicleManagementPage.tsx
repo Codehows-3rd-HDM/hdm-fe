@@ -1,17 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import StandardDataManagementTable from '../../components/management/StandardDataManagementTable';
 import { type VehicleData, VEHICLE_COLUMNS } from '../../types/data';
-import { fetchRegistrationOptions, type OptionsData } from '../../apis/registerApi';
+import { fetchRegistrationOptions } from '../../apis/registerApi';
+import { fetchOperationPurposes, type OperationPurposeResponse } from '../../apis/operationPurposeApi';
 
 const VehicleManagementPage: React.FC = () => {
   const [options, setOptions] = useState<{
     operationPurposes: { id: number; name: string }[];
+    operationPurposesMap: Record<number, { purposeName: string; defaultScope?: number }>;
     companies: { id: number; name: string; oneWayDistance?: number }[];
     carCategories: { id: number; name: string }[];
     carCategoryMap: Record<string, { id: number; name: string }[]>;
     fuelTypes: { id: number; name: string }[];
   }>({
     operationPurposes: [],
+    operationPurposesMap: {},
     companies: [],
     carCategories: [],
     carCategoryMap: {},
@@ -22,18 +25,26 @@ const VehicleManagementPage: React.FC = () => {
     const loadOptions = async () => {
       try {
         console.log('[VehicleManagementPage] 옵션 데이터 로딩 시작');
-        const fetchedOptions: OptionsData = await fetchRegistrationOptions();
+        const [fetchedOptions, purposeResponse] = await Promise.all([
+          fetchRegistrationOptions(),
+          fetchOperationPurposes(undefined, undefined, undefined, 0, 1000)
+        ]);
+        
         console.log('[VehicleManagementPage] 로드된 옵션 데이터:', fetchedOptions);
-        // options는 추후 사용을 위해 보관
-        console.log('[VehicleManagementPage] options 보관 완료');
-        void options; // 사용되지 않는 변수 경고 회피
-        console.log('[VehicleManagementPage] PURPOSE_OPTIONS:', fetchedOptions.PURPOSE_OPTIONS);
-        console.log('[VehicleManagementPage] COMPANY_OPTIONS:', fetchedOptions.COMPANY_OPTIONS);
-        console.log('[VehicleManagementPage] CAT_LARGE_OPTIONS:', fetchedOptions.CAT_LARGE_OPTIONS);
-        console.log('[VehicleManagementPage] FUEL_OPTIONS:', fetchedOptions.FUEL_OPTIONS);
+        console.log('[VehicleManagementPage] 운행 목적 데이터:', purposeResponse);
+        
+        // 운행 목적 맵 생성
+        const operationPurposesMap: Record<number, { purposeName: string; defaultScope?: number }> = {};
+        purposeResponse.content.forEach((purpose: OperationPurposeResponse) => {
+          operationPurposesMap[purpose.id] = {
+            purposeName: purpose.purposeName,
+            defaultScope: purpose.defaultScope
+          };
+        });
         
         setOptions({
           operationPurposes: fetchedOptions.PURPOSE_OPTIONS || [],
+          operationPurposesMap,
           companies: fetchedOptions.COMPANY_LIST || fetchedOptions.COMPANY_OPTIONS || [],
           carCategories: fetchedOptions.CAT_LARGE_OPTIONS || [],
           carCategoryMap: fetchedOptions.CAR_CATEGORY_MAP || {},
@@ -42,6 +53,7 @@ const VehicleManagementPage: React.FC = () => {
         
         console.log('[VehicleManagementPage] 설정된 옵션 상태:', {
           operationPurposes: fetchedOptions.PURPOSE_OPTIONS || [],
+          operationPurposesMap,
           companies: fetchedOptions.COMPANY_LIST || fetchedOptions.COMPANY_OPTIONS || [],
           carCategories: fetchedOptions.CAT_LARGE_OPTIONS || [],
           carCategoryMap: fetchedOptions.CAR_CATEGORY_MAP || {},

@@ -73,7 +73,8 @@ const StandardDataManagementTable = <T extends { id: number; [key: string]: unkn
     const k = String(key);
 
     if (apiEndpoint.includes('vehicle')) {
-      if (k === 'operationPurposeName' || k === 'defaultScope') return null; // 현재 엔티티 매핑이 없어 정렬 제외
+      // operationPurposeName과 defaultScope는 purposeId로 정렬
+      if (k === 'operationPurposeName' || k === 'defaultScope') return 'purposeId';
       return k;
     }
 
@@ -193,6 +194,29 @@ const StandardDataManagementTable = <T extends { id: number; [key: string]: unkn
               const fuelMatch = normalizedOptions.fuelTypes.find(f => f.name === itemData.fuelType);
               fuelTypeId = fuelMatch ? fuelMatch.id : '';
             }
+            
+            // 운행 목적과 Scope 매핑
+            let operationPurposeName = (itemData.operationPurposeName as string) || '';
+            let defaultScope = '';
+            const purposeId = itemData.purposeId as number;
+            if (purposeId && (normalizedOptions as Record<string, unknown>).operationPurposesMap) {
+              const purposeMap = ((normalizedOptions as Record<string, unknown>).operationPurposesMap as Record<number, { purposeName: string; defaultScope?: number }>);
+              const purposeData = purposeMap[purposeId];
+              if (purposeData) {
+                operationPurposeName = purposeData.purposeName;
+                // defaultScope를 문자열로 변환 (1 -> 'Scope1', 3 -> 'Scope3', 4 -> '기타')
+                if (purposeData.defaultScope === 1) {
+                  defaultScope = 'Scope1';
+                } else if (purposeData.defaultScope === 3) {
+                  defaultScope = 'Scope3';
+                } else if (purposeData.defaultScope === 4) {
+                  defaultScope = '기타';
+                } else {
+                  defaultScope = '';
+                }
+              }
+            }
+            
             return {
               ...item,
               carNumber: itemData.carNumber || '',
@@ -207,10 +231,11 @@ const StandardDataManagementTable = <T extends { id: number; [key: string]: unkn
               fuelTypeId: fuelTypeId,
               operationDistance: itemData.operationDistance || '',
               remark: itemData.remark || '',
-              operationPurposeName: itemData.operationPurposeName || '',
+              operationPurposeName: operationPurposeName,
               companyName: itemData.companyName || '',
               parentCategoryName: itemData.parentCategoryName || '',
-              carCategoryName: itemData.carCategoryName || ''
+              carCategoryName: itemData.carCategoryName || '',
+              defaultScope: defaultScope
             };
           });
         } else if (endpoint.includes('supply-type')) {
@@ -379,6 +404,29 @@ const StandardDataManagementTable = <T extends { id: number; [key: string]: unkn
             const fuelMatch = normalizedOptions.fuelTypes.find(f => f.name === itemData.fuelType);
             fuelTypeId = fuelMatch ? fuelMatch.id : '';
           }
+          
+          // 운행 목적과 Scope 매핑
+          let operationPurposeName = (itemData.operationPurposeName as string) || '';
+          let defaultScope = '';
+          const purposeId = itemData.purposeId as number;
+          if (purposeId && (normalizedOptions as Record<string, unknown>).operationPurposesMap) {
+            const purposeMap = ((normalizedOptions as Record<string, unknown>).operationPurposesMap as Record<number, { purposeName: string; defaultScope?: number }>);
+            const purposeData = purposeMap[purposeId];
+            if (purposeData) {
+              operationPurposeName = purposeData.purposeName;
+              // defaultScope를 문자열로 변환 (1 -> 'Scope1', 3 -> 'Scope3', 4 -> '기타')
+              if (purposeData.defaultScope === 1) {
+                defaultScope = 'Scope1';
+              } else if (purposeData.defaultScope === 3) {
+                defaultScope = 'Scope3';
+              } else if (purposeData.defaultScope === 4) {
+                defaultScope = '기타';
+              } else {
+                defaultScope = '';
+              }
+            }
+          }
+          
           return {
             ...item,
             carNumber: itemData.carNumber || '',
@@ -393,10 +441,11 @@ const StandardDataManagementTable = <T extends { id: number; [key: string]: unkn
             fuelTypeId: fuelTypeId,
             operationDistance: itemData.operationDistance || '',
             remark: itemData.remark || '',
-            operationPurposeName: itemData.operationPurposeName || '',
+            operationPurposeName: operationPurposeName,
             companyName: itemData.companyName || '',
             parentCategoryName: itemData.parentCategoryName || '',
-            carCategoryName: itemData.carCategoryName || ''
+            carCategoryName: itemData.carCategoryName || '',
+            defaultScope: defaultScope
           };
         });
       } else if (endpoint.includes('supply-type')) {
