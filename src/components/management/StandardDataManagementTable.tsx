@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
 import type { ColumnDefinition } from '../../types/data';
 import { 
   ArrowUp, ArrowDown, ArrowUpDown, Search, Save, Trash2, X, CheckSquare, Edit2, Loader2 
@@ -14,24 +14,30 @@ interface StandardDataManagementTableProps<T> {
   columns: ColumnDefinition<T>[];
   apiEndpoint: string; // [변경] initialData 대신 endpoint만 받음
   disableDelete?: boolean; // 차종 모델 페이지에서 삭제 비활성화
-  options?: {
-    supplyTypes?: { id: number; name: string }[];
-    supplyCustomers?: { id: number; name: string }[];
-    operationPurposes?: { id: number; name: string }[];
-    companies?: { id: number; name: string; oneWayDistance?: number }[];
-    carCategories?: { id: number; name: string }[];
-    carCategoryMap?: Record<string, { id: number; name: string }[]>;
-    fuelTypes?: { id: number; name: string }[];
-  };
+  options?: ManagementOptions;
 }
+
+type ManagementOptions = {
+  supplyTypes?: { id: number; name: string }[];
+  supplyCustomers?: { id: number; name: string }[];
+  operationPurposes?: { id: number; name: string }[];
+  companies?: { id: number; name: string; oneWayDistance?: number }[];
+  carCategories?: { id: number; name: string }[];
+  carCategoryMap?: Record<string, { id: number; name: string }[]>;
+  fuelTypes?: { id: number; name: string }[];
+};
+
+const EMPTY_OPTIONS: ManagementOptions = Object.freeze({});
 
 const StandardDataManagementTable = <T extends { id: number, [key: string]: any }>({ 
   title, 
   columns, 
   apiEndpoint,
   disableDelete = false,
-  options = {}
+  options
 }: StandardDataManagementTableProps<T>) => {
+  // options가 없는 페이지에서는 새 객체가 렌더마다 생성되어 useEffect가 반복되지 않도록 메모이제이션
+  const normalizedOptions: ManagementOptions = useMemo(() => options ?? EMPTY_OPTIONS, [options]);
   
   // --- 상태 관리 ---
   const [data, setData] = useState<T[]>([]); // 초기값은 빈 배열
@@ -62,13 +68,51 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
   // 단일 수정 취소를 위한 원본 행 백업
   const [originalRows, setOriginalRows] = useState<Record<number, T>>({});
 
-  // --- [API] 데이터 로딩 (Mount 시점) ---
+  // 프론트 컬럼 키 -> 백엔드 정렬 키 매핑 (엔드포인트별)
+  const mapSortKey = useCallback((key: keyof T): string | null => {
+    const k = String(key);
+
+    if (apiEndpoint.includes('vehicle')) {
+      if (k === 'operationPurposeName' || k === 'defaultScope') return null; // 현재 엔티티 매핑이 없어 정렬 제외
+      return k;
+    }
+
+    if (apiEndpoint.includes('company')) {
+      return k; // 백엔드에서 실제 경로로 매핑
+    }
+
+    if (apiEndpoint.includes('car-model')) {
+      return k; // 백엔드에서 실제 경로로 매핑
+    }
+
+    if (apiEndpoint.includes('operation-purpose')) {
+      return k;
+    }
+
+    return k;
+  }, [apiEndpoint]);
+
+  // 정렬이 변경되면 페이지를 리셋
+  useEffect(() => {
+    if (currentSort) {
+      setCurrentPage(0);
+    }
+  }, [currentSort]);
+
+  // 검색어 변경 시 페이지를 리셋
+  useEffect(() => {
+    if (searchQuery) {
+      setCurrentPage(0);
+    }
+  }, [searchQuery]);
+
+  // --- [API] 통합 데이터 로딩 ---
   useEffect(() => {
     const loadData = async () => {
       setLoading(true);
       try {
         let endpoint = apiEndpoint;
-        console.log(`[${title}] 데이터 로딩 시작 - 원본 엔드포인트: ${apiEndpoint}`);
+        console.log(`[${title}] 데이터 재로딩 - 검색어: ${searchQuery}, 정렬: ${String(currentSort?.key)}-${currentSort?.direction}, 페이지: ${currentPage}`);
 
         if (endpoint.includes('car-model')) {
           endpoint = '/admin/car-model/search';
@@ -84,31 +128,31 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
           endpoint = '/admin/supply-customer/search';
         }
 
-        console.log(`[${title}] 최종 API 엔드포인트: ${endpoint}`);
+        // 정렬 파라미터 생성
+        const sortParam = currentSort 
+          ? (() => {
+              const mapped = mapSortKey(currentSort.key);
+              return mapped ? `${mapped},${currentSort.direction}` : undefined;
+            })()
+          : undefined;
+
         const response = await axiosInstance.get(endpoint, {
           params: {
             page: currentPage,
-            size: pageSize, // 고정된 페이지 크기
-            ...(searchQuery.trim() && { keyword: searchQuery.trim() })
+            size: pageSize,
+            ...(searchQuery.trim() && { keyword: searchQuery.trim() }),
+            ...(sortParam && { sort: sortParam })
           }
         });
-        console.log(`[${title}] API 응답 상태: ${response.status}`);
-        console.log(`[${title}] API 응답 데이터:`, response.data);
 
-        // 페이징 정보 추출
         const pageData = response.data;
         let rawData = pageData.content || pageData;
         
-        // 페이징 정보 저장
         setTotalPages(pageData.totalPages || 1);
         setTotalElements(pageData.totalElements || rawData.length);
         setCurrentPage(pageData.number || 0);
-        
-        console.log(`[${title}] 페이징 정보 - 현재페이지: ${pageData.number}, 전체페이지: ${pageData.totalPages}, 전체아이템: ${pageData.totalElements}`);
-        console.log(`[${title}] 추출된 데이터 개수: ${Array.isArray(rawData) ? rawData.length : 'N/A'}`);
-        console.log(`[${title}] 추출된 데이터 샘플:`, Array.isArray(rawData) && rawData.length > 0 ? rawData[0] : '데이터 없음');
-        
-        // 데이터 변환
+
+        // 데이터 변환 로직
         if (endpoint.includes('car-model')) {
           rawData = rawData.map((item: any) => ({
             ...item,
@@ -116,48 +160,35 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
             carCategoryName: item.carCategoryName || '',
             customEfficiency: item.customEfficiency || '',
             fuelType: item.fuelType || '',
-            // ID 값 유지
             carCategoryId: item.carCategoryId
           }));
-        } else if (endpoint.includes('companies')) {
-          console.log(`[${title}] 협력사 데이터 변환 시작 - 데이터 개수: ${rawData.length}`);
+        } else if (endpoint.includes('company')) {
           rawData = rawData.map((item: any) => {
-            console.log(`[${title}] 주소 처리 전 데이터:`, item);
-            // 주소 처리: 이미 region과 addressDetail이 분리되어 있으면 그대로 사용, 아니면 파싱
             let region = item.region || '';
-            let addressDetail = item.addressDetail || '';
-            
+            let addressDetail = item.detailAddress || item.addressDetail || '';
             if (!region && !addressDetail && item.address) {
-              // 주소가 통합되어 있는 경우에만 파싱
-              const addressParts = (item.address || '').split(' ');
-              region = addressParts[0] || '';
-              addressDetail = addressParts.slice(1).join(' ') || '';
+              const addressParts = item.address.split(' ');
+              if (addressParts.length >= 2) {
+                region = addressParts[0];
+                addressDetail = addressParts.slice(1).join(' ');
+              }
             }
-            
-            console.log(`[${title}] 주소 처리 - 원본: ${item.address || 'N/A'}, region: ${region}, addressDetail: ${addressDetail}`);
-
             return {
               ...item,
+              region,
+              addressDetail,
               companyName: item.companyName || '',
-              supplyTypeName: item.supplyTypeName || '',
-              customerName: item.customerName || '',
-              oneWayDistance: item.oneWayDistance || 0,
-              region: region,
-              addressDetail: addressDetail,
-              remark: item.remark || '',
-              // ID 값들 유지
-              supplyTypeId: item.supplyTypeId,
-              customerId: item.customerId
+              supplyTypeId: item.supplyTypeId || '',
+              customerId: item.customerId || '',
+              oneWayDistance: item.oneWayDistance || '',
+              remark: item.remark || ''
             };
           });
-          console.log(`[${title}] 협력사 데이터 변환 완료`);
         } else if (endpoint.includes('vehicle')) {
-          // 차량 데이터 초기 로딩 시 모델명이 비어있는 문제 수정 (carName 우선 반영)
           rawData = rawData.map((item: any) => {
-            // 연료 타입 ID 설정 (fuelType은 이름, ID도 필요)
             let fuelTypeId: any = '';
-            if (options.fuelTypes && item.fuelType) {
-              const fuelMatch = options.fuelTypes.find(f => f.name === item.fuelType);
+            if (normalizedOptions.fuelTypes && item.fuelType) {
+              const fuelMatch = normalizedOptions.fuelTypes.find(f => f.name === item.fuelType);
               fuelTypeId = fuelMatch ? fuelMatch.id : '';
             }
             return {
@@ -174,23 +205,23 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
               fuelTypeId: fuelTypeId,
               operationDistance: item.operationDistance || '',
               remark: item.remark || '',
-              // 표시용 이름 필드들 보존
               operationPurposeName: item.operationPurposeName || '',
               companyName: item.companyName || '',
               parentCategoryName: item.parentCategoryName || '',
-              carCategoryName: item.carCategoryName || '',
+              carCategoryName: item.carCategoryName || ''
             };
           });
         } else if (endpoint.includes('supply-type')) {
           rawData = rawData.map((item: any) => ({
             ...item,
-            supplyType: item.supplyTypeName || ''
+            supplyType: item.supplyTypeName || '',
+            note: item.remark || ''
           }));
         } else if (endpoint.includes('operation-purpose')) {
           rawData = rawData.map((item: any) => ({
             ...item,
             purpose: item.purposeName || '',
-            scope: item.defaultScope === 1 ? 'Scope1' : item.defaultScope === 3 ? 'Scope3' : '기타'
+            scope: item.defaultScope || ''
           }));
         } else if (endpoint.includes('supply-customer')) {
           rawData = rawData.map((item: any) => ({
@@ -200,198 +231,37 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
           }));
         }
 
-        console.log(`[${title}] 데이터 변환 완료. 최종 데이터 개수: ${Array.isArray(rawData) ? rawData.length : 'N/A'}`);
-        console.log(`[${title}] 변환된 데이터 샘플:`, Array.isArray(rawData) && rawData.length > 0 ? rawData[0] : '데이터 없음');
-
         setData(rawData);
-        console.log(`[${title}] 데이터 상태에 설정됨. 현재 데이터 개수: ${Array.isArray(rawData) ? rawData.length : 'N/A'}`);
-
       } catch (error) {
-        console.error(`[${title}] 데이터 로딩 중 오류 발생:`, error);
+        console.error(`[${title}] 검색 데이터 로딩 중 오류 발생:`, error);
+        let errorMsg = '데이터 로딩 중 오류가 발생했습니다.';
+        if (error instanceof Error) {
+          errorMsg = error.message;
+        } else if (typeof error === 'object' && error !== null && 'response' in error) {
+          const axiosError = error as any;
+          errorMsg = axiosError.response?.data?.message || errorMsg;
+        }
+        setErrorTitle('데이터 로딩 오류');
+        setErrorMessage(errorMsg);
+        setIsErrorModalOpen(true);
       } finally {
         setLoading(false);
       }
     };
+    
     loadData();
-  }, [apiEndpoint]); // endpoint가 바뀌면 다시 로딩
+  }, [apiEndpoint, currentPage, currentSort, pageSize, searchQuery, title, normalizedOptions, mapSortKey]); // 데이터 로딩 의존성
 
-  // 검색어 변경 시 페이지를 리셋하고 데이터 다시 로딩
-  useEffect(() => {
-    if (searchQuery !== '') { // 초기 로딩 시 제외
-      setCurrentPage(0);
-      const loadData = async () => {
-        setLoading(true);
-        try {
-          let endpoint = apiEndpoint;
-          console.log(`[${title}] 검색어 변경으로 데이터 재로딩 - 검색어: ${searchQuery}`);
-
-          if (endpoint.includes('car-model')) {
-            endpoint = '/admin/car-model/search';
-          } else if (endpoint.includes('company')) {
-            endpoint = '/admin/company/search';
-          } else if (endpoint.includes('vehicle')) {
-            endpoint = '/admin/vehicle/search';
-          } else if (endpoint.includes('supply-type')) {
-            endpoint = '/admin/supply-type/search';
-          } else if (endpoint.includes('operation-purpose')) {
-            endpoint = '/admin/operation-purpose/search';
-          } else if (endpoint.includes('supply-customer')) {
-            endpoint = '/admin/supply-customer/search';
-          }
-
-          const response = await axiosInstance.get(endpoint, {
-            params: {
-              page: 0, // 검색 시 첫 페이지부터
-              size: pageSize,
-              keyword: searchQuery
-            }
-          });
-
-          const pageData = response.data;
-          let rawData = pageData.content || pageData;
-          
-          setTotalPages(pageData.totalPages || 1);
-          setTotalElements(pageData.totalElements || rawData.length);
-          setCurrentPage(pageData.number || 0);
-
-          // 데이터 변환 로직 (위와 동일)
-          if (endpoint.includes('car-model')) {
-            rawData = rawData.map((item: any) => ({
-              ...item,
-              parentCategoryName: item.parentCategoryName || '',
-              carCategoryName: item.carCategoryName || '',
-              customEfficiency: item.customEfficiency || '',
-              fuelType: item.fuelType || '',
-              carCategoryId: item.carCategoryId
-            }));
-          } else if (endpoint.includes('company')) {
-            rawData = rawData.map((item: any) => {
-              let region = item.region || '';
-              let addressDetail = item.detailAddress || item.addressDetail || '';
-              if (!region && !addressDetail && item.address) {
-                const addressParts = item.address.split(' ');
-                if (addressParts.length >= 2) {
-                  region = addressParts[0];
-                  addressDetail = addressParts.slice(1).join(' ');
-                }
-              }
-              return {
-                ...item,
-                region,
-                addressDetail,
-                companyName: item.companyName || '',
-                supplyTypeId: item.supplyTypeId || '',
-                customerId: item.customerId || '',
-                oneWayDistance: item.oneWayDistance || '',
-                remark: item.remark || ''
-              };
-            });
-          } else if (endpoint.includes('vehicle')) {
-            rawData = rawData.map((item: any) => {
-              let fuelTypeId: any = '';
-              if (options.fuelTypes && item.fuelType) {
-                const fuelMatch = options.fuelTypes.find(f => f.name === item.fuelType);
-                fuelTypeId = fuelMatch ? fuelMatch.id : '';
-              }
-              return {
-                ...item,
-                carNumber: item.carNumber || '',
-                purposeId: item.purposeId || '',
-                companyId: item.companyId || '',
-                driverMemberId: item.driverMemberId || '',
-                parentCategoryId: item.parentCategoryId || item.carCategoryParentId || '',
-                carCategoryId: item.carCategoryId || '',
-                carModelId: item.carModelId || '',
-                carModelName: item.carName || item.carModelName || '',
-                fuelType: item.fuelType || '',
-                fuelTypeId: fuelTypeId,
-                operationDistance: item.operationDistance || '',
-                remark: item.remark || '',
-                operationPurposeName: item.operationPurposeName || '',
-                companyName: item.companyName || '',
-                parentCategoryName: item.parentCategoryName || '',
-                carCategoryName: item.carCategoryName || ''
-              };
-            });
-          } else if (endpoint.includes('supply-type')) {
-            rawData = rawData.map((item: any) => ({
-              ...item,
-              supplyType: item.supplyTypeName || '',
-              note: item.remark || ''
-            }));
-          } else if (endpoint.includes('operation-purpose')) {
-            rawData = rawData.map((item: any) => ({
-              ...item,
-              purpose: item.purposeName || '',
-              scope: item.defaultScope || ''
-            }));
-          } else if (endpoint.includes('supply-customer')) {
-            rawData = rawData.map((item: any) => ({
-              ...item,
-              customerName: item.customerName || '',
-              note: item.remark || ''
-            }));
-          }
-
-          setData(rawData);
-        } catch (error) {
-          console.error(`[${title}] 검색 데이터 로딩 중 오류 발생:`, error);
-          let errorMsg = '데이터 로딩 중 오류가 발생했습니다.';
-          if (error instanceof Error) {
-            errorMsg = error.message;
-          } else if (typeof error === 'object' && error !== null && 'response' in error) {
-            const axiosError = error as any;
-            errorMsg = axiosError.response?.data?.message || errorMsg;
-          }
-          setErrorTitle('데이터 로딩 오류');
-          setErrorMessage(errorMsg);
-          setIsErrorModalOpen(true);
-        } finally {
-          setLoading(false);
-        }
-      };
-      loadData();
-    }
-  }, [pageSize, searchQuery, apiEndpoint, title]);
-
-  // --- 필터링 & 정렬 로직 (메모이제이션) ---
+  // --- 필터링 로직 (메모이제이션) - 정렬은 서버 사이드에서 처리 ---
   const searchableColumns = useMemo(() => 
     columns.filter(col => col.searchable && col.id !== 'actions').map(col => col.id as keyof T)
   , [columns]);
 
   const filteredData = useMemo(() => {
-    let result = [...data];
-
-    // 1. 검색
-    if (searchQuery) {
-        result = result.filter(row => {
-            if (searchColumn === 'all') {
-                return searchableColumns.some(key => 
-                    String(row[key]).toLowerCase().includes(searchQuery.toLowerCase())
-                );
-            } else {
-                return String(row[searchColumn]).toLowerCase().includes(searchQuery.toLowerCase());
-            }
-        });
-    }
-
-    // 2. 정렬
-    if (currentSort) {
-        const { key, direction } = currentSort;
-        result.sort((a, b) => {
-            const valA = a[key];
-            const valB = b[key];
-            if (valA == null) return 1;
-            if (valB == null) return -1;
-            
-            const strA = String(valA);
-            const strB = String(valB);
-            const comparison = strA.localeCompare(strB, undefined, { numeric: true });
-            return direction === 'asc' ? comparison : -comparison;
-        });
-    }
-    return result;
-  }, [data, searchQuery, searchColumn, searchableColumns, currentSort]);
+    // 검색 필터 (서버에서 처리하지만, 클라이언트에서 추가 필터링도 가능)
+    // 서버에서 이미 검색된 데이터이므로 그대로 반환
+    return [...data];
+  }, [data]);
   
   // --- 페이지네이션 ---
   // 백엔드에서 페이징된 데이터를 사용하므로 클라이언트 사이드 페이지네이션 불필요
@@ -400,12 +270,17 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
   // --- 핸들러 ---
   
   const handleSort = (key: keyof T) => {
+    // 백엔드에서 정렬 불가능한 컬럼은 클릭 시 무시
+    if (!mapSortKey(key)) {
+      return;
+    }
     setCurrentSort(prev => {
       if (prev?.key === key) {
         return { key, direction: prev.direction === 'asc' ? 'desc' : 'asc' };
       }
       return { key, direction: 'asc' };
     });
+    // 페이지 리셋은 useEffect에서 처리
   };
 
   // [페이지 변경]
@@ -437,7 +312,11 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
         params: {
           page: page,
           size: pageSize,
-          ...(searchQuery.trim() && { keyword: searchQuery.trim() })
+          ...(searchQuery.trim() && { keyword: searchQuery.trim() }),
+          ...(currentSort && (() => {
+            const mapped = mapSortKey(currentSort.key);
+            return mapped ? { sort: `${mapped},${currentSort.direction}` } : {};
+          })())
         }
       });
 
@@ -483,8 +362,8 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
       } else if (endpoint.includes('vehicle')) {
         rawData = rawData.map((item: any) => {
           let fuelTypeId: any = '';
-          if (options.fuelTypes && item.fuelType) {
-            const fuelMatch = options.fuelTypes.find(f => f.name === item.fuelType);
+          if (normalizedOptions.fuelTypes && item.fuelType) {
+            const fuelMatch = normalizedOptions.fuelTypes.find(f => f.name === item.fuelType);
             fuelTypeId = fuelMatch ? fuelMatch.id : '';
           }
           return {
@@ -922,17 +801,17 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
         let dynamicOptions: { id: number; name: string; oneWayDistance?: number }[] = [];
 
         if (fieldKey === 'customerName' || fieldKey === 'customerId') {
-          dynamicOptions = options.supplyCustomers || [];
+          dynamicOptions = normalizedOptions.supplyCustomers || [];
         } else if (fieldKey === 'supplyTypeName' || fieldKey === 'supplyTypeId') {
-          dynamicOptions = options.supplyTypes || [];
+          dynamicOptions = normalizedOptions.supplyTypes || [];
         } else if (fieldKey === 'companyName' || fieldKey === 'companyId') {
-          dynamicOptions = options.companies || [];
+          dynamicOptions = normalizedOptions.companies || [];
         } else if (fieldKey === 'operationPurposeName' || fieldKey === 'purposeId') {
-          dynamicOptions = options.operationPurposes || [];
+          dynamicOptions = normalizedOptions.operationPurposes || [];
         } else if (fieldKey === 'parentCategoryName' || fieldKey === 'parentCategoryId') {
-          dynamicOptions = options.carCategories || [];
+          dynamicOptions = normalizedOptions.carCategories || [];
         } else if (fieldKey === 'fuelType' || fieldKey === 'fuelTypeId') {
-          dynamicOptions = options.fuelTypes || [];
+          dynamicOptions = normalizedOptions.fuelTypes || [];
         }
 
 
@@ -983,8 +862,8 @@ const StandardDataManagementTable = <T extends { id: number, [key: string]: any 
           // 소분류 필드의 경우 대분류에 따라 옵션 필터링 (차량 관리에서만)
           if (String(fieldKey) === 'carCategoryName' && apiEndpoint.includes('vehicle')) {
               const selectedParentCategory = selectedParentCategories[rowId] || row.parentCategoryName || '';
-              const filteredOptions = selectedParentCategory && options.carCategoryMap ? 
-                options.carCategoryMap[selectedParentCategory] || [] : [];
+              const filteredOptions = selectedParentCategory && normalizedOptions.carCategoryMap ? 
+                normalizedOptions.carCategoryMap[selectedParentCategory] || [] : [];
               
               // 소분류 ID 계산
               const carCategoryCurrentId = (() => {
