@@ -131,7 +131,7 @@ export const fetchAnalysisData = async (
     const params = {
       year: parseInt(year),
       month: month === 'all' ? undefined : parseInt(month),
-      defaultScope: scope === 'scope1' ? 1 : scope === 'scope3' ? 3 : undefined,
+      defaultScope: scope === 'scope1' ? 1 : scope === 'scope3' ? 3 : scope === '기타' ? 4 : undefined,
     };
 
     let apiResponse: any;

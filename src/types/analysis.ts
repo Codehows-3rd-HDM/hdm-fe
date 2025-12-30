@@ -32,4 +32,4 @@ export interface MapData {
 }
 
 // 탭 옵션 타입
-export type ScopeType = 'total' | 'scope1' | 'scope3' | 'other';
+export type ScopeType = 'total' | 'scope1' | 'scope3' | '기타';

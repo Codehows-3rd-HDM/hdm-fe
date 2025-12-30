@@ -67,6 +67,13 @@ const CompanyEmissionPage: React.FC = () => {
   );
   const DB_START_YEAR = 2018;
 
+  // --- 유틸리티 함수 ---
+  // 탄소 배출량 반올림: 소수점 3째자리에서 반올림하여 2째 자리까지만 표시
+  const roundEmission = (value: number | undefined | null): number => {
+    if (value === undefined || value === null) return 0;
+    return Math.round(value * 100) / 100;
+  };
+
   // --- 연도 옵션 생성 ---
   const yearOptions = useMemo(() => {
     const options = [];
@@ -106,12 +113,21 @@ const CompanyEmissionPage: React.FC = () => {
         const mappedData = response.data.map((item: any, index: number) => ({
           id: item.id || index,
           name: item.companyName, // 백엔드 변수명 매핑
-          value: item.totalEmission, // 백엔드 변수명 매핑
+          value: roundEmission(item.totalEmission), // 반올림 적용
           address: item.address,
           ratio: item.ratio,
         }));
 
+        // 값이 큰 순으로 정렬
+        mappedData.sort((a, b) => b.value - a.value);
+
         setCompanyData(mappedData);
+        
+        // 기본 정렬 설정 (값이 큰 순서)
+        setSortConfig({
+          key: 'value',
+          direction: 'desc',
+        });
       } catch (error) {
         console.error("데이터 로드 실패:", error);
         setCompanyData([]);
@@ -219,7 +235,16 @@ const CompanyEmissionPage: React.FC = () => {
       "주소",
     ].join(",");
     const rows = filteredData
-      .map((d, idx) => [idx + 1, d.name, d.value, d.ratio, d.address].join(","))
+      .map((d, idx) => [
+        idx + 1, 
+        d.name, 
+        parseFloat(roundEmission(d.value).toFixed(2)).toLocaleString(undefined, { 
+          minimumFractionDigits: 2, 
+          maximumFractionDigits: 2 
+        }), 
+        d.ratio, 
+        d.address
+      ].join(","))
       .join("\n");
     const csvContent = `\ufeff${headers}\n${rows}`;
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
@@ -340,7 +365,10 @@ const CompanyEmissionPage: React.FC = () => {
                 />
                 <Tooltip
                   formatter={(val: string | number | undefined) =>
-                    val?.toLocaleString()
+                    parseFloat(roundEmission(val as number).toFixed(2)).toLocaleString(undefined, { 
+                      minimumFractionDigits: 2, 
+                      maximumFractionDigits: 2 
+                    })
                   }
                 />
                 <Bar dataKey="value" radius={[0, 4, 4, 0]}>
@@ -472,7 +500,10 @@ const CompanyEmissionPage: React.FC = () => {
                       {row.name}
                     </td>
                     <td className="px-4 py-3 text-center text-gray-800">
-                      {row.value.toLocaleString()}
+                      {parseFloat(roundEmission(row.value).toFixed(2)).toLocaleString(undefined, { 
+                        minimumFractionDigits: 2, 
+                        maximumFractionDigits: 2 
+                      })}
                     </td>
                     <td className="px-4 py-3 text-center text-gray-800">
                       {row.ratio}%

@@ -42,11 +42,18 @@ const COLORS = [
 ];
 const DB_START_YEAR = 2018; // [설정] DB 데이터 시작 연도
 
+// --- 유틸리티 함수 ---
+// 탄소 배출량 반올림: 소수점 3째자리에서 반올림하여 2째 자리까지만 표시
+const roundEmission = (value: number | undefined | null): number => {
+  if (value === undefined || value === null) return 0;
+  return Math.round(value * 100) / 100;
+};
+
 const SCOPE_TABS: { id: ScopeType; label: string }[] = [
   { id: "total", label: "총 배출량" },
   { id: "scope1", label: "Scope 1" },
   { id: "scope3", label: "Scope 3" },
-  { id: "other", label: "기타" },
+  { id: "기타", label: "기타" },
 ];
 
 interface CarbonAnalysisTemplateProps {
@@ -100,6 +107,12 @@ const CarbonAnalysisTemplate: React.FC<CarbonAnalysisTemplateProps> = ({
           selectedScope
         );
         setData(result);
+
+        // 데이터 로드 후 기본 정렬 (totalEmission 기준 내림차순)
+        setSortConfig({
+          key: 'totalEmission',
+          direction: 'desc',
+        });
 
         // 데이터 로드 후 차트 체크박스 초기화 (상위 3개 자동 선택)
         const top3 = [...result]
@@ -398,7 +411,10 @@ const CarbonAnalysisTemplate: React.FC<CarbonAnalysisTemplateProps> = ({
                 />
                 <RechartsTooltip
                   formatter={(value: any) =>
-                    [`${value?.toLocaleString()} tCO2eq`, '']
+                    [`${parseFloat(roundEmission(value).toFixed(2)).toLocaleString(undefined, { 
+                      minimumFractionDigits: 2, 
+                      maximumFractionDigits: 2 
+                    })} tCO2eq`, '']
                   }
                   contentStyle={{
                     borderRadius: "8px",
@@ -439,7 +455,10 @@ const CarbonAnalysisTemplate: React.FC<CarbonAnalysisTemplateProps> = ({
                   />
                   <RechartsTooltip
                     formatter={(value: any) =>
-                      [value?.toLocaleString(), '']
+                      [parseFloat(roundEmission(value).toFixed(2)).toLocaleString(undefined, { 
+                        minimumFractionDigits: 2, 
+                        maximumFractionDigits: 2 
+                      }), '']
                     }
                     contentStyle={{
                       borderRadius: "8px",
@@ -627,9 +646,20 @@ const CarbonAnalysisTemplate: React.FC<CarbonAnalysisTemplateProps> = ({
                     {columns.map((col) => {
                       const val = (row as any)[col.id];
                       let displayVal = val;
-                      if (col.format === "number")
+                      
+                      // 탄소 배출량 관련 필드 반올림 처리
+                      if (col.format === "number" && 
+                          (col.id === 'totalEmission' || col.id === 'avgEmission')) {
+                        const rounded = roundEmission(val);
+                        displayVal = parseFloat(rounded.toFixed(2)).toLocaleString(undefined, { 
+                          minimumFractionDigits: 2, 
+                          maximumFractionDigits: 2 
+                        });
+                      } else if (col.format === "number") {
                         displayVal = val?.toLocaleString();
-                      if (col.format === "percent") displayVal = `${val}%`;
+                      } else if (col.format === "percent") {
+                        displayVal = `${val}%`;
+                      }
 
                       return (
                         <td
