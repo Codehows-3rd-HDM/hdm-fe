@@ -50,7 +50,9 @@ const StandardDataManagementTable = <T extends { id: number; [key: string]: unkn
   const [errorTitle, setErrorTitle] = useState('오류');
   
   const [currentSort, setCurrentSort] = useState<{ key: keyof T; direction: 'asc' | 'desc' } | null>(null);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState(''); // 실제 검색에 사용
+  const [searchInput, setSearchInput] = useState(''); // 입력 필드 표시값 (한글 조합 중간값 포함)
+  const [isComposing, setIsComposing] = useState(false); // 한글 입력 조합 플래그
   const [searchColumn, setSearchColumn] = useState<'all' | keyof T>('all');
   
   // const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
@@ -1116,8 +1118,21 @@ const StandardDataManagementTable = <T extends { id: number; [key: string]: unkn
             <input
               type="text"
               placeholder="검색어를 입력하세요"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              value={searchInput}
+              onChange={(e) => {
+                const next = e.target.value;
+                setSearchInput(next);
+                if (!isComposing) {
+                  setSearchQuery(next);
+                }
+              }}
+              onCompositionStart={() => setIsComposing(true)}
+              onCompositionEnd={(e) => {
+                setIsComposing(false);
+                const finalValue = e.currentTarget.value;
+                setSearchInput(finalValue);
+                setSearchQuery(finalValue);
+              }}
               className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 outline-none"
             />
             <Search size={16} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
