@@ -543,7 +543,7 @@ const StandardDataManagementTable = <T extends { id: number; [key: string]: unkn
   
   // [API] 개별 삭제
   const handleSingleDelete = async (rowId: number) => {
-      if (window.confirm(`ID ${rowId} 행을 정말 삭제하시겠습니까?`)) {
+      if (window.confirm(`정말 삭제하시겠습니까?`)) {
           let endpoint = apiEndpoint;
           if (endpoint.includes('car-model')) {
             endpoint = `/admin/car-model/${rowId}`;
