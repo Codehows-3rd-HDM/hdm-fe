@@ -159,7 +159,7 @@ const StandardDataManagementTable = <T extends { id: number; [key: string]: unkn
           params: {
             page: currentPage,
             size: pageSize,
-            ...(searchQuery.trim() && { keyword: searchQuery.trim() }),
+            ...buildSearchParams(),
             ...(sortParam && { sort: sortParam })
           }
         });
@@ -333,6 +333,33 @@ const StandardDataManagementTable = <T extends { id: number; [key: string]: unkn
   const pageBtnActive = 'bg-blue-600 text-white border-blue-600 shadow-sm';
   const pageBtnDisabled = 'bg-gray-50 text-gray-400 border-gray-200 cursor-not-allowed';
 
+  // 검색 파라미터 이름 매핑 (엔드포인트별)
+  const buildSearchParams = useCallback(() => {
+    const trimmed = searchQuery.trim();
+    if (!trimmed) return {};
+
+    if (apiEndpoint.includes('supply-type')) {
+      return { supplyTypeName: trimmed };
+    }
+    if (apiEndpoint.includes('supply-customer')) {
+      return { customerName: trimmed };
+    }
+    if (apiEndpoint.includes('car-model')) {
+      return { keyword: trimmed };
+    }
+    if (apiEndpoint.includes('company')) {
+      return { keyword: trimmed };
+    }
+    if (apiEndpoint.includes('vehicle')) {
+      return { keyword: trimmed };
+    }
+    if (apiEndpoint.includes('operation-purpose')) {
+      return { keyword: trimmed };
+    }
+
+    return { keyword: trimmed };
+  }, [apiEndpoint, searchQuery]);
+
   // --- 핸들러 ---
   
   const handleSort = (key: keyof T) => {
@@ -378,7 +405,7 @@ const StandardDataManagementTable = <T extends { id: number; [key: string]: unkn
         params: {
           page: page,
           size: pageSize,
-          ...(searchQuery.trim() && { keyword: searchQuery.trim() }),
+          ...buildSearchParams(),
           ...(currentSort && (() => {
             const mapped = mapSortKey(currentSort.key);
             return mapped ? { sort: `${mapped},${currentSort.direction}` } : {};
