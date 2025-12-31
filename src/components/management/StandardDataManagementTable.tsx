@@ -319,6 +319,18 @@ const StandardDataManagementTable = <T extends { id: number; [key: string]: unkn
   // 백엔드에서 페이징된 데이터를 사용하므로 클라이언트 사이드 페이지네이션 불필요
   const paginatedData = filteredData;
 
+  // 페이지네이션 그룹 계산 (1~10, 11~20 고정 블록)
+  const pageGroupSize = 10;
+  const currentGroupStart = Math.floor(currentPage / pageGroupSize) * pageGroupSize;
+  const currentGroupEnd = Math.min(totalPages, currentGroupStart + pageGroupSize);
+  const visiblePages = Array.from({ length: Math.max(currentGroupEnd - currentGroupStart, 0) }, (_, i) => currentGroupStart + i);
+
+  // 버튼 스타일 (간단한 테마 일관성)
+  const pageBtnBase = 'px-3 py-1.5 rounded border text-sm font-semibold transition-colors duration-150';
+  const pageBtnDefault = 'bg-white text-gray-700 border-gray-200 hover:bg-blue-50';
+  const pageBtnActive = 'bg-blue-600 text-white border-blue-600 shadow-sm';
+  const pageBtnDisabled = 'bg-gray-50 text-gray-400 border-gray-200 cursor-not-allowed';
+
   // --- 핸들러 ---
   
   const handleSort = (key: keyof T) => {
@@ -1274,27 +1286,60 @@ const StandardDataManagementTable = <T extends { id: number; [key: string]: unkn
           <div className="hidden md:block w-1/4"></div> 
           
           {/* 페이지네이션 (중앙) */}
-        <div className="flex items-center gap-1">
-            <button onClick={() => handlePageChange(0)} disabled={currentPage === 0} className="px-3 py-1 border rounded hover:bg-gray-100 disabled:opacity-50">&lt;&lt;&lt;</button>
-            <button onClick={() => handlePageChange(Math.max(currentPage - 10, 0))} disabled={currentPage === 0} className="px-3 py-1 border rounded hover:bg-gray-100 disabled:opacity-50">&lt;&lt;</button>
-            <button onClick={() => handlePageChange(currentPage - 1)} disabled={currentPage === 0} className="px-3 py-1 border rounded hover:bg-gray-100 disabled:opacity-50">&lt;</button>
-          
-            
-            {Array.from({ length: totalPages }, (_, i) => i).slice(
-                Math.max(0, currentPage - 4), Math.min(totalPages, currentPage + 5)
-            ).map(page => (
-                <button
-                    key={page}
-                    onClick={() => handlePageChange(page)}
-                    className={`px-3 py-1 border rounded ${page === currentPage ? 'bg-blue-600 text-white border-blue-600' : 'bg-white hover:bg-gray-100'}`}
-                >
-                    {page + 1}
-                </button>
+        <div className="flex items-center gap-1 bg-white px-3 py-2 rounded-lg shadow-sm border border-gray-200">
+            <button
+              onClick={() => handlePageChange(0)}
+              disabled={currentPage === 0}
+              className={`${pageBtnBase} ${currentPage === 0 ? pageBtnDisabled : pageBtnDefault}`}
+            >
+              ⏮
+            </button>
+            <button
+              onClick={() => handlePageChange(Math.max(currentGroupStart - pageGroupSize, 0))}
+              disabled={currentGroupStart === 0}
+              className={`${pageBtnBase} ${currentGroupStart === 0 ? pageBtnDisabled : pageBtnDefault}`}
+            >
+              ◀10
+            </button>
+            <button
+              onClick={() => handlePageChange(currentPage - 1)}
+              disabled={currentPage === 0}
+              className={`${pageBtnBase} ${currentPage === 0 ? pageBtnDisabled : pageBtnDefault}`}
+            >
+              ◀
+            </button>
+
+            {visiblePages.map(page => (
+              <button
+                key={page}
+                onClick={() => handlePageChange(page)}
+                className={`${pageBtnBase} ${page === currentPage ? pageBtnActive : pageBtnDefault}`}
+              >
+                {page + 1}
+              </button>
             ))}
-            
-            <button onClick={() => handlePageChange(currentPage + 1)} disabled={currentPage === totalPages - 1} className="px-3 py-1 border rounded hover:bg-gray-100 disabled:opacity-50">&gt;</button>
-            <button onClick={() => handlePageChange(Math.min(currentPage + 10, totalPages - 1))} disabled={currentPage === totalPages - 1} className="px-3 py-1 border rounded hover:bg-gray-100 disabled:opacity-50">&gt;&gt;</button>
-            <button onClick={() => handlePageChange(totalPages - 1)} disabled={currentPage === totalPages - 1} className="px-3 py-1 border rounded hover:bg-gray-100 disabled:opacity-50">&gt;&gt;&gt;</button>
+
+            <button
+              onClick={() => handlePageChange(currentPage + 1)}
+              disabled={currentPage === totalPages - 1}
+              className={`${pageBtnBase} ${currentPage === totalPages - 1 ? pageBtnDisabled : pageBtnDefault}`}
+            >
+              ▶
+            </button>
+            <button
+              onClick={() => handlePageChange(Math.min(currentGroupStart + pageGroupSize, totalPages - 1))}
+              disabled={currentGroupEnd >= totalPages}
+              className={`${pageBtnBase} ${currentGroupEnd >= totalPages ? pageBtnDisabled : pageBtnDefault}`}
+            >
+              10▶
+            </button>
+            <button
+              onClick={() => handlePageChange(totalPages - 1)}
+              disabled={currentPage === totalPages - 1}
+              className={`${pageBtnBase} ${currentPage === totalPages - 1 ? pageBtnDisabled : pageBtnDefault}`}
+            >
+              ⏭
+            </button>
         </div>
 
         {/* 일괄 작업 버튼 (우측) */}
