@@ -37,82 +37,124 @@ export interface ReductionActivity {
   reduction?: number; // % (optional for mock data)
 }
 
+interface TargetApiResponse {
+  totalTarget: number | string;
+  totalActual: number | string;
+  totalAchievementRate?: number | string;
+  monthlyData: Array<{ month: number; target: number | string; actual: number | string }>;
+}
+
+interface DashboardYearlyApiResponse {
+  year: number;
+  scope1Actual?: number | string;
+  scope3Actual?: number | string;
+  scope1Target?: number | string;
+  scope3Target?: number | string;
+  totalTarget?: number | string;
+}
+
+const toNumber = (value: number | string | undefined | null) => {
+  if (value === undefined || value === null) return 0;
+  const num = typeof value === 'string' ? parseFloat(value) : value;
+  return Number.isFinite(num) ? num : 0;
+};
+
+const fetchTarget = async (type: 'total' | 'Scope1' | 'Scope3', year: number): Promise<TargetApiResponse> => {
+  const response = await axiosInstance.get('/view/target', { params: { year, type } });
+  return response.data as TargetApiResponse;
+};
+
 export const fetchDashboardSummary = async (): Promise<DashboardSummaryData> => {
   const year = getBusinessYear();
   try {
-    // TODO: 실제 API 호출로 변경
-    const response = await axiosInstance.get('/api/dashboard/summary', {
-      params: {
-        year
-      }
-    });
-    return response.data;
-  } catch (error) {
-    console.warn('Dashboard summary API 실패, Mock 데이터 반환:', error);
-    return Promise.resolve({
+    const [scope1, scope3] = await Promise.all([
+      fetchTarget('Scope1', year),
+      fetchTarget('Scope3', year),
+    ]);
+
+    return {
       currentYear: year,
-      scope1Current: 28000,
-      scope3Current: 95000,
-      scope1Target: 30000,
-      scope3Target: 100000,
-    });
+      scope1Current: toNumber(scope1.totalActual),
+      scope3Current: toNumber(scope3.totalActual),
+      scope1Target: toNumber(scope1.totalTarget),
+      scope3Target: toNumber(scope3.totalTarget),
+    };
+  } catch (error) {
+    console.error('Dashboard summary API 실패:', error);
+    throw error;
   }
 };
 
 export const fetchMonthlyData = async (): Promise<MonthlyData[]> => {
   const year = getBusinessYear();
   try {
-    const response = await axiosInstance.get('/api/dashboard/monthly', {
-      params: {
-        year
-      }
-    });
-    return response.data;
+    const [total, scope1, scope3] = await Promise.all([
+      fetchTarget('total', year),
+      fetchTarget('Scope1', year),
+      fetchTarget('Scope3', year),
+    ]);
+
+    const byMonth: Record<number, MonthlyData> = {};
+    for (let m = 1; m <= 12; m++) {
+      byMonth[m] = { month: m, scope1: 0, scope3: 0, target: 0 };
+    }
+
+    const apply = (source: TargetApiResponse, key: 'scope1' | 'scope3' | 'target') => {
+      source.monthlyData?.forEach((item) => {
+        const month = item.month;
+        if (month >= 1 && month <= 12) {
+          if (key === 'target') byMonth[month].target = toNumber(item.target);
+          if (key === 'scope1') byMonth[month].scope1 = toNumber(item.actual);
+          if (key === 'scope3') byMonth[month].scope3 = toNumber(item.actual);
+        }
+      });
+    };
+
+    apply(total, 'target');
+    apply(scope1, 'scope1');
+    apply(scope3, 'scope3');
+
+    return Object.values(byMonth).sort((a, b) => a.month - b.month);
   } catch (error) {
-    console.warn('Monthly data API 실패, Mock 데이터 반환:', error);
-    // 1년 약 13~15만: 월평균 10,833~12,500 (scope1+scope3)
-    return Promise.resolve(
-      Array.from({ length: 12 }, (_, i) => {
-        const base = 11000 + Math.random() * 1500; // 11,000 ~ 12,500
-        const scope1 = Math.floor(base * 0.2); // 약 20%
-        const scope3 = Math.floor(base * 0.8); // 약 80%
-        return {
-          month: i + 1,
-          scope1,
-          scope3,
-          target: Math.floor(base * 1.05),
-        };
-      })
-    );
+    console.error('Monthly data API 실패:', error);
+    throw error;
   }
 };
 
 export const fetchYearlyData = async (): Promise<YearlyData[]> => {
   const year = getBusinessYear();
   try {
-    const response = await axiosInstance.get('/api/dashboard/yearly', {
-      params: {
-        years: 5, // 최근 5년
-        baseYear: year,
-      }
-    });
-    return response.data;
-  } catch (error) {
-    console.warn('Yearly data API 실패, Mock 데이터 반환:', error);
-    // 1년 약 13~15만
-    return Promise.resolve(
-      Array.from({ length: 5 }, (_, i) => {
-        const base = 130000 + Math.random() * 20000; // 130,000 ~ 150,000
-        const scope1 = Math.floor(base * 0.2); // 약 20%
-        const scope3 = Math.floor(base * 0.8); // 약 80%
+    const years = Array.from({ length: 5 }, (_, i) => year - 4 + i);
+
+    const results = await Promise.allSettled(
+      years.map(async (y) => {
+        const [scope1, scope3, total] = await Promise.all([
+          fetchTarget('Scope1', y),
+          fetchTarget('Scope3', y),
+          fetchTarget('total', y),
+        ]);
+
+        const scope1Actual = toNumber(scope1.totalActual);
+        const scope3Actual = toNumber(scope3.totalActual);
+        const targetFromTotal = toNumber(total.totalTarget);
+        const targetFromScopes = toNumber(scope1.totalTarget) + toNumber(scope3.totalTarget);
+        const target = targetFromTotal || targetFromScopes;
+
         return {
-          year: year - 4 + i,
-          scope1,
-          scope3,
-          target: Math.floor(base * 1.05),
-        };
+          year: y,
+          scope1: scope1Actual,
+          scope3: scope3Actual,
+          target,
+        } as YearlyData;
       })
     );
+
+    return results
+      .filter((r): r is PromiseFulfilledResult<YearlyData> => r.status === 'fulfilled')
+      .map((r) => r.value);
+  } catch (error) {
+    console.error('Yearly data API 실패:', error);
+    return [];
   }
 };
 
@@ -127,15 +169,8 @@ export const fetchPurposeData = async (): Promise<PurposeData[]> => {
       }))
       .filter((d) => d.name);
   } catch (error) {
-    console.warn('Purpose data API 실패, Mock 데이터 반환:', error);
-    // TODO: 실제 API 호출로 변경
-    return Promise.resolve([
-      { name: '출퇴근', value: 35 },
-      { name: '납품', value: 25 },
-      { name: '출장', value: 20 },
-      { name: '공정운영', value: 15 },
-      { name: '기타', value: 5 },
-    ]);
+    console.error('Purpose data API 실패:', error);
+    throw error;
   }
 };
 
@@ -155,14 +190,7 @@ export const fetchReductionActivities = async (): Promise<ReductionActivity[]> =
       date: activity.periodEnd || activity.periodStart,
     }));
   } catch (error) {
-    console.warn('Reduction activities API 실패, Mock 데이터 반환:', error);
-    const today = new Date();
-    return Promise.resolve([
-      { id: '1', description: '물류 동선 최적화로 연료 절감', date: new Date(today.getTime() - 0 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] },
-      { id: '2', description: '야간 공정 전력 피크 컷 적용', date: new Date(today.getTime() - 1 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] },
-      { id: '3', description: '폐열 회수 보일러 시범 운영', date: new Date(today.getTime() - 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] },
-      { id: '4', description: '사내 EV 충전 인센티브 도입', date: new Date(today.getTime() - 5 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] },
-      { id: '5', description: '친환경 포장재 전환 파일럿 착수', date: new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] },
-    ]);
+    console.error('Reduction activities API 실패:', error);
+    throw error;
   }
 };
