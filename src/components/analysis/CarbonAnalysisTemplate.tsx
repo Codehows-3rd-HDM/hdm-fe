@@ -103,12 +103,18 @@ const CarbonAnalysisTemplate: React.FC<CarbonAnalysisTemplateProps> = ({
     const loadYears = async () => {
       try {
         const years = await fetchAvailableYears();
-        const yearStrings = years.map((y) => y.toString());
+        const yearStrings = years
+          .sort((a, b) => b - a)
+          .map((y) => y.toString());
         setYearOptions(yearStrings);
-        
+
         // 현재 연도가 목록에 있으면 그대로, 없으면 첫 번째 연도로 설정
-        if (yearStrings.length > 0 && !yearStrings.includes(currentYear.toString())) {
-          setSelectedYear(yearStrings[0]);
+        if (yearStrings.length > 0) {
+          //  현재 선택된 연도(기본값 2026)가 목록에 없으면
+          if (!yearStrings.includes(selectedYear)) {
+            // 목록 중 가장 최신 연도(index 0)로 강제 설정
+            setSelectedYear(yearStrings[0]);
+          }
         }
       } catch (error) {
         console.error("Failed to load available years:", error);
@@ -117,7 +123,7 @@ const CarbonAnalysisTemplate: React.FC<CarbonAnalysisTemplateProps> = ({
       }
     };
     loadYears();
-  }, [currentYear]);
+  }, []);
 
   // --- [API] 데이터 로딩 ---
   useEffect(() => {
@@ -135,8 +141,8 @@ const CarbonAnalysisTemplate: React.FC<CarbonAnalysisTemplateProps> = ({
 
         // 데이터 로드 후 기본 정렬 (totalEmission 기준 내림차순)
         setSortConfig({
-          key: 'totalEmission',
-          direction: 'desc',
+          key: "totalEmission",
+          direction: "desc",
         });
 
         // 데이터 로드 후 차트 체크박스 초기화 (상위 3개 자동 선택)
@@ -430,12 +436,15 @@ const CarbonAnalysisTemplate: React.FC<CarbonAnalysisTemplateProps> = ({
                   content={<CustomLegend />}
                 />
                 <RechartsTooltip
-                  formatter={(value: any) =>
-                    [`${parseFloat(roundEmission(value).toFixed(2)).toLocaleString(undefined, { 
-                      minimumFractionDigits: 2, 
-                      maximumFractionDigits: 2 
-                    })} tCO2eq`, '']
-                  }
+                  formatter={(value: any) => [
+                    `${parseFloat(
+                      roundEmission(value).toFixed(2)
+                    ).toLocaleString(undefined, {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })} tCO2eq`,
+                    "",
+                  ]}
                   contentStyle={{
                     borderRadius: "8px",
                     border: "none",
@@ -474,12 +483,15 @@ const CarbonAnalysisTemplate: React.FC<CarbonAnalysisTemplateProps> = ({
                     tickLine={false}
                   />
                   <RechartsTooltip
-                    formatter={(value: any) =>
-                      [parseFloat(roundEmission(value).toFixed(2)).toLocaleString(undefined, { 
-                        minimumFractionDigits: 2, 
-                        maximumFractionDigits: 2 
-                      }), '']
-                    }
+                    formatter={(value: any) => [
+                      parseFloat(
+                        roundEmission(value).toFixed(2)
+                      ).toLocaleString(undefined, {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      }),
+                      "",
+                    ]}
                     contentStyle={{
                       borderRadius: "8px",
                       border: "none",
@@ -579,7 +591,9 @@ const CarbonAnalysisTemplate: React.FC<CarbonAnalysisTemplateProps> = ({
       {!loading && processedData.length === 0 && (
         <div className="flex items-center justify-center h-[500px] mb-8 bg-white rounded-xl shadow-sm border border-gray-100">
           <div className="text-center text-gray-500">
-            <p className="text-lg font-medium">선택기간의 조회된 데이터가 없습니다.</p>
+            <p className="text-lg font-medium">
+              선택기간의 조회된 데이터가 없습니다.
+            </p>
           </div>
         </div>
       )}
@@ -675,14 +689,18 @@ const CarbonAnalysisTemplate: React.FC<CarbonAnalysisTemplateProps> = ({
                     {columns.map((col) => {
                       const val = (row as any)[col.id];
                       let displayVal = val;
-                      
+
                       // 탄소 배출량 관련 필드 반올림 처리
-                      if (col.format === "number" && 
-                          (col.id === 'totalEmission' || col.id === 'avgEmission')) {
+                      if (
+                        col.format === "number" &&
+                        (col.id === "totalEmission" || col.id === "avgEmission")
+                      ) {
                         const rounded = roundEmission(val);
-                        displayVal = parseFloat(rounded.toFixed(2)).toLocaleString(undefined, { 
-                          minimumFractionDigits: 2, 
-                          maximumFractionDigits: 2 
+                        displayVal = parseFloat(
+                          rounded.toFixed(2)
+                        ).toLocaleString(undefined, {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
                         });
                       } else if (col.format === "number") {
                         displayVal = val?.toLocaleString();
