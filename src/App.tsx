@@ -10,7 +10,7 @@ import {
 import Sidebar from "./components/Sidebar";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/admin/RegisterPage";
-import DataUploadPage from "./pages/admin/ExcelUpS1Nice";
+import DataUploadPage from "./pages/admin/excel/ExcelUpS1Nice";
 import VehicleRegisterPage from "./pages/admin/VehicleRegisterPage";
 import DashboardPage from "./pages/dashboard/DashboardPage";
 import VehicleManagementPage from "./pages/admin/VehicleManagementPage";
@@ -31,8 +31,9 @@ import "./App.css";
 import SupplyTypeEmissionPage from "./pages/Emissions inquiry/SupplyTypeEmissionPage";
 import SupplyCustomerEmissionPage from "./pages/Emissions inquiry/SupplyCustomerEmissionPage";
 import MainPage from "./pages/MainPage";
-import ExcelManagementPage from "./pages/admin/ExcelUpDownBaseInfo";
+import ExcelManagementPage from "./pages/admin/excel/ExcelUpDownBaseInfo";
 import EmissionFactorPage from "./pages/admin/EmissionFactorPage";
+import CarbonTargetApp from "./pages/admin/CarbonTargetManagement";
 
 // [임시] 페이지가 없을 때 보여줄 플레이스홀더 컴포넌트
 const PagePlaceholder = ({ title }: { title: string }) => {
@@ -53,7 +54,7 @@ const PagePlaceholder = ({ title }: { title: string }) => {
         </code>
       </p>
       <p style={{ marginTop: "20px", fontSize: "14px", color: "#888" }}>
-        ⚠️ 화면설계서 및 API 명세서에 따라 개발 예정입니다.
+        화면설계서 및 API 명세서에 따라 개발 예정입니다.
       </p>
     </div>
   );
@@ -64,7 +65,7 @@ const MainLayout = () => {
   const location = useLocation();
   const isDashboard = location.pathname === "/dashboard";
 
-  // 🔥 사이드바 토글 상태
+  // 사이드바 토글 상태
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const toggleSidebar = () => {
@@ -82,11 +83,11 @@ const MainLayout = () => {
 
       {/* 메인 콘텐츠 영역: 사이드바 너비만큼 margin-left 조정 */}
       <main
-        className={`flex-1 transition-all duration-300 ease-in-out ${
-          isDashboard ? "ml-[0px]" : isSidebarOpen ? "ml-[260px]" : "ml-[80px]"
+        className={`min-w-0 flex-1 transition-all duration-300 ease-in-out ${
+          isDashboard ? "ml-0" : isSidebarOpen ? "ml-65" : "ml-20"
         }`}
       >
-        <div>
+        <div className={`${!isDashboard ? '' : ''}`}>
           <Outlet />
         </div>
       </main>
@@ -186,10 +187,11 @@ const App: React.FC = () => {
                   <PagePlaceholder title="탄소 배출량 계산 설정 (HDM-028)" />
                 }
               />
+              //  목표 관리
               <Route
                 path="target-view"
                 element={
-                  <PagePlaceholder title="탄소 배출 목표 관리 (HDM-029)" />
+                  <CarbonTargetApp />
                 }
               />
 

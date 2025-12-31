@@ -1,4 +1,5 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useEffect, useMemo } from "react";
+import axios from "axios";
 import {
   BarChart,
   Bar,
@@ -13,22 +14,35 @@ import {
   LabelList,
   Legend,
 } from "recharts";
-import { Printer, ChevronDown, TrendingUp, TrendingDown } from "lucide-react";
+import { ChevronDown, TrendingUp, TrendingDown } from "lucide-react";
+
+const BASE_URL = import.meta.env.VITE_API_URL || "/api";
 
 // --- 타입 정의 ---
 type ScopeType = "total" | "scope1" | "scope3";
 
-interface MonthlyTargetData {
-  month: string;
-  actual: number; // 실적
+interface MonthlyComparisonDto {
+  month: number;
   target: number; // 목표
+  actual: number; // 실제
+  achievementRate: number; // 증감률
 }
 
-// useMemo에서 반환할 데이터 구조 확장
-interface ChartData {
-  totalActual: number;
+interface ViewEmissionTargetDto {
   totalTarget: number;
-  monthlyData: MonthlyTargetData[];
+  totalActual: number;
+  totalAchievementRate: number;
+  monthlyData: MonthlyComparisonDto[];
+  latestMonth: number;
+}
+
+// 차트에 바인딩할 데이터 구조 (month를 문자열로 변환 후 사용)
+interface ChartData extends ViewEmissionTargetDto {
+  processedMonthlyData: {
+    month: string;
+    target: number;
+    actual: number;
+  }[];
   lastReportingMonth: number; // 데이터가 존재하는 마지막 월 (1~12)
 }
 
@@ -40,87 +54,133 @@ const RECHARTS_COLORS = {
   targetLine: "#f97316", // 목표 선 (Tailwind orange-500)
 };
 
-const DB_START_YEAR = 1979;
+// const DB_START_YEAR = 1979;
 
 const TargetComparisonPage: React.FC = () => {
   // --- 상태 관리 ---
   const [selectedScope, setSelectedScope] = useState<ScopeType>("total");
 
-  // 연도 선택: 1979년 ~ 현재 연도까지 동적 생성
   const today = useMemo(() => new Date(), []);
   const currentYear = today.getFullYear();
+  const currentMonth = today.getMonth() + 1;
 
-  const years = useMemo(() => {
-    const yearList = [];
-    for (let y = currentYear; y >= DB_START_YEAR; y--) {
-      yearList.push(y.toString());
-    }
-    return yearList;
-  }, [currentYear]);
+  // 연도 목록을 State로 관리 (서버에서 받아옴)
+  // 초기값은 일단 현재 연도 하나만 넣어둠
+  const [years, setYears] = useState<string[]>([currentYear.toString()]);
 
   const [selectedYear, setSelectedYear] = useState<string>(
     currentYear.toString()
   );
 
-  // --- Mock Data 생성 및 동적 월 기준 설정 ---
-  const data: ChartData = useMemo(() => {
-    const reportingYear = parseInt(selectedYear);
-    const currentMonth = today.getMonth() + 1; // 1월: 1, 12월: 12
+  // 서버에서 받아온 데이터 저장용 State
+  const [chartData, setChartData] = useState<ChartData | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
 
-    // [개선] 데이터가 존재하는 마지막 월을 동적으로 설정
-    // 현재 연도: 현재 월까지. 과거 연도: 12월까지.
-    const lastReportingMonth = reportingYear < currentYear ? 12 : currentMonth;
+  // --- API 호출 (useEffect) ---
+  // 화면 켜지면 '연도 목록'부터 가져오기
+  useEffect(() => {
+    const fetchYears = async () => {
+      try {
+        const response = await axios.get<number[]>(
+          `${BASE_URL}/view/common/years`
+        );
+        const yearList = response.data;
 
-    // 1. 연간 총 데이터 계산 (Mock)
-    const yearNum = parseInt(selectedYear);
-    const isBadYear = yearNum % 2 === 0;
+        if (yearList && yearList.length > 0) {
+          // 최신 연도가 위로 오게 내림차순 정렬 (2025, 2024, 2023...)
+          const sortedYears = yearList.sort((a, b) => b - a).map(String);
+          setYears(sortedYears);
 
-    const baseTarget =
-      selectedScope === "total"
-        ? 10000
-        : selectedScope === "scope1"
-        ? 4000
-        : 6000;
-    const totalTarget = baseTarget;
-
-    // 실적은 보고된 월 수에 비례하여 조정될 수 있도록 Mockup
-    const totalActualBase = isBadYear
-      ? baseTarget + Math.floor(Math.random() * 2000) + 500
-      : baseTarget - Math.floor(Math.random() * 1000);
-
-    // 보고 월수에 따른 총 실적 조정 (단순화를 위해, 실제는 월별 합산)
-    const totalActual = Math.floor(totalActualBase * (lastReportingMonth / 12));
-
-    // 2. 월별 데이터 생성 (lastReportingMonth까지만 생성)
-    const monthlyData: MonthlyTargetData[] = Array.from(
-      { length: lastReportingMonth },
-      (_, i) => {
-        const baseMonthTarget = Math.floor(totalTarget / lastReportingMonth); // 보고 월수로 나눔
-
-        const targetVariance = Math.floor(Math.random() * 100) - 50;
-        const actualVariance = Math.floor(Math.random() * 200) - 100;
-
-        return {
-          month: `${i + 1}월`,
-          target: baseMonthTarget + targetVariance,
-          actual: Math.floor(totalActual / lastReportingMonth) + actualVariance, // 총 실적을 보고 월수로 나눔
-        };
+          // 만약 현재 선택된 연도가 목록에 없으면, 가장 최신 연도로 자동 선택
+          // (예: 나는 2025 보고 있었는데 DB엔 2024까지만 있을 경우)
+          if (!sortedYears.includes(selectedYear)) {
+            setSelectedYear(sortedYears[0]);
+          }
+        } else {
+          // DB에 데이터가 하나도 없으면 그냥 현재 연도만 표시
+          setYears([currentYear.toString()]);
+        }
+      } catch (error) {
+        console.error("연도 목록 로딩 실패:", error);
       }
-    );
-
-    return {
-      totalActual,
-      totalTarget,
-      monthlyData,
-      lastReportingMonth, // 동적으로 계산된 마지막 월 반환
     };
-  }, [selectedYear, selectedScope, currentYear, today]); // 의존성 추가
+
+    fetchYears();
+  }, []); // 빈 배열([]): 처음 한 번만 실행
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+
+        // 1. 파라미터 준비 (프론트 'total' -> 백엔드 'Total' 대문자 변환 필요 시 처리)
+        // 백엔드가 대소문자 무관하게 처리하면 그대로 보내도 됨. 여기선 확실하게 매핑.
+        let typeParam = "Total";
+        if (selectedScope === "scope1") typeParam = "Scope1";
+        if (selectedScope === "scope3") typeParam = "Scope3";
+
+        // 2. API 호출
+        const response = await axios.get<ViewEmissionTargetDto>(
+          `${BASE_URL}/view/target`,
+          {
+            params: {
+              year: selectedYear,
+              type: typeParam,
+            },
+          }
+        );
+
+        const data = response.data;
+
+        // 3. 데이터 가공 (month: 1 -> "1월")
+        const processedMonthly = data.monthlyData.map((d) => ({
+          month: `${d.month}월`,
+          target: d.target,
+          actual: d.actual,
+        }));
+
+        // 4. 기준 월 계산 (선택 연도가 현재 연도면 현재 월, 과거면 12월)
+        // const isCurrentYear = parseInt(selectedYear) === currentYear;
+        // const lastMonth = isCurrentYear ? currentMonth : 12;
+
+        // [수정] 백엔드에서 준 값을 사용 (값이 없으면 기본값 0)
+        const lastMonth =
+          data.latestMonth && data.latestMonth > 0 ? data.latestMonth : 0;
+
+        setChartData({
+          ...data,
+          processedMonthlyData: processedMonthly,
+          lastReportingMonth: lastMonth,
+        });
+      } catch (error) {
+        console.error("데이터 로딩 실패:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [selectedYear, selectedScope, currentYear, currentMonth]);
+
+  // --- 로딩 중이거나 데이터 없을 때 처리 ---
+  if (loading || !chartData) {
+    return (
+      <div className="p-10 text-center">데이터를 불러오는 중입니다...</div>
+    );
+  }
 
   // --- 계산 로직 ---
-  const diff = data.totalActual - data.totalTarget;
+  const diff = chartData.totalActual - chartData.totalTarget;
   // 목표는 연간 목표이므로, 퍼센트 계산 시에도 연간 목표를 사용
-  const percent = ((Math.abs(diff) / data.totalTarget) * 100).toFixed(1);
+  // const percent = ((Math.abs(diff) / data.totalTarget) * 100).toFixed(1);
   const isExceeded = diff > 0; // 목표 초과 여부
+
+  // 백엔드에서 주는 totalAchievementRate를 써도 되고, 여기서 다시 계산해도 됨.
+  // 여기선 UI 표시용으로 직접 계산된 퍼센트 문자열 생성
+  const percentStr = (
+    (Math.abs(diff) / (chartData.totalTarget || 1)) *
+    100
+  ).toFixed(1);
 
   const statusColorClass = isExceeded ? "text-red-500" : "text-green-500";
   const statusRechartsColor = isExceeded
@@ -128,16 +188,13 @@ const TargetComparisonPage: React.FC = () => {
     : RECHARTS_COLORS.green;
 
   // 기준 월 텍스트
-  const monthCriterionText = `${data.lastReportingMonth}월까지 기준`;
+  const monthCriterionText = `${chartData.lastReportingMonth}월까지 기준`;
 
-  // 차트용 데이터
+  // 연간 비교 차트용 데이터 배열 생성
   const annualChartData = [
-    { name: `${selectedYear}년 총 배출량`, value: data.totalActual },
-    { name: "목표 배출량", value: data.totalTarget },
+    { name: `${selectedYear}년 총 배출량`, value: chartData.totalActual },
+    { name: "목표 배출량", value: chartData.totalTarget },
   ];
-
-  // --- 이벤트 핸들러 ---
-  const handlePrint = () => window.print();
 
   //   const handleDownloadExcel = () => {
   //     const headers = "Month,Actual Emission,Target Emission\n";
@@ -154,28 +211,10 @@ const TargetComparisonPage: React.FC = () => {
   return (
     <div className="min-h-screen p-8 font-sans bg-gray-50">
       {/* 헤더 */}
-      <header className="flex items-center justify-between mb-6 print:hidden">
+      <header className="flex items-center justify-between mb-6">
         <h2 className="text-2xl font-bold text-gray-800">
           목표 대비 탄소 배출량
         </h2>
-        <div className="flex gap-3">
-          {/* Print 버튼 */}
-          <button
-            onClick={handlePrint}
-            className="flex items-center px-4 py-2 text-sm font-semibold text-gray-700 transition duration-150 bg-white border border-gray-300 rounded-lg shadow-sm hover:bg-gray-100"
-          >
-            <Printer size={16} className="mr-2" />
-            인쇄
-          </button>
-          {/* Excel 다운로드 버튼 */}
-          {/* <button 
-            onClick={handleDownloadExcel} 
-            className="flex items-center px-4 py-2 text-sm font-semibold text-white transition duration-150 bg-green-500 border border-green-500 rounded-lg shadow-md hover:bg-green-600"
-          >
-            <Download size={16} className="mr-2" /> 
-            Excel 다운로드
-          </button> */}
-        </div>
       </header>
 
       {/* 1. 탭 (Scope 선택) */}
@@ -212,7 +251,7 @@ const TargetComparisonPage: React.FC = () => {
               {selectedYear}년도 총 배출량
             </div>
             <div className={`text-4xl font-extrabold mb-1 ${statusColorClass}`}>
-              {data.totalActual.toLocaleString()}{" "}
+              {chartData.totalActual.toLocaleString()}{" "}
               <span className="text-xl text-gray-700">tCO2eq</span>
             </div>
             {/* 차이 및 증감률 */}
@@ -225,7 +264,7 @@ const TargetComparisonPage: React.FC = () => {
                 <TrendingDown size={16} className="mr-1" />
               )}
               {diff > 0 ? "+" : ""}
-              {diff.toLocaleString()} tCO2eq ({percent}%)
+              {diff.toLocaleString()} tCO2eq ({percentStr}%)
             </div>
             {/* 동적 월 기준 적용 */}
             <div className="mt-2 text-xs text-right text-gray-500">
@@ -239,13 +278,13 @@ const TargetComparisonPage: React.FC = () => {
               {selectedYear}년 목표 배출량
             </div>
             <div className="mb-1 text-4xl font-extrabold text-gray-800">
-              {data.totalTarget.toLocaleString()}{" "}
+              {chartData.totalTarget.toLocaleString()}{" "}
               <span className="text-xl text-gray-700">tCO2eq</span>
             </div>
             {/* 동적 월 기준 적용 */}
-            <div className="text-xs text-right text-gray-500 mt-9">
+            {/* <div className="text-xs text-right text-gray-500 mt-9">
               *{monthCriterionText}
-            </div>
+            </div> */}
           </div>
 
           {/* 연도 선택 드롭다운 */}
@@ -294,12 +333,13 @@ const TargetComparisonPage: React.FC = () => {
                 angle: -90,
                 position: "insideLeft",
                 fill: "#6b7280",
+                offset: 0,
+                dx: -10,
               }}
+              width={80}
             />
             <Tooltip
-              formatter={(val: number | undefined) =>
-                `${val?.toLocaleString()} tCO2eq`
-              }
+              formatter={(val: any) => [`${val?.toLocaleString()} tCO2eq`, ""]}
               labelFormatter={(name) => name}
               contentStyle={{
                 backgroundColor: "#fff",
@@ -350,8 +390,8 @@ const TargetComparisonPage: React.FC = () => {
 
         <ResponsiveContainer width="100%" height="85%">
           <ComposedChart
-            data={data.monthlyData}
-            margin={{ top: 20, right: 20, bottom: 20, left: 0 }}
+            data={chartData.processedMonthlyData}
+            margin={{ top: 30, right: 30, bottom: 20, left: 30 }}
           >
             <CartesianGrid
               strokeDasharray="3 3"
@@ -365,12 +405,13 @@ const TargetComparisonPage: React.FC = () => {
                 angle: -90,
                 position: "insideLeft",
                 fill: "#6b7280",
+                offset: 5,
+                dx: -10,
               }}
+              width={70}
             />
             <Tooltip
-              formatter={(val: number | undefined) =>
-                `${val?.toLocaleString()} tCO2eq`
-              }
+              formatter={(val: any) => [`${val?.toLocaleString()} tCO2eq`, ""]}
             />
             <Legend iconType="circle" wrapperStyle={{ paddingTop: "10px" }} />
 

@@ -30,9 +30,16 @@ declare module 'react-simple-maps' {
   children?: React.ReactNode;
 }
   export const ComposableMap: React.FC<ComposableMapProps>;
-  export const Geographies: React.FC<any>;
-  export const Geography: React.FC<any>;
-  export const Graticule: React.FC<any>;
-  export const Sphere: React.FC<any>;
-  export const ZoomableGroup: React.FC<any>;
+  export const Geographies: React.FC<{
+    geography: string | object;
+    children: (args: { geographies: unknown[] }) => React.ReactNode;
+  }>;
+  export const Geography: React.FC<{
+    geography: unknown;
+    style?: Record<string, unknown>;
+    [key: string]: unknown;
+  }>;
+  export const Graticule: React.FC<Record<string, unknown>>;
+  export const Sphere: React.FC<Record<string, unknown>>;
+  export const ZoomableGroup: React.FC<Record<string, unknown>>;
 }

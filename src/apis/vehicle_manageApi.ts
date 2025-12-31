@@ -1,11 +1,19 @@
 import type { VehicleData, CompanyData, CarModelData, ProcessData, PurposeData, ProductData } from '../types/data';
 
+type ManagementData =
+  | VehicleData
+  | CompanyData
+  | CarModelData
+  | ProcessData
+  | PurposeData
+  | ProductData;
+
 // ----------------------------------------------------------------------
 // [API Functions] 컴포넌트에서 호출할 함수들
 // ----------------------------------------------------------------------
 // 1. 조회 (GET)
 // endpoint 파라미터에 따라 다른 데이터를 반환하도록 분기 처리 (Router 역할)
-export const fetchManagementData = async (endpoint: string): Promise<any[]> => {
+export const fetchManagementData = async (endpoint: string): Promise<ManagementData[]> => {
   return new Promise((resolve) => {
     setTimeout(() => {
       console.log(`[API] GET request to ${endpoint}`);
@@ -34,7 +42,11 @@ export const deleteManagementItem = async (endpoint: string, id: number): Promis
 };
 
 // 3. 수정 (PUT)
-export const updateManagementItem = async (endpoint: string, id: number, data: any): Promise<boolean> => {
+export const updateManagementItem = async (
+  endpoint: string,
+  id: number,
+  data: Partial<ManagementData>
+): Promise<boolean> => {
   return new Promise((resolve) => {
     setTimeout(() => {
       console.log(`[API] PUT request to ${endpoint}/${id}`, data);
@@ -69,7 +81,8 @@ const MOCK_VEHICLE_DATA: VehicleData[] = [
     carCategoryName: '중형',
     carModelName: '쏘나타',
     fuelType: '가솔린',
-    remark: '기본 등록 데이터' 
+    remark: '기본 등록 데이터',
+    calcBaseDate: '2024-01-01'
   },
   { 
     id: 2, 
@@ -83,7 +96,8 @@ const MOCK_VEHICLE_DATA: VehicleData[] = [
     carCategoryName: '대형',
     carModelName: '볼보트럭',
     fuelType: '디젤',
-    remark: '장거리 운행' 
+    remark: '장거리 운행',
+    calcBaseDate: '2023-06-15'
   },
   // ... 추가 더미 데이터 생성
   ...Array.from({ length: 20 }, (_, i) => ({
@@ -98,7 +112,8 @@ const MOCK_VEHICLE_DATA: VehicleData[] = [
     carCategoryName: '소형',
     carModelName: '아반떼',
     fuelType: '가솔린',
-    remark: '-'
+    remark: '-',
+    calcBaseDate: `2024-${String((i % 12) + 1).padStart(2, '0')}-${String((i % 28) + 1).padStart(2, '0')}`
   }))
 ];
 
@@ -107,7 +122,7 @@ const MOCK_COMPANY_DATA: CompanyData[] = [
     id: 1, 
     companyName: '현대정밀', 
     supplyTypeName: '조립', 
-    supplyCustomerName: '1000',
+    customerName: '1000',
     oneWayDistance: 12.5,
     region: '경상남도',
     detailAddress: '창원시', 
@@ -117,7 +132,7 @@ const MOCK_COMPANY_DATA: CompanyData[] = [
     id: 2, 
     companyName: 'Volvo KOREA', 
     supplyTypeName: '도장', 
-    supplyCustomerName: 'clark',
+    customerName: 'clark',
     oneWayDistance: 45.0,
     region: '경상남도',
     detailAddress: '창원시 성산구',
@@ -128,7 +143,7 @@ const MOCK_COMPANY_DATA: CompanyData[] = [
     id: i + 3,
     companyName: `협력사_${i + 1}`,
     supplyTypeName: i % 2 === 0 ? '프레스' : '차체',
-    supplyCustomerName: i % 3 === 0 ? '2000' : '3000',
+    customerName: i % 3 === 0 ? '2000' : '3000',
     oneWayDistance: Math.floor(Math.random() * 100),
     region: '경기도',
     detailAddress: `평택시 포승읍 ${i + 1}번길`,
@@ -174,9 +189,9 @@ const MOCK_PURPOSE_DATA: PurposeData[] = [
 
 
 const MOCK_PRODUCT_DATA: ProductData[] = [
-  { id: 1, supplyCustomer: '1000', note: '기본 부품류' },
-  { id: 2, supplyCustomer: '2000', note: '전자 장비' },
-  { id: 3, supplyCustomer: '3000', note: '내장재' },
-  { id: 4, supplyCustomer: 'clark', note: '지게차 부품' },
-  { id: 5, supplyCustomer: '기타', note: '소모품 등' },
+  { id: 1, customerName: '1000', note: '기본 부품류' },
+  { id: 2, customerName: '2000', note: '전자 장비' },
+  { id: 3, customerName: '3000', note: '내장재' },
+  { id: 4, customerName: 'clark', note: '지게차 부품' },
+  { id: 5, customerName: '기타', note: '소모품 등' },
 ];

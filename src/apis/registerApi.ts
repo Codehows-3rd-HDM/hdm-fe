@@ -33,6 +33,7 @@ export interface IntegratedFormData {
   fuelType: string;
   carModel: string;
   remark: string;
+  calcBaseDate: string;
   supplyTypeId: number | null;
   supplyTypeName: string;
   customerId: number | null;
@@ -164,11 +165,12 @@ export const registerVehicle = async (data: IntegratedFormData) => {
       carName: data.carModel,
       childCategoryId: data.categorySmallId,
       fuelType: data.fuelType,
-      purposeName: data.purposeName,
+      purposeId: data.purposeId,
       companyNameForCreation: data.companyName,
       driverMemberId: data.employeeId,
       operationDistance: data.distance,
       remark: data.remark,
+      calcBaseDate: data.calcBaseDate,
     };
     
     console.log('Register Vehicle Payload:', payload);
@@ -214,6 +216,17 @@ export const registerCarModel = async (data: IntegratedFormData) => {
     return response.data;
   } catch (error) {
     console.error('API Error:', error);
+    
+    // 백엔드에서 반환한 에러 메시지 추출
+    const axiosError = error as any;
+    if (axiosError.response?.data?.message) {
+      throw new Error(axiosError.response.data.message);
+    }
+    if (axiosError.response?.data) {
+      const data = axiosError.response.data;
+      throw new Error(typeof data === 'string' ? data : axiosError.message);
+    }
+    
     throw error;
   }
 };

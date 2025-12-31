@@ -14,7 +14,6 @@ import {
 } from "recharts";
 import {
   Search,
-  Printer,
   Download,
   CheckSquare,
   Square,
@@ -28,8 +27,10 @@ import type {
 } from "../../types/analysis";
 import {
   fetchAnalysisData,
+  fetchAvailableYears,
   type AnalysisDataType,
 } from "../../apis/emissionsApi";
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 // --- 상수 ---
 const COLORS = [
@@ -41,13 +42,22 @@ const COLORS = [
   "#82ca9d",
   "#ffc658",
 ];
-const DB_START_YEAR = 2018; // [설정] DB 데이터 시작 연도
+const LEGEND_MAX_ITEMS = 5;
+const LEGEND_ITEM_HEIGHT = 22; // px per legend row
+const LEGEND_HEIGHT = LEGEND_MAX_ITEMS * LEGEND_ITEM_HEIGHT; // keep pie chart height stable
+
+// --- 유틸리티 함수 ---
+// 탄소 배출량 반올림: 소수점 3째자리에서 반올림하여 2째 자리까지만 표시
+const roundEmission = (value: number | undefined | null): number => {
+  if (value === undefined || value === null) return 0;
+  return Math.round(value * 100) / 100;
+};
 
 const SCOPE_TABS: { id: ScopeType; label: string }[] = [
   { id: "total", label: "총 배출량" },
   { id: "scope1", label: "Scope 1" },
   { id: "scope3", label: "Scope 3" },
-  { id: "other", label: "기타" },
+  { id: "기타", label: "기타" },
 ];
 
 interface CarbonAnalysisTemplateProps {
@@ -66,6 +76,7 @@ const CarbonAnalysisTemplate: React.FC<CarbonAnalysisTemplateProps> = ({
   // --- 상태 관리 ---
   const [data, setData] = useState<AnalysisData[]>([]);
   const [loading, setLoading] = useState(false);
+  const [yearOptions, setYearOptions] = useState<string[]>([]);
 
   // 현재 연도를 기본값으로 설정
   const currentYear = new Date().getFullYear();
@@ -88,6 +99,33 @@ const CarbonAnalysisTemplate: React.FC<CarbonAnalysisTemplateProps> = ({
 
   const componentRef = useRef<HTMLDivElement>(null);
 
+  // --- [API] 연도 목록 로딩 ---
+  useEffect(() => {
+    const loadYears = async () => {
+      try {
+        const years = await fetchAvailableYears();
+        const yearStrings = years
+          .sort((a, b) => b - a)
+          .map((y) => y.toString());
+        setYearOptions(yearStrings);
+
+        // 현재 연도가 목록에 있으면 그대로, 없으면 첫 번째 연도로 설정
+        if (yearStrings.length > 0) {
+          //  현재 선택된 연도(기본값 2026)가 목록에 없으면
+          if (!yearStrings.includes(selectedYear)) {
+            // 목록 중 가장 최신 연도(index 0)로 강제 설정
+            setSelectedYear(yearStrings[0]);
+          }
+        }
+      } catch (error) {
+        console.error("Failed to load available years:", error);
+        // 실패 시 현재 연도만 표시
+        setYearOptions([currentYear.toString()]);
+      }
+    };
+    loadYears();
+  }, [currentYear, selectedYear]);
+
   // --- [API] 데이터 로딩 ---
   useEffect(() => {
     const loadData = async () => {
@@ -101,6 +139,12 @@ const CarbonAnalysisTemplate: React.FC<CarbonAnalysisTemplateProps> = ({
           selectedScope
         );
         setData(result);
+
+        // 데이터 로드 후 기본 정렬 (totalEmission 기준 내림차순)
+        setSortConfig({
+          key: "totalEmission",
+          direction: "desc",
+        });
 
         // 데이터 로드 후 차트 체크박스 초기화 (상위 3개 자동 선택)
         const top3 = [...result]
@@ -183,15 +227,6 @@ const CarbonAnalysisTemplate: React.FC<CarbonAnalysisTemplateProps> = ({
     });
   }, [processedData, selectedMonth, checkedItems]);
 
-  // --- 연도 옵션 생성 (DB 시작년도 ~ 현재년도) ---
-  const yearOptions = useMemo(() => {
-    const options = [];
-    for (let y = currentYear; y >= DB_START_YEAR; y--) {
-      options.push(y.toString());
-    }
-    return options;
-  }, [currentYear]);
-
   // --- 핸들러 ---
   const handleSort = (key: string) => {
     setSortConfig((prev) => ({
@@ -199,8 +234,6 @@ const CarbonAnalysisTemplate: React.FC<CarbonAnalysisTemplateProps> = ({
       direction: prev?.key === key && prev.direction === "asc" ? "desc" : "asc",
     }));
   };
-
-  const handlePrint = () => window.print();
 
   const handleDownloadExcel = () => {
     if (processedData.length === 0) return;
@@ -232,10 +265,13 @@ const CarbonAnalysisTemplate: React.FC<CarbonAnalysisTemplateProps> = ({
     if (!payload) return null;
     const sorted = [...payload]
       .sort((a, b) => b.payload.totalEmission - a.payload.totalEmission)
-      .slice(0, 5);
+      .slice(0, LEGEND_MAX_ITEMS);
 
     return (
-      <ul className="w-full p-0 m-0 text-sm list-none">
+      <ul
+        className="w-full p-0 m-0 text-sm list-none"
+        style={{ minHeight: LEGEND_HEIGHT }}
+      >
         {sorted.map((entry: any, index: number) => (
           <li
             key={`legend-item-${index}`}
@@ -258,15 +294,9 @@ const CarbonAnalysisTemplate: React.FC<CarbonAnalysisTemplateProps> = ({
   return (
     <div ref={componentRef} className="min-h-full p-8 font-sans bg-gray-50">
       {/* 헤더 */}
-      <div className="flex items-center justify-between mb-6 print:hidden">
+      <div className="flex items-center justify-between mb-6">
         <h2 className="text-2xl font-bold text-gray-800">{title}</h2>
         <div className="flex gap-3">
-          <button
-            onClick={handlePrint}
-            className="flex items-center px-4 py-2 font-bold text-gray-700 transition-colors bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-100"
-          >
-            <Printer size={16} className="mr-2" /> Print
-          </button>
           <button
             onClick={handleDownloadExcel}
             className="flex items-center px-4 py-2 font-bold text-white transition-colors bg-green-600 rounded-md shadow-sm hover:bg-green-700"
@@ -278,7 +308,7 @@ const CarbonAnalysisTemplate: React.FC<CarbonAnalysisTemplateProps> = ({
 
       {/* Scope 탭 */}
       {hasScopeTabs && (
-        <div className="flex mb-6 border-b border-gray-200 print:hidden">
+        <div className="flex mb-6 border-b border-gray-200">
           {SCOPE_TABS.map((tab) => (
             <button
               key={tab.id}
@@ -299,7 +329,7 @@ const CarbonAnalysisTemplate: React.FC<CarbonAnalysisTemplateProps> = ({
       )}
 
       {/* 필터 영역 */}
-      <div className="flex gap-6 p-5 mb-6 bg-white border border-gray-100 shadow-sm rounded-xl print:hidden">
+      <div className="flex gap-6 p-5 mb-6 bg-white border border-gray-100 shadow-sm rounded-xl ">
         {/* 연도 선택 */}
         <div className="flex flex-col gap-1.5">
           <label className="text-xs font-bold text-gray-500">▼ 연도 선택</label>
@@ -361,7 +391,7 @@ const CarbonAnalysisTemplate: React.FC<CarbonAnalysisTemplateProps> = ({
 
       {/* 차트 영역 */}
       {!loading && processedData.length > 0 && (
-        <div className="flex flex-col lg:flex-row gap-6 mb-8 h-[500px]">
+        <div className="flex flex-col lg:flex-row gap-6 mb-8 h-125">
           {/* 파이 차트 */}
           <div
             className={`
@@ -387,7 +417,7 @@ const CarbonAnalysisTemplate: React.FC<CarbonAnalysisTemplateProps> = ({
                   dataKey="totalEmission"
                   nameKey="name"
                   cx="50%"
-                  cy="55%"
+                  cy="52.5%"
                   innerRadius={80}
                   outerRadius={120}
                   paddingAngle={2}
@@ -403,12 +433,19 @@ const CarbonAnalysisTemplate: React.FC<CarbonAnalysisTemplateProps> = ({
                   layout="horizontal"
                   verticalAlign="bottom"
                   align="center"
+                  wrapperStyle={{ height: LEGEND_HEIGHT, paddingTop: 8 }}
                   content={<CustomLegend />}
                 />
                 <RechartsTooltip
-                  formatter={(value: number | undefined) =>
-                    `${value?.toLocaleString()} tCO2eq`
-                  }
+                  formatter={(value: any) => [
+                    `${parseFloat(
+                      roundEmission(value).toFixed(2)
+                    ).toLocaleString(undefined, {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })} tCO2eq`,
+                    "",
+                  ]}
                   contentStyle={{
                     borderRadius: "8px",
                     border: "none",
@@ -421,7 +458,7 @@ const CarbonAnalysisTemplate: React.FC<CarbonAnalysisTemplateProps> = ({
 
           {/* 라인 차트 */}
           {selectedMonth === "all" && (
-            <div className="lg:flex-[2] bg-white rounded-xl p-6 shadow-sm border border-gray-100 flex flex-col">
+            <div className="lg:flex-2 bg-white rounded-xl p-6 shadow-sm border border-gray-100 flex flex-col">
               <h4 className="mb-6 text-lg font-bold text-gray-800">
                 {selectedYear}년 월별 추이
               </h4>
@@ -447,9 +484,15 @@ const CarbonAnalysisTemplate: React.FC<CarbonAnalysisTemplateProps> = ({
                     tickLine={false}
                   />
                   <RechartsTooltip
-                    formatter={(value: number | undefined) =>
-                      value?.toLocaleString()
-                    }
+                    formatter={(value: any) => [
+                      parseFloat(
+                        roundEmission(value).toFixed(2)
+                      ).toLocaleString(undefined, {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      }),
+                      "",
+                    ]}
                     contentStyle={{
                       borderRadius: "8px",
                       border: "none",
@@ -457,7 +500,7 @@ const CarbonAnalysisTemplate: React.FC<CarbonAnalysisTemplateProps> = ({
                     }}
                   />
                   <Legend />
-                  {Array.from(checkedItems).map((key, _idx) => (
+                  {Array.from(checkedItems).map((key) => (
                     <Line
                       key={key}
                       type="monotone"
@@ -542,6 +585,17 @@ const CarbonAnalysisTemplate: React.FC<CarbonAnalysisTemplateProps> = ({
               </div>
             </div>
           )}
+        </div>
+      )}
+
+      {/* 데이터 없음 메시지 */}
+      {!loading && processedData.length === 0 && (
+        <div className="flex items-center justify-center h-125 mb-8 bg-white rounded-xl shadow-sm border border-gray-100">
+          <div className="text-center text-gray-500">
+            <p className="text-lg font-medium">
+              선택기간의 조회된 데이터가 없습니다.
+            </p>
+          </div>
         </div>
       )}
 
@@ -636,9 +690,24 @@ const CarbonAnalysisTemplate: React.FC<CarbonAnalysisTemplateProps> = ({
                     {columns.map((col) => {
                       const val = (row as any)[col.id];
                       let displayVal = val;
-                      if (col.format === "number")
+
+                      // 탄소 배출량 관련 필드 반올림 처리
+                      if (
+                        col.format === "number" &&
+                        (col.id === "totalEmission" || col.id === "avgEmission")
+                      ) {
+                        const rounded = roundEmission(val);
+                        displayVal = parseFloat(
+                          rounded.toFixed(2)
+                        ).toLocaleString(undefined, {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        });
+                      } else if (col.format === "number") {
                         displayVal = val?.toLocaleString();
-                      if (col.format === "percent") displayVal = `${val}%`;
+                      } else if (col.format === "percent") {
+                        displayVal = `${val}%`;
+                      }
 
                       return (
                         <td

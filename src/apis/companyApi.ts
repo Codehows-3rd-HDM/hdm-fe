@@ -1,6 +1,6 @@
 // import type { AnalysisData } from '../types/analysis';// 프로젝트 타입 경로에 맞춰 수정
 // If you don't have a central types file, just export a lightweight type:
-import axios from 'axios';
+import axiosInstance from './axiosInstance';
 
 export type AnalysisDataTypeLocal = 'company' | 'supply-type' | 'supply-customer' | 'fuel' | 'purpose';
 
@@ -12,26 +12,8 @@ export interface AnalysisData {
   monthlyTrend?: number[]; // length 12
   address?: string;
   region?: string; // e.g. '서울', '경기'
-  [k: string]: any;
+  [k: string]: unknown;
 }
-
-const BASE = import.meta.env.VITE_API_URL ?? '/api';
-
-const axiosInstance = axios.create({
-  baseURL: BASE,
-});
-
-// 요청 인터셉터: 토큰 자동 추가
-axiosInstance.interceptors.request.use(
-  (config) => {
-    const token = sessionStorage.getItem('token');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => Promise.reject(error)
-);
 
 export async function fetchAnalysisData(
   dataType: AnalysisDataTypeLocal | string,
