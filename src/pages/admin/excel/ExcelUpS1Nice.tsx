@@ -341,6 +341,7 @@ const DataUploadPage: React.FC = () => {
           "선택한 연/월과 엑셀 데이터가 일치하지 않습니다.\n파일의 날짜를 확인해주세요.",
           false
         );
+        setIsLoading(false);
         return;
       }
 
