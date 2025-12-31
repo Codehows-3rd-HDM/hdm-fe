@@ -57,7 +57,7 @@ const DashboardPage: React.FC = () => {
         <img
           src="/rogo.png"
           alt="HDM Logo"
-          className="absolute left-0 top-1/2 -translate-y-1/2 h-20 w-auto bg-transparent select-none object-contain"
+          className="absolute left-0 top-2/3 -translate-y-1/2 h-20 w-auto bg-transparent select-none object-contain"
           draggable={false}
         />
         {/* 중앙 제목 */}

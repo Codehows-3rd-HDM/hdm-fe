@@ -42,6 +42,28 @@ const labelFormatter = (value: unknown) => {
   return Number.isNaN(parsed) ? String(value ?? '') : formatNumber(parsed);
 };
 
+// 작은 막대에서는 레이블을 숨겨 겹침을 방지
+const renderStackLabel = (props: any) => {
+  const { x = 0, y = 0, width = 0, height = 0, value } = props;
+  const minHeight = 26;
+  if (height < minHeight) return null;
+  const labelX = x + width / 2;
+  const labelY = y + Math.min(22, height - 6);
+  return (
+    <text
+      x={labelX}
+      y={labelY}
+      fill="#0f172a"
+      fontSize={20}
+      fontWeight={800}
+      textAnchor="middle"
+      dominantBaseline="central"
+    >
+      {labelFormatter(value)}
+    </text>
+  );
+};
+
 // -----------------------------------------------------------------------
 // [Text Summary Section - 목표/올해/달성도 텍스트]
 // -----------------------------------------------------------------------
@@ -133,10 +155,10 @@ export const ChartSummarySection = () => {
             />
             <Legend layout="vertical" verticalAlign="middle" align="right" wrapperStyle={{ fontSize: 24, color: '#fff', fontWeight: 800, paddingLeft: '40px' }} formatter={(v) => <span style={{ color: '#fff', fontWeight: 800 }}>{v}</span>} />
             <Bar dataKey="scope1" name="Scope 1" stackId="a" fill="#60a5fa" radius={[2, 2, 0, 0]}>
-              <LabelList dataKey="scope1" position="insideTop" fill="#0f172a" fontSize={24} fontWeight={800} formatter={labelFormatter} />
+              <LabelList dataKey="scope1" content={renderStackLabel} />
             </Bar>
             <Bar dataKey="scope3" name="Scope 3" stackId="a" fill="#22d3ee" radius={[2, 2, 0, 0]}>
-              <LabelList dataKey="scope3" position="insideTop" fill="#0f172a" fontSize={24} fontWeight={800} formatter={labelFormatter} />
+              <LabelList dataKey="scope3" content={renderStackLabel} />
             </Bar>
           </BarChart>
         </ResponsiveContainer>
