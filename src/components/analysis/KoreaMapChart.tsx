@@ -13,6 +13,7 @@ interface KoreaMapChartProps {
   large?: boolean; // CompanyEmissionPage passes `large` prop
   defaultFitAll?: boolean; // Show full country on load
   theme?: "dark" | "light"; // Dark theme for dashboard, light for other pages
+  showNoDecimals?: boolean; // Remove decimals from value display (for dashboard)
 }
 
 // TopoJSON 영문명 → 실제 지역 한글명 매핑
@@ -41,6 +42,7 @@ const KoreaMapChart: React.FC<KoreaMapChartProps> = ({
   large = false,
   defaultFitAll = false,
   theme = "light",
+  showNoDecimals = false,
 }) => {
   //const [localData, setLocalData] = useState<{ region: string; value: number }[]>(propData ?? []);
 
@@ -166,10 +168,12 @@ const KoreaMapChart: React.FC<KoreaMapChartProps> = ({
                   theme === "dark" ? "text-sky-400" : "text-gray-900"
                 }`}
               >
-                {value.toLocaleString(undefined, {
-                  minimumFractionDigits: 2,
-                  maximumFractionDigits: 2,
-                })}
+                {showNoDecimals
+                  ? Math.floor(value).toLocaleString()
+                  : value.toLocaleString(undefined, {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })}
               </span>
             </div>
           ))}

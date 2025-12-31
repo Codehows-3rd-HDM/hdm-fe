@@ -27,10 +27,10 @@ const cardBase = 'bg-white/10 backdrop-blur-sm rounded-xl shadow-md p-6 h-full f
 const axisStyle = { stroke: '#fff', strokeWidth: 3 };
 const tooltipStyle = { backgroundColor: 'rgba(15,23,42,0.9)', borderRadius: 8, border: '2px solid #334155' };
 
-// 숫자 포맷터 (천 단위 구분)
+// 숫자 포맷터 (천 단위 구분, 소수점 제거)
 const formatNumber = (v: number) => {
   try {
-    return Number(v).toLocaleString();
+    return Math.floor(Number(v)).toLocaleString();
   } catch {
     return String(v);
   }
@@ -42,24 +42,34 @@ const labelFormatter = (value: unknown) => {
   return Number.isNaN(parsed) ? String(value ?? '') : formatNumber(parsed);
 };
 
-// 작은 막대에서는 레이블을 숨겨 겹침을 방지
+// 값이 0이면 숨기고, 충분히 높으면 내부 상단, 부족하면 막대 바로 위에 살짝 띄움
 const renderStackLabel = (props: any) => {
   const { x = 0, y = 0, width = 0, height = 0, value } = props;
-  const minHeight = 26;
-  if (height < minHeight) return null;
+  const numeric = Number(value ?? 0);
+  if (!numeric) return null;
+
   const labelX = x + width / 2;
-  const labelY = y + Math.min(22, height - 6);
+  const safeHeight = Math.max(height, 0);
+  const textHeight = 24;
+  const padding = 6;
+  const hasRoomInside = safeHeight >= textHeight;
+
+  // 내부 여유가 있으면 상단 패딩으로 걸치기, 없으면 글자 높이만큼 고정 간격으로 위로 올려서 통일감 유지
+  const outsideOffset = textHeight + padding; // 글자 높이 + 살짝 띄우기
+  const labelY = hasRoomInside ? y + padding : y - outsideOffset;
+  const baseline = 'hanging';
+
   return (
     <text
       x={labelX}
       y={labelY}
       fill="#0f172a"
-      fontSize={20}
+      fontSize={24}
       fontWeight={800}
       textAnchor="middle"
-      dominantBaseline="central"
+      dominantBaseline={baseline}
     >
-      {labelFormatter(value)}
+      {labelFormatter(numeric)}
     </text>
   );
 };
@@ -98,7 +108,7 @@ export const TextSummarySection = () => {
         <div className="text-center flex-1 border-r-2 border-emerald-400/30 py-4">
           <div className="text-5xl text-gray-300 font-bold mb-2 tracking-wide uppercase">올해 총 배출량</div>
           <div className={`text-7xl font-extrabold leading-tight drop-shadow-lg transition-all ${isGood ? 'text-emerald-300' : 'text-rose-400'}`}>
-            {total.toLocaleString()}
+            {Math.floor(total).toLocaleString()}
           </div>
           <div className="text-3xl text-gray-300 mt-2 font-semibold">tCO₂eq</div>
         </div>
@@ -205,11 +215,11 @@ export const MonthlyScopeSection = () => {
               ]}
             />
             <Legend wrapperStyle={{ fontSize: 24, color: '#fff', fontWeight: 800, paddingTop: 15 }} formatter={(v) => <span style={{ color: '#fff', fontWeight: 800 }}>{v}</span>} />
-            <Bar dataKey="scope1" name="Scope 1" stackId="a" fill="#60a5fa" barSize={72} radius={[2, 2, 0, 0]}>
-              <LabelList dataKey="scope1" position="insideTop" fill="#0f172a" fontSize={24} fontWeight={800} formatter={labelFormatter} />
+            <Bar dataKey="scope1" name="Scope 1" stackId="a" fill="#60a5fa" barSize={120} radius={[2, 2, 0, 0]}>
+              <LabelList dataKey="scope1" content={renderStackLabel} />
             </Bar>
-            <Bar dataKey="scope3" name="Scope 3" stackId="a" fill="#22d3ee" barSize={72} radius={[2, 2, 0, 0]}>
-              <LabelList dataKey="scope3" position="insideTop" fill="#0f172a" fontSize={24} fontWeight={800} formatter={labelFormatter} />
+            <Bar dataKey="scope3" name="Scope 3" stackId="a" fill="#22d3ee" barSize={120} radius={[2, 2, 0, 0]}>
+              <LabelList dataKey="scope3" content={renderStackLabel} />
             </Bar>
             <Line type="monotone" dataKey="target" name="목표" stroke="#fbbf24" strokeWidth={6} dot={{ r: 8, fill: '#fbbf24' }} />
           </ComposedChart>
@@ -253,7 +263,7 @@ export const PartnerMapSection = ({ theme }: { theme?: 'dark' | 'light' }) => {
 
         const aggregatedData = Array.from(regionEmissionMap, ([region, value]) => ({
           region,
-          value: Math.round(value * 100) / 100,
+          value: Math.floor(value),
         }));
 
         setMapData(aggregatedData);
@@ -275,7 +285,7 @@ export const PartnerMapSection = ({ theme }: { theme?: 'dark' | 'light' }) => {
     <div className={`${cardBase} max-h-full`}>
       <h3 className="text-4xl font-extrabold mb-5 text-white text-center">협력사 지역별 배출량 현황</h3>
       <div className="flex-1 h-full">
-        <KoreaMapChart data={mapData} large defaultFitAll theme={theme} />
+        <KoreaMapChart data={mapData} large defaultFitAll theme={theme} showNoDecimals />
       </div>
     </div>
   );
@@ -313,10 +323,10 @@ export const YearlyHistorySection = () => {
             />
             <Legend wrapperStyle={{ fontSize: 24, color: '#fff', fontWeight: 800, paddingTop: 12 }} formatter={(v) => <span style={{ color: '#fff', fontWeight: 800 }}>{v}</span>} />
             <Bar dataKey="scope1" name="Scope 1" stackId="a" fill="#60a5fa" barSize={120} radius={[2, 2, 0, 0]}>
-              <LabelList dataKey="scope1" position="insideTop" fill="#0f172a" fontSize={24} fontWeight={800} formatter={labelFormatter} />
+              <LabelList dataKey="scope1" content={renderStackLabel} />
             </Bar>
             <Bar dataKey="scope3" name="Scope 3" stackId="a" fill="#22d3ee" barSize={120} radius={[2, 2, 0, 0]}>
-              <LabelList dataKey="scope3" position="insideTop" fill="#0f172a" fontSize={24} fontWeight={800} formatter={labelFormatter} />
+              <LabelList dataKey="scope3" content={renderStackLabel} />
             </Bar>
             <Line type="monotone" dataKey="target" name="목표" stroke="#fbbf24" strokeWidth={6} dot={{ r: 6, fill: '#fbbf24' }} />
           </BarChart>
