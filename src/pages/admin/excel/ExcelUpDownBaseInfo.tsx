@@ -108,6 +108,7 @@ const ExcelManagementPage: React.FC = () => {
   // --- [1. 엑셀 파일 읽기 로직 (모달에서 가져옴)] ---
   const handleFileRead = async (file: File) => {
     try {
+      setIsLoading(true);
       const { normalizedData } = await parseExcelFile(file);
 
       setHeaders(Object.keys(normalizedData[0] || {}));
@@ -115,6 +116,7 @@ const ExcelManagementPage: React.FC = () => {
     } catch (e: any) {
       alert(e.message);
     }
+    setIsLoading(false);
   };
 
   // 드래그 앤 드롭 핸들러

@@ -300,6 +300,7 @@ const DataUploadPage: React.FC = () => {
 
   // 엑셀 파일 파싱, 업로드
   const handleFileUpload = async (file: File, type: "nice" | "s1") => {
+    setIsLoading(true);
     try {
       // 1️. 엑셀 파싱 (parsing.ts)
       const { normalizedData } = await parseExcelFile(file);
@@ -375,6 +376,7 @@ const DataUploadPage: React.FC = () => {
         false
       );
     }
+    setIsLoading(false);
   };
 
   // const onDragOverNice = (e: React.DragEvent) => {
@@ -406,7 +408,7 @@ const DataUploadPage: React.FC = () => {
     // 확인 모달부터 닫기
     setIsConfirmModalOpen(false);
 
-    // ✅ [시작] 스피너 켜기! (화면 잠금)
+    // [시작] 스피너 켜기 (화면 잠금)
     setIsLoading(true);
 
     // 1. 데이터 빈 값 체크
@@ -521,7 +523,7 @@ const DataUploadPage: React.FC = () => {
       });
       setModalOpen(true);
     } finally {
-      // ✅ [끝] 성공하든 실패하든 무조건 스피너 끄기!
+      // [끝] 성공하든 실패하든 무조건 스피너 끄기
       setIsLoading(false);
     }
   };

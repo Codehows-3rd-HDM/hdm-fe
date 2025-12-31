@@ -33,6 +33,7 @@ interface ViewEmissionTargetDto {
   totalActual: number;
   totalAchievementRate: number;
   monthlyData: MonthlyComparisonDto[];
+  latestMonth: number;
 }
 
 // 차트에 바인딩할 데이터 구조 (month를 문자열로 변환 후 사용)
@@ -59,7 +60,6 @@ const TargetComparisonPage: React.FC = () => {
   // --- 상태 관리 ---
   const [selectedScope, setSelectedScope] = useState<ScopeType>("total");
 
-  // 연도 선택: 1979년 ~ 현재 연도까지 동적 생성
   const today = useMemo(() => new Date(), []);
   const currentYear = today.getFullYear();
   const currentMonth = today.getMonth() + 1;
@@ -82,7 +82,7 @@ const TargetComparisonPage: React.FC = () => {
     const fetchYears = async () => {
       try {
         const response = await axios.get<number[]>(
-          `${BASE_URL}/view/target/years`
+          `${BASE_URL}/view/common/years`
         );
         const yearList = response.data;
 
@@ -140,8 +140,12 @@ const TargetComparisonPage: React.FC = () => {
         }));
 
         // 4. 기준 월 계산 (선택 연도가 현재 연도면 현재 월, 과거면 12월)
-        const isCurrentYear = parseInt(selectedYear) === currentYear;
-        const lastMonth = isCurrentYear ? currentMonth : 12;
+        // const isCurrentYear = parseInt(selectedYear) === currentYear;
+        // const lastMonth = isCurrentYear ? currentMonth : 12;
+
+        // [수정] 백엔드에서 준 값을 사용 (값이 없으면 기본값 12)
+        const lastMonth =
+          data.latestMonth && data.latestMonth > 0 ? data.latestMonth : 12;
 
         setChartData({
           ...data,
@@ -278,9 +282,9 @@ const TargetComparisonPage: React.FC = () => {
               <span className="text-xl text-gray-700">tCO2eq</span>
             </div>
             {/* 동적 월 기준 적용 */}
-            <div className="text-xs text-right text-gray-500 mt-9">
+            {/* <div className="text-xs text-right text-gray-500 mt-9">
               *{monthCriterionText}
-            </div>
+            </div> */}
           </div>
 
           {/* 연도 선택 드롭다운 */}

@@ -65,7 +65,29 @@ const CompanyEmissionPage: React.FC = () => {
   const [selectedYear, setSelectedYear] = useState<string>(
     currentYear.toString()
   );
-  const DB_START_YEAR = 2018;
+  const [years, setYears] = useState<string[]>([]); // 서버에서 받아올 진짜 목록
+
+  useEffect(() => {
+    const fetchYears = async () => {
+      try {
+        const response = await axios.get<number[]>(
+          `${BASE_URL}/view/common/years`
+        );
+        const yearList = response.data;
+        if (yearList && yearList.length > 0) {
+          const sortedYears = yearList.sort((a, b) => b - a).map(String);
+          setYears(sortedYears);
+          // 목록에 현재 선택된 연도가 없으면 최신 연도로 강제 변경
+          if (!sortedYears.includes(selectedYear)) {
+            setSelectedYear(sortedYears[0]);
+          }
+        }
+      } catch (error) {
+        console.error("연도 로드 실패", error);
+      }
+    };
+    fetchYears();
+  }, []);
 
   // --- 유틸리티 함수 ---
   // 탄소 배출량 반올림: 소수점 3째자리에서 반올림하여 2째 자리까지만 표시
@@ -73,15 +95,6 @@ const CompanyEmissionPage: React.FC = () => {
     if (value === undefined || value === null) return 0;
     return Math.round(value * 100) / 100;
   };
-
-  // --- 연도 옵션 생성 ---
-  const yearOptions = useMemo(() => {
-    const options = [];
-    for (let y = currentYear; y >= DB_START_YEAR; y--) {
-      options.push(y.toString());
-    }
-    return options;
-  }, [currentYear]);
 
   // =================================================================
   // [1] API 데이터 호출 (백엔드 연동)
@@ -314,7 +327,7 @@ const CompanyEmissionPage: React.FC = () => {
               className="w-32 p-2 pr-8 text-sm bg-white border border-gray-300 rounded-md outline-none cursor-pointer"
             >
               <option value="all">전체</option>
-              {yearOptions.map((y) => (
+              {years.map((y) => (
                 <option key={y} value={y}>
                   {y}년
                 </option>
