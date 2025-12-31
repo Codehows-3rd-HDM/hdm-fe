@@ -304,7 +304,7 @@ const StandardDataManagementTable = <T extends { id: number; [key: string]: unkn
     };
     
     loadData();
-  }, [apiEndpoint, currentPage, currentSort, pageSize, searchQuery, title, normalizedOptions, mapSortKey]); // 데이터 로딩 의존성
+  }, [apiEndpoint, currentPage, currentSort, pageSize, searchQuery, title, normalizedOptions, mapSortKey, buildSearchParams]); // 데이터 로딩 의존성
 
   // --- 필터링 로직 (메모이제이션) - 정렬은 서버 사이드에서 처리 ---
   const searchableColumns = useMemo(() => 

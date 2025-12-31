@@ -53,7 +53,14 @@ const toAbsoluteUrl = (url?: string): string | undefined => {
   }
 };
 
-const normalizeActivity = (data: any): ReductionActivity => {
+type RawActivity = Partial<ReductionActivity> & {
+  id?: number | string;
+  imageUrl?: string;
+  imageUrls?: Array<string | undefined | null>;
+  costAmount?: number | string | null;
+};
+
+const normalizeActivity = (data: RawActivity): ReductionActivity => {
   const rawList = Array.isArray(data?.imageUrls)
     ? data.imageUrls
     : data?.imageUrl
@@ -61,7 +68,7 @@ const normalizeActivity = (data: any): ReductionActivity => {
     : [];
 
   const absoluteList = rawList
-    .map((u: string | undefined) => toAbsoluteUrl(u))
+    .map((u) => toAbsoluteUrl(u ?? undefined))
     .filter((u): u is string => Boolean(u));
 
   return {
