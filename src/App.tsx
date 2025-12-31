@@ -84,7 +84,7 @@ const MainLayout = () => {
       {/* 메인 콘텐츠 영역: 사이드바 너비만큼 margin-left 조정 */}
       <main
         className={`min-w-0 flex-1 transition-all duration-300 ease-in-out ${
-          isDashboard ? "ml-[0px]" : isSidebarOpen ? "ml-[260px]" : "ml-[80px]"
+          isDashboard ? "ml-0" : isSidebarOpen ? "ml-65" : "ml-20"
         }`}
       >
         <div className={`${!isDashboard ? '' : ''}`}>

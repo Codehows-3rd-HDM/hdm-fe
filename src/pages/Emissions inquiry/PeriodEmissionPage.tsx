@@ -40,6 +40,36 @@ const formatEmissionWithComma = (value: number): string => {
   return parts.join('.');
 };
 
+type ChartDatum = {
+  name: string;
+  scope1: number;
+  scope3: number;
+  total: number;
+};
+
+type LabelFormatterValue =
+  | string
+  | number
+  | boolean
+  | readonly (string | number | boolean)[]
+  | null
+  | undefined;
+
+const extractNumeric = (val: LabelFormatterValue): number => {
+  if (Array.isArray(val)) return Number(val[0] ?? 0);
+  return Number(val ?? 0);
+};
+
+const formatPositiveLabel = (val: LabelFormatterValue): string => {
+  const numeric = extractNumeric(val);
+  return numeric > 0 ? formatEmissionWithComma(numeric) : "";
+};
+
+const formatTotalLabel = (val: LabelFormatterValue): string => {
+  const numeric = extractNumeric(val);
+  return Number.isFinite(numeric) ? formatEmissionWithComma(numeric) : "";
+};
+
 const PeriodEmissionPage: React.FC = () => {
   // 1. 날짜 상태 관리
   // 현재 날짜 기준 기본값 (1개월 전 ~ 오늘)
@@ -53,7 +83,7 @@ const PeriodEmissionPage: React.FC = () => {
   const [endDate, setEndDate] = useState(formatDate(today));
 
   // 2. 차트 및 통계 데이터 상태 관리
-  const [chartData, setChartData] = useState<any[]>([]);
+  const [chartData, setChartData] = useState<ChartDatum[]>([]);
   const [summary, setSummary] = useState({
     currentTotal: 0,
     prevTotal: 0,
@@ -81,7 +111,7 @@ const PeriodEmissionPage: React.FC = () => {
 
       // ✅ 백엔드 데이터를 차트용 포맷으로 변환
       // (Recharts는 배열 형태의 데이터를 좋아함)
-      const mappedChartData = [
+      const mappedChartData: ChartDatum[] = [
         {
           name: "선택기간",
           scope1: parseFloat(formatEmission(current.scope1 || 0)),
@@ -181,7 +211,7 @@ const PeriodEmissionPage: React.FC = () => {
       {/* 하단 콘텐츠 */}
       <div className="flex items-stretch gap-6">
         {/* 차트 */}
-        <div className="bg-white rounded-xl shadow-md p-6 flex-1 min-h-[800px] flex flex-col">
+        <div className="bg-white rounded-xl shadow-md p-6 flex-1 min-h-200 flex flex-col">
           {loading ? (
             <div className="flex-1 flex items-center justify-center">
               <LoadingSpinner />
@@ -216,7 +246,7 @@ const PeriodEmissionPage: React.FC = () => {
                   />
                   <YAxis tick={{ fontSize: 18 }} />
                   <Tooltip
-                    formatter={(val: any) => [formatEmissionWithComma(val), ""]}
+                    formatter={(val?: number | string) => [formatEmissionWithComma(Number(val ?? 0)), ""]}
                     cursor={{ fill: "transparent" }}
                   />
                   <Legend wrapperStyle={{ fontSize: '19px' }} />
@@ -232,11 +262,7 @@ const PeriodEmissionPage: React.FC = () => {
                       fill="white"
                       fontSize={19}
                       fontWeight="bold"
-                      formatter={(val: any) =>
-                        typeof val === "number" && val > 0
-                          ? formatEmissionWithComma(val)
-                          : ""
-                      }
+                      formatter={formatPositiveLabel}
                     />
                   </Bar>
                   <Bar
@@ -251,11 +277,7 @@ const PeriodEmissionPage: React.FC = () => {
                       fill="white"
                       fontSize={19}
                       fontWeight="bold"
-                      formatter={(val: any) =>
-                        typeof val === "number" && val > 0
-                          ? formatEmissionWithComma(val)
-                          : ""
-                      }
+                      formatter={formatPositiveLabel}
                     />
                     <LabelList
                       dataKey="total"
@@ -263,9 +285,7 @@ const PeriodEmissionPage: React.FC = () => {
                       fill="#333"
                       fontSize={20}
                       fontWeight="bold"
-                      formatter={(val: any) =>
-                        typeof val === "number" ? formatEmissionWithComma(val) : ""
-                      }
+                      formatter={formatTotalLabel}
                     />
                   </Bar>
                 </BarChart>
@@ -275,7 +295,7 @@ const PeriodEmissionPage: React.FC = () => {
         </div>
 
         {/* 정보 카드 */}
-        <div className="w-[420px] flex flex-col gap-6">
+        <div className="w-105 flex flex-col gap-6">
           {/* 카드 1 */}
           <div className="flex flex-col justify-center p-6 bg-white shadow-md rounded-xl">
             <div className="mb-8">
@@ -316,7 +336,7 @@ const PeriodEmissionPage: React.FC = () => {
           </div>
 
           {/* 카드 2 */}
-          <div className="bg-white rounded-xl shadow-md p-6 h-[200px] flex flex-col justify-center">
+          <div className="bg-white rounded-xl shadow-md p-6 h-50 flex flex-col justify-center">
             <div className="mb-3 text-lg font-semibold text-gray-700">
               선택기간 총 운행거리
             </div>

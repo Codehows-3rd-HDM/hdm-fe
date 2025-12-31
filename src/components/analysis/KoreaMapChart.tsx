@@ -137,7 +137,7 @@ const KoreaMapChart: React.FC<KoreaMapChartProps> = ({
     >
       {/* 좌측 지역 리스트 */}
       <div
-        className={`w-[500px] p-8 overflow-y-auto ${
+        className={`w-125 p-8 overflow-y-auto ${
           theme === "dark"
             ? "border-r border-white/20 bg-white/5 text-white"
             : "border-r border-gray-200 bg-linear-to-b from-gray-50 to-white text-gray-800"

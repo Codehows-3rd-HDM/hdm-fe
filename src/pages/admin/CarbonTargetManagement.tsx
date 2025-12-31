@@ -134,7 +134,7 @@ export default function App() {
       };
       loadRegInfo();
     }
-  }, [view]);
+  }, [baseYear, view]);
 
   // 등록 페이지에서 기준연도 변경 시 실적 로드
   useEffect(() => {
@@ -391,7 +391,7 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-[#f8fafc] text-slate-800 font-sans">
-      <div className="w-full max-w-[1700px] mx-auto p-6 md:p-10 space-y-8">
+      <div className="w-full max-w-425 mx-auto p-6 md:p-10 space-y-8">
         
         {/* Header */}
         <header className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
@@ -459,7 +459,7 @@ export default function App() {
                       <div className="space-y-1">
                         <p className="text-slate-500 font-black text-xs uppercase tracking-widest">Total Annual Target</p>
                         {isEditMode ? (
-                          <div className="flex items-center gap-2 border-b-2 border-sky-500 pb-1 max-w-[300px] mx-auto md:mx-0">
+                          <div className="flex items-center gap-2 border-b-2 border-sky-500 pb-1 max-w-75 mx-auto md:mx-0">
                             <input 
                               type="number"
                               value={currentData.total}
@@ -514,7 +514,7 @@ export default function App() {
                     <h3 className="text-xl font-black flex items-center gap-2 text-slate-400">
                       <div className="w-1.5 h-6 bg-sky-500 rounded-full" /> 월별 분포 그래프
                     </h3>
-                    <div className="h-[450px] flex gap-4 bg-slate-50/50 rounded-[2.5rem] p-10 relative border border-slate-100">
+                    <div className="h-112.5 flex gap-4 bg-slate-50/50 rounded-[2.5rem] p-10 relative border border-slate-100">
                       {/* Y-Axis Markers */}
                       <div className="flex flex-col justify-between h-[calc(100%-40px)] text-[10px] font-black text-slate-400 w-12 pt-1 pb-1">
                         {yAxisMarkers.map(m => <div key={m}>{m >= 1000 ? (m/1000).toFixed(1)+'k' : m}</div>)}
@@ -529,7 +529,7 @@ export default function App() {
                         {currentData.monthly.map((m, i) => (
                           <div key={i} className="flex-1 flex flex-col items-center group relative h-full justify-end z-10">
                             <div 
-                              className={`w-full max-w-[40px] rounded-t-lg transition-all duration-500 relative ${isEditMode ? 'bg-sky-400' : 'bg-slate-300 group-hover:bg-sky-500'}`}
+                              className={`w-full max-w-10 rounded-t-lg transition-all duration-500 relative ${isEditMode ? 'bg-sky-400' : 'bg-slate-300 group-hover:bg-sky-500'}`}
                               style={{ height: getBarHeight(m.value) }}
                             >
                               <div className="absolute -top-10 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-[10px] py-1.5 px-3 rounded-lg opacity-0 group-hover:opacity-100 transition-all whitespace-nowrap z-30">
@@ -551,7 +551,7 @@ export default function App() {
                     </div>
                     <div className="grid grid-cols-2 gap-3">
                       {currentData.monthly.map((m, i) => (
-                        <div key={i} className={`p-4 rounded-[1.5rem] border-2 transition-all ${isEditMode ? 'bg-white border-sky-400 shadow-lg shadow-sky-50 ring-4 ring-sky-50' : 'bg-slate-50 border-transparent'}`}>
+                        <div key={i} className={`p-4 rounded-3xl border-2 transition-all ${isEditMode ? 'bg-white border-sky-400 shadow-lg shadow-sky-50 ring-4 ring-sky-50' : 'bg-slate-50 border-transparent'}`}>
                           <label className="text-[10px] font-black text-slate-400 uppercase block mb-1">{m.month}월</label>
                           <input
                             type="number"
@@ -563,7 +563,7 @@ export default function App() {
                         </div>
                       ))}
                     </div>
-                    <div className="p-8 bg-slate-900 rounded-[2rem] flex justify-between items-center text-white shadow-xl shadow-slate-200">
+                    <div className="p-8 bg-slate-900 rounded-4xl flex justify-between items-center text-white shadow-xl shadow-slate-200">
                       <span className="font-bold text-slate-500 uppercase tracking-tighter text-sm">Monthly Sum</span>
                       <span className="text-3xl font-black">{monthlySum.toLocaleString()}</span>
                     </div>
@@ -665,7 +665,7 @@ export default function App() {
                       </div>
                     </div>
 
-                    <div className="h-[450px] w-full bg-slate-50/50 rounded-[3rem] p-12 border border-slate-200 flex items-end justify-between gap-5 relative overflow-hidden shadow-inner">
+                    <div className="h-112.5 w-full bg-slate-50/50 rounded-[3rem] p-12 border border-slate-200 flex items-end justify-between gap-5 relative overflow-hidden shadow-inner">
                       {/* Y-Axis Labeling */}
                       <div className="flex flex-col justify-between h-[calc(100%-40px)] text-[10px] font-black text-slate-400 absolute left-4 top-12 bottom-12 pointer-events-none">
                         {yAxisMarkers.map(m => <div key={m}>{m >= 1000 ? (m/1000).toFixed(1)+'k' : m}</div>)}
@@ -760,7 +760,7 @@ export default function App() {
                     <button 
                       onClick={handleFinalSubmit}
                       disabled={diffAmount !== 0 || monthlySum === 0 || isLoading}
-                      className="px-20 py-6 bg-sky-600 text-white font-black rounded-[2rem] shadow-2xl shadow-sky-300 hover:bg-sky-700 active:scale-95 disabled:opacity-30 transition-all flex items-center gap-3"
+                      className="px-20 py-6 bg-sky-600 text-white font-black rounded-4xl shadow-2xl shadow-sky-300 hover:bg-sky-700 active:scale-95 disabled:opacity-30 transition-all flex items-center gap-3"
                     >
                       {isLoading ? '저장 중...' : <><Save size={24} /> 최종 목표 등록 완료</>}
                     </button>

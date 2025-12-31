@@ -1,6 +1,6 @@
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
-  Line, ComposedChart, PieChart, Pie, Cell, LabelList
+  Line, ComposedChart, PieChart, Pie, Cell, LabelList, type LabelProps
 } from 'recharts';
 import { useState, useEffect } from 'react';
 import { getBusinessYear } from '../../utils/dateUtils';
@@ -43,20 +43,24 @@ const labelFormatter = (value: unknown) => {
 };
 
 // 값이 0이면 숨기고, 충분히 높으면 내부 상단, 부족하면 막대 바로 위에 살짝 띄움
-const renderStackLabel = (props: any) => {
+const renderStackLabel = (props: LabelProps) => {
   const { x = 0, y = 0, width = 0, height = 0, value } = props;
-  const numeric = Number(value ?? 0);
+  const numX = Number(x);
+  const numY = Number(y);
+  const numWidth = Number(width);
+  const numHeight = Number(height);
+  const numeric = Number((value as number | string | undefined) ?? 0);
   if (!numeric) return null;
 
-  const labelX = x + width / 2;
-  const safeHeight = Math.max(height, 0);
+  const labelX = numX + numWidth / 2;
+  const safeHeight = Math.max(numHeight, 0);
   const textHeight = 24;
   const padding = 6;
   const hasRoomInside = safeHeight >= textHeight;
 
   // 내부 여유가 있으면 상단 패딩으로 걸치기, 없으면 글자 높이만큼 고정 간격으로 위로 올려서 통일감 유지
   const outsideOffset = textHeight + padding; // 글자 높이 + 살짝 띄우기
-  const labelY = hasRoomInside ? y + padding : y - outsideOffset;
+  const labelY = hasRoomInside ? numY + padding : numY - outsideOffset;
   const baseline = 'hanging';
 
   return (
@@ -148,7 +152,7 @@ export const ChartSummarySection = () => {
   return (
     <div className={cardBase}>
       <h3 className="text-4xl font-extrabold text-white text-center mb-0">{currentYear}년 배출량 현황</h3>
-      <div className="flex-1 min-h-[140px]">
+      <div className="flex-1 min-h-35">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={summaryBarData} barCategoryGap={60} barSize={160} margin={{ top: 8, right: 30, left: 30, bottom:0 }}>
             <CartesianGrid strokeDasharray="5 5" stroke="#ffffff22" strokeWidth={2} />
@@ -199,7 +203,7 @@ export const MonthlyScopeSection = () => {
   return (
     <div className={cardBase}>
       <h3 className="text-4xl font-extrabold mb-5 text-white text-center">올해 월별 배출량 (Scope)</h3>
-      <div className="flex-1 min-h-[300px]">
+      <div className="flex-1 min-h-75">
         <ResponsiveContainer width="100%" height="100%">
           <ComposedChart data={monthlyChartData} margin={{ top: 15, right: 15, left: 10, bottom: 10 }}>
             <CartesianGrid strokeDasharray="5 5" stroke="#ffffff22" strokeWidth={2} />
@@ -250,7 +254,7 @@ export const PartnerMapSection = ({ theme }: { theme?: 'dark' | 'light' }) => {
 
         const regionEmissionMap = new Map<string, number>();
 
-        payload.forEach((company: any) => {
+        payload.forEach((company: { address?: string; totalEmission?: number; value?: number }) => {
           const address = company.address || '';
           const regionMatch = address.match(/^([가-힣]+도|[가-힣]+시|세종)/);
           if (regionMatch) {
@@ -279,7 +283,7 @@ export const PartnerMapSection = ({ theme }: { theme?: 'dark' | 'light' }) => {
     };
 
     loadCompanyData();
-  }, []);
+  }, [businessYear]);
 
   return (
     <div className={`${cardBase} max-h-full`}>

@@ -100,6 +100,8 @@ const buildFormData = (
 
   // ID는 서버에서 생성/경로로 전달되므로 본문에서 제외
   const { id: _id, imageUrls: _imageUrls, ...rest } = payload;
+  void _id;
+  void _imageUrls;
 
   Object.entries(rest).forEach(([key, value]) => {
     if (value !== undefined && value !== null) {

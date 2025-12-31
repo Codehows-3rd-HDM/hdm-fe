@@ -30,6 +30,7 @@ import {
   fetchAvailableYears,
   type AnalysisDataType,
 } from "../../apis/emissionsApi";
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 // --- 상수 ---
 const COLORS = [
@@ -123,7 +124,7 @@ const CarbonAnalysisTemplate: React.FC<CarbonAnalysisTemplateProps> = ({
       }
     };
     loadYears();
-  }, []);
+  }, [currentYear, selectedYear]);
 
   // --- [API] 데이터 로딩 ---
   useEffect(() => {
@@ -390,7 +391,7 @@ const CarbonAnalysisTemplate: React.FC<CarbonAnalysisTemplateProps> = ({
 
       {/* 차트 영역 */}
       {!loading && processedData.length > 0 && (
-        <div className="flex flex-col lg:flex-row gap-6 mb-8 h-[500px]">
+        <div className="flex flex-col lg:flex-row gap-6 mb-8 h-125">
           {/* 파이 차트 */}
           <div
             className={`
@@ -457,7 +458,7 @@ const CarbonAnalysisTemplate: React.FC<CarbonAnalysisTemplateProps> = ({
 
           {/* 라인 차트 */}
           {selectedMonth === "all" && (
-            <div className="lg:flex-[2] bg-white rounded-xl p-6 shadow-sm border border-gray-100 flex flex-col">
+            <div className="lg:flex-2 bg-white rounded-xl p-6 shadow-sm border border-gray-100 flex flex-col">
               <h4 className="mb-6 text-lg font-bold text-gray-800">
                 {selectedYear}년 월별 추이
               </h4>
@@ -499,7 +500,7 @@ const CarbonAnalysisTemplate: React.FC<CarbonAnalysisTemplateProps> = ({
                     }}
                   />
                   <Legend />
-                  {Array.from(checkedItems).map((key, _idx) => (
+                  {Array.from(checkedItems).map((key) => (
                     <Line
                       key={key}
                       type="monotone"
@@ -589,7 +590,7 @@ const CarbonAnalysisTemplate: React.FC<CarbonAnalysisTemplateProps> = ({
 
       {/* 데이터 없음 메시지 */}
       {!loading && processedData.length === 0 && (
-        <div className="flex items-center justify-center h-[500px] mb-8 bg-white rounded-xl shadow-sm border border-gray-100">
+        <div className="flex items-center justify-center h-125 mb-8 bg-white rounded-xl shadow-sm border border-gray-100">
           <div className="text-center text-gray-500">
             <p className="text-lg font-medium">
               선택기간의 조회된 데이터가 없습니다.

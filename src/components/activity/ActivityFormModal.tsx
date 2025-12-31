@@ -43,14 +43,14 @@ const ActivityFormModal: React.FC<ActivityFormModalProps> = ({
     isSuccess: boolean;
   }>({ open: false, title: "", message: "", isSuccess: true });
 
-  const displayImages =
-    formData.imageUrls?.length > 0
+  const displayImages: string[] =
+    formData.imageUrls && formData.imageUrls.length > 0
       ? formData.imageUrls
       : formData.imageUrl
       ? [formData.imageUrl]
       : [];
 
-  const viewerImages = preview.length > 0 ? preview : displayImages;
+  const viewerImages: string[] = preview.length > 0 ? preview : displayImages;
 
   const isReadOnly = mode === "view";
 
@@ -218,8 +218,8 @@ const ActivityFormModal: React.FC<ActivityFormModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-[1000]">
-      <div className="bg-white rounded-lg w-[600px] max-h-[90vh] overflow-y-auto p-8 relative">
+    <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-1000">
+      <div className="bg-white rounded-lg w-150 max-h-[90vh] overflow-y-auto p-8 relative">
         {/* 헤더 */}
         <div className="mb-5 border-b border-gray-200 pb-4 relative">
           <h2 className="text-xl font-bold">
@@ -461,7 +461,7 @@ const ActivityFormModal: React.FC<ActivityFormModalProps> = ({
       {/* 이미지 뷰어 모달 */}
       {imageViewerOpen && viewerImages.length > 0 && (
         <div
-          className="fixed inset-0 bg-black/90 flex items-center justify-center z-[2000]"
+          className="fixed inset-0 bg-black/90 flex items-center justify-center z-2000"
           onClick={() => setImageViewerOpen(false)}
         >
           <button

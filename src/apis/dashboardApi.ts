@@ -44,15 +44,6 @@ interface TargetApiResponse {
   monthlyData: Array<{ month: number; target: number | string; actual: number | string }>;
 }
 
-interface DashboardYearlyApiResponse {
-  year: number;
-  scope1Actual?: number | string;
-  scope3Actual?: number | string;
-  scope1Target?: number | string;
-  scope3Target?: number | string;
-  totalTarget?: number | string;
-}
-
 const toNumber = (value: number | string | undefined | null) => {
   if (value === undefined || value === null) return 0;
   const num = typeof value === 'string' ? parseFloat(value) : value;
@@ -158,14 +149,21 @@ export const fetchYearlyData = async (): Promise<YearlyData[]> => {
   }
 };
 
+type PurposeApiItem = {
+  purposeName?: string;
+  name?: string;
+  ratio?: number | string;
+  totalEmission?: number | string;
+};
+
 export const fetchPurposeData = async (): Promise<PurposeData[]> => {
   const year = getBusinessYear();
   try {
     const response = await fetchPurposeAnalysisData('operationpurpose', year.toString(), 'all', 'total');
     return response
-      .map((item) => ({
-        name: (item as any).purposeName ?? (item as any).name ?? '',
-        value: Number((item as any).ratio ?? (item as any).totalEmission ?? 0),
+      .map((item: PurposeApiItem) => ({
+        name: item.purposeName ?? item.name ?? '',
+        value: Number(item.ratio ?? item.totalEmission ?? 0),
       }))
       .filter((d) => d.name);
   } catch (error) {

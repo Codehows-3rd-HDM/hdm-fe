@@ -73,7 +73,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggleSidebar }) => {
     <div
   className={`
     fixed left-0 top-0 h-screen border-r border-gray-200 flex flex-col font-sans z-50 transition-all duration-300 ease-in-out
-    ${isOpen ? 'w-[260px]' : 'w-[80px]'}
+    ${isOpen ? 'w-65' : 'w-20'}
   `}
 >
       
@@ -83,7 +83,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggleSidebar }) => {
           <img 
             src="/rogo1.png" 
             alt="HDM Logo" 
-            className="max-w-[140px] block h-auto cursor-pointer bg-transparent select-none" 
+            className="max-w-36 block h-auto cursor-pointer bg-transparent select-none" 
             onClick={() => navigate('/main')}
             draggable={false}
           />
@@ -127,7 +127,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggleSidebar }) => {
                 title={!isOpen ? depth1.title : undefined} // 접혔을 때 툴팁 효과
               >
                 <div className={`flex items-center ${isOpen ? 'gap-x-3' : ''}`}>
-                  {Icon && <Icon size={22} strokeWidth={1.5} className="flex-shrink-0" />}
+                  {Icon && <Icon size={22} strokeWidth={1.5} className="shrink-0" />}
                   
                   {/* 텍스트: 펼쳐졌을 때만 표시 */}
                   <span className={`whitespace-nowrap overflow-hidden transition-all duration-300 ${isOpen ? 'w-auto opacity-100' : 'w-0 opacity-0 hidden'}`}>
@@ -148,7 +148,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggleSidebar }) => {
               {/* 사이드바가 접혀있을 때는 하위 메뉴를 숨김 (복잡도 방지) */}
               {isOpen && hasSub1 && (
                 <div
-                  className={`overflow-hidden transition-all duration-300 ease-in-out bg-white ${isClosed1 ? 'max-h-0 opacity-0' : 'max-h-[1000px] opacity-100'}`}
+                  className={`overflow-hidden transition-all duration-300 ease-in-out bg-white ${isClosed1 ? 'max-h-0 opacity-0' : 'max-h-250 opacity-100'}`}
                 >
                   {depth1.items!.map((depth2) => {
                     if (depth2.requiredRoles && !hasRole(depth2.requiredRoles)) return null;
@@ -189,7 +189,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggleSidebar }) => {
                         {/* --- Level 2 Content (Level 3) --- */}
                         {hasSub2 && (
                           <div
-                            className={`overflow-hidden transition-all duration-300 ease-in-out bg-gray-50 ${isClosed2 ? 'max-h-0' : 'max-h-[500px]'}`}
+                            className={`overflow-hidden transition-all duration-300 ease-in-out bg-gray-50 ${isClosed2 ? 'max-h-0' : 'max-h-125'}`}
                           >
                             {depth2.items!.map((depth3) => {
                               if (depth3.requiredRoles && !hasRole(depth3.requiredRoles)) return null;
@@ -199,7 +199,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggleSidebar }) => {
                                 <div
                                   key={depth3.title}
                                   className={`
-                                    flex items-center pr-6 mb-1 cursor-pointer text-[13px] transition-colors duration-200 pl-[74px] py-2
+                                    flex items-center pr-6 mb-1 cursor-pointer text-[13px] transition-colors duration-200 pl-18.5 py-2
                                     ${isActive3 
                                       ? 'text-blue-600 font-semibold bg-blue-50' 
                                       : 'text-gray-500 font-normal hover:bg-white hover:text-blue-600'

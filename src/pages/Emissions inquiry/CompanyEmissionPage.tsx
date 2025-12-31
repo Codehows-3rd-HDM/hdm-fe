@@ -87,7 +87,7 @@ const CompanyEmissionPage: React.FC = () => {
       }
     };
     fetchYears();
-  }, []);
+  }, [selectedYear]);
 
   // --- 유틸리티 함수 ---
   // 탄소 배출량 반올림: 소수점 3째자리에서 반올림하여 2째 자리까지만 표시
@@ -371,21 +371,21 @@ const CompanyEmissionPage: React.FC = () => {
       {/* ========================== */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-10">
         {/* 왼쪽: 지역별 탄소 배출량 지도 */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 h-[600px]">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 h-150">
           <h3 className="mb-2 text-lg font-bold text-gray-800">
             지역별 탄소 배출량
           </h3>
-          <div className="h-[600px]">
+          <div className="h-150">
             <KoreaMapChart data={regionData} />
           </div>
         </div>
 
         {/* 오른쪽: 협력사별 탄소 배출량 Top5 */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 h-[600px]">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 h-150">
           <h3 className="mb-15 text-lg font-bold text-gray-800">
             협력사별 탄소 배출량 Top5
           </h3>
-          <div className="h-[500px]">
+          <div className="h-125">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart
                 data={top5Data}
