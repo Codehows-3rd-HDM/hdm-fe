@@ -143,9 +143,9 @@ const TargetComparisonPage: React.FC = () => {
         // const isCurrentYear = parseInt(selectedYear) === currentYear;
         // const lastMonth = isCurrentYear ? currentMonth : 12;
 
-        // [수정] 백엔드에서 준 값을 사용 (값이 없으면 기본값 12)
+        // [수정] 백엔드에서 준 값을 사용 (값이 없으면 기본값 0)
         const lastMonth =
-          data.latestMonth && data.latestMonth > 0 ? data.latestMonth : 12;
+          data.latestMonth && data.latestMonth > 0 ? data.latestMonth : 0;
 
         setChartData({
           ...data,
@@ -333,7 +333,10 @@ const TargetComparisonPage: React.FC = () => {
                 angle: -90,
                 position: "insideLeft",
                 fill: "#6b7280",
+                offset: 0,
+                dx: -10,
               }}
+              width={80}
             />
             <Tooltip
               formatter={(val: any) => [`${val?.toLocaleString()} tCO2eq`, ""]}
@@ -388,7 +391,7 @@ const TargetComparisonPage: React.FC = () => {
         <ResponsiveContainer width="100%" height="85%">
           <ComposedChart
             data={chartData.processedMonthlyData}
-            margin={{ top: 20, right: 20, bottom: 20, left: 0 }}
+            margin={{ top: 30, right: 30, bottom: 20, left: 30 }}
           >
             <CartesianGrid
               strokeDasharray="3 3"
@@ -402,7 +405,10 @@ const TargetComparisonPage: React.FC = () => {
                 angle: -90,
                 position: "insideLeft",
                 fill: "#6b7280",
+                offset: 5,
+                dx: -10,
               }}
+              width={70}
             />
             <Tooltip
               formatter={(val: any) => [`${val?.toLocaleString()} tCO2eq`, ""]}
