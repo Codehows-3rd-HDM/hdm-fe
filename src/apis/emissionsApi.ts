@@ -73,6 +73,20 @@ const getProductData = (): AnalysisData[] => [
 export type AnalysisDataType = 'operationpurpose' | 'fuel' | 'company' | 'process' | 'product' | 'supplycustomer' | 'supplytype';
 
 /**
+ * DB에 저장된 연도 목록을 가져오는 API
+ * @returns 연도 배열 (내림차순)
+ */
+export const fetchAvailableYears = async (): Promise<number[]> => {
+  try {
+    const response = await axiosInstance.get('/view/common/years');
+    return response.data;
+  } catch (error) {
+    console.error('Failed to fetch available years:', error);
+    return [];
+  }
+};
+
+/**
  * 분석 데이터를 가져오는 API (실제 백엔드 API 호출)
  * @param type 데이터 종류
  * @param year 조회 연도

@@ -27,6 +27,7 @@ import type {
 } from "../../types/analysis";
 import {
   fetchAnalysisData,
+  fetchAvailableYears,
   type AnalysisDataType,
 } from "../../apis/emissionsApi";
 
@@ -43,7 +44,6 @@ const COLORS = [
 const LEGEND_MAX_ITEMS = 5;
 const LEGEND_ITEM_HEIGHT = 22; // px per legend row
 const LEGEND_HEIGHT = LEGEND_MAX_ITEMS * LEGEND_ITEM_HEIGHT; // keep pie chart height stable
-const DB_START_YEAR = 2018; // [설정] DB 데이터 시작 연도
 
 // --- 유틸리티 함수 ---
 // 탄소 배출량 반올림: 소수점 3째자리에서 반올림하여 2째 자리까지만 표시
@@ -75,6 +75,7 @@ const CarbonAnalysisTemplate: React.FC<CarbonAnalysisTemplateProps> = ({
   // --- 상태 관리 ---
   const [data, setData] = useState<AnalysisData[]>([]);
   const [loading, setLoading] = useState(false);
+  const [yearOptions, setYearOptions] = useState<string[]>([]);
 
   // 현재 연도를 기본값으로 설정
   const currentYear = new Date().getFullYear();
@@ -96,6 +97,27 @@ const CarbonAnalysisTemplate: React.FC<CarbonAnalysisTemplateProps> = ({
   const [chartSearchQuery, setChartSearchQuery] = useState("");
 
   const componentRef = useRef<HTMLDivElement>(null);
+
+  // --- [API] 연도 목록 로딩 ---
+  useEffect(() => {
+    const loadYears = async () => {
+      try {
+        const years = await fetchAvailableYears();
+        const yearStrings = years.map((y) => y.toString());
+        setYearOptions(yearStrings);
+        
+        // 현재 연도가 목록에 있으면 그대로, 없으면 첫 번째 연도로 설정
+        if (yearStrings.length > 0 && !yearStrings.includes(currentYear.toString())) {
+          setSelectedYear(yearStrings[0]);
+        }
+      } catch (error) {
+        console.error("Failed to load available years:", error);
+        // 실패 시 현재 연도만 표시
+        setYearOptions([currentYear.toString()]);
+      }
+    };
+    loadYears();
+  }, [currentYear]);
 
   // --- [API] 데이터 로딩 ---
   useEffect(() => {
@@ -197,15 +219,6 @@ const CarbonAnalysisTemplate: React.FC<CarbonAnalysisTemplateProps> = ({
       return row;
     });
   }, [processedData, selectedMonth, checkedItems]);
-
-  // --- 연도 옵션 생성 (DB 시작년도 ~ 현재년도) ---
-  const yearOptions = useMemo(() => {
-    const options = [];
-    for (let y = currentYear; y >= DB_START_YEAR; y--) {
-      options.push(y.toString());
-    }
-    return options;
-  }, [currentYear]);
 
   // --- 핸들러 ---
   const handleSort = (key: string) => {
@@ -559,6 +572,15 @@ const CarbonAnalysisTemplate: React.FC<CarbonAnalysisTemplateProps> = ({
               </div>
             </div>
           )}
+        </div>
+      )}
+
+      {/* 데이터 없음 메시지 */}
+      {!loading && processedData.length === 0 && (
+        <div className="flex items-center justify-center h-[500px] mb-8 bg-white rounded-xl shadow-sm border border-gray-100">
+          <div className="text-center text-gray-500">
+            <p className="text-lg font-medium">선택기간의 조회된 데이터가 없습니다.</p>
+          </div>
         </div>
       )}
 
