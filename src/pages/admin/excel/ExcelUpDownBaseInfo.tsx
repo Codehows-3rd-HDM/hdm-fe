@@ -111,12 +111,60 @@ const ExcelManagementPage: React.FC = () => {
       setIsLoading(true);
       const { normalizedData } = await parseExcelFile(file);
 
-      setHeaders(Object.keys(normalizedData[0] || {}));
-      await checkPreviewStatus(normalizedData); // 여기 중요
+      if (normalizedData.length > 0) {
+        // 1. 반드시 포함되어야 하는 '필수 헤더'
+        const REQUIRED_HEADERS = [
+          "차량번호",
+          "사원번호",
+          "협력사명",
+          "공급유형",
+          "공급고객",
+          "Scope",
+          "운행목적",
+          "주소",
+          "편도거리(km)",
+          "차종",
+          "차종구분(대분류)",
+          "차종구분(소분류)",
+          "연료종류",
+          "연비(ℓ/km)",
+          "탄소배출계수",
+        ];
+
+        // 엑셀에서 읽어온 실제 헤더들 (normalize로 인해 공백은 이미 제거된 상태)
+        const excelHeaders = Object.keys(normalizedData[0]);
+
+        // 2. 필수 항목이 모두 들어있는지 검사
+        const missing = REQUIRED_HEADERS.filter(
+          (h) => !excelHeaders.includes(h)
+        );
+
+        if (missing.length > 0) {
+          // 필수 항목이 하나라도 없으면 입구 컷!
+          setAlertState({
+            title: "필수 항목 누락",
+            message: `엑셀 양식에 필수 항목 [${missing.join(
+              ", "
+            )}]이(가) 없습니다.\n헤더 이름을 확인해주세요.`,
+            isSuccess: false,
+          });
+          setAlertModalOpen(true);
+          setIsLoading(false);
+          if (fileInputRef.current) fileInputRef.current.value = "";
+          return;
+        }
+
+        // 3. 검증 통과!
+        // 이제 'headers' 상태값에는 화면에 보여줄 항목만 설정하거나, 전체를 설정
+        // 우리는 Mapper에서 지정한 것만 가져갈 것이므로 excelHeaders 전체를 넘겨도 안전
+        setHeaders(excelHeaders);
+        await checkPreviewStatus(normalizedData);
+      }
     } catch (e: any) {
       alert(e.message);
+    } finally {
+      setIsLoading(false);
     }
-    setIsLoading(false);
   };
 
   // 드래그 앤 드롭 핸들러
