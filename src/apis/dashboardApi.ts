@@ -1,5 +1,7 @@
 import { getBusinessYear } from '../utils/dateUtils';
 import axiosInstance from './axiosInstance';
+import { fetchAnalysisData as fetchPurposeAnalysisData } from './emissionsApi';
+import { fetchActivities as fetchActivityList } from './activityApi';
 
 export interface DashboardSummaryData {
   currentYear: number;
@@ -35,22 +37,20 @@ export interface ReductionActivity {
   reduction?: number; // % (optional for mock data)
 }
 
-// 더미 데이터 반환 함수들
-const currentYear = getBusinessYear();
-
 export const fetchDashboardSummary = async (): Promise<DashboardSummaryData> => {
+  const year = getBusinessYear();
   try {
     // TODO: 실제 API 호출로 변경
     const response = await axiosInstance.get('/api/dashboard/summary', {
       params: {
-        year: currentYear
+        year
       }
     });
     return response.data;
   } catch (error) {
     console.warn('Dashboard summary API 실패, Mock 데이터 반환:', error);
     return Promise.resolve({
-      currentYear,
+      currentYear: year,
       scope1Current: 28000,
       scope3Current: 95000,
       scope1Target: 30000,
@@ -60,10 +60,11 @@ export const fetchDashboardSummary = async (): Promise<DashboardSummaryData> => 
 };
 
 export const fetchMonthlyData = async (): Promise<MonthlyData[]> => {
+  const year = getBusinessYear();
   try {
     const response = await axiosInstance.get('/api/dashboard/monthly', {
       params: {
-        year: currentYear
+        year
       }
     });
     return response.data;
@@ -87,10 +88,12 @@ export const fetchMonthlyData = async (): Promise<MonthlyData[]> => {
 };
 
 export const fetchYearlyData = async (): Promise<YearlyData[]> => {
+  const year = getBusinessYear();
   try {
     const response = await axiosInstance.get('/api/dashboard/yearly', {
       params: {
-        years: 5 // 최근 5년
+        years: 5, // 최근 5년
+        baseYear: year,
       }
     });
     return response.data;
@@ -103,7 +106,7 @@ export const fetchYearlyData = async (): Promise<YearlyData[]> => {
         const scope1 = Math.floor(base * 0.2); // 약 20%
         const scope3 = Math.floor(base * 0.8); // 약 80%
         return {
-          year: currentYear - 4 + i,
+          year: year - 4 + i,
           scope1,
           scope3,
           target: Math.floor(base * 1.05),
@@ -114,13 +117,15 @@ export const fetchYearlyData = async (): Promise<YearlyData[]> => {
 };
 
 export const fetchPurposeData = async (): Promise<PurposeData[]> => {
+  const year = getBusinessYear();
   try {
-    const response = await axiosInstance.get('/api/dashboard/purpose', {
-      params: {
-        year: currentYear
-      }
-    });
-    return response.data;
+    const response = await fetchPurposeAnalysisData('operationpurpose', year.toString(), 'all', 'total');
+    return response
+      .map((item) => ({
+        name: (item as any).purposeName ?? (item as any).name ?? '',
+        value: Number((item as any).ratio ?? (item as any).totalEmission ?? 0),
+      }))
+      .filter((d) => d.name);
   } catch (error) {
     console.warn('Purpose data API 실패, Mock 데이터 반환:', error);
     // TODO: 실제 API 호출로 변경
@@ -136,13 +141,19 @@ export const fetchPurposeData = async (): Promise<PurposeData[]> => {
 
 export const fetchReductionActivities = async (): Promise<ReductionActivity[]> => {
   try {
-    const response = await axiosInstance.get('/api/dashboard/reduction-activities', {
-      params: {
-        year: currentYear,
-        limit: 5 // 최근 5개
-      }
+    const activities = await fetchActivityList();
+
+    const sorted = [...activities].sort((a, b) => {
+      const aDate = new Date(a.periodEnd || a.periodStart || '').getTime() || 0;
+      const bDate = new Date(b.periodEnd || b.periodStart || '').getTime() || 0;
+      return bDate - aDate;
     });
-    return response.data;
+
+    return sorted.slice(0, 5).map((activity) => ({
+      id: String(activity.id),
+      description: activity.activityName || activity.expectedEffect || activity.activityDetails,
+      date: activity.periodEnd || activity.periodStart,
+    }));
   } catch (error) {
     console.warn('Reduction activities API 실패, Mock 데이터 반환:', error);
     const today = new Date();

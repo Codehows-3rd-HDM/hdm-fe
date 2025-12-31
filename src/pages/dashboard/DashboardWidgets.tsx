@@ -2,7 +2,6 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
   Line, ComposedChart, PieChart, Pie, Cell, LabelList
 } from 'recharts';
-import type { LegendPayload } from 'recharts';
 import { useState, useEffect } from 'react';
 import { getBusinessYear } from '../../utils/dateUtils';
 import 'react-grid-layout/css/styles.css';
@@ -18,7 +17,7 @@ import {
   type MonthlyData,
   type YearlyData,
 } from '../../apis/dashboardApi';
-import { fetchAnalysisData } from '../../apis/emissionsApi';
+import axiosInstance from '../../apis/axiosInstance';
 
 // 상수 정의
 const currentYear = getBusinessYear();
@@ -206,34 +205,35 @@ export const MonthlyScopeSection = () => {
 // -----------------------------------------------------------------------
 export const PartnerMapSection = ({ theme }: { theme?: 'dark' | 'light' }) => {
   const [mapData, setMapData] = useState<{ region: string; value: number }[]>([]);
-  const currentYear = getBusinessYear();
+  const businessYear = getBusinessYear();
 
   useEffect(() => {
     const loadCompanyData = async () => {
       try {
-        // 협력사별 페이지와 동일한 API 사용 (company 타입)
-        const companyData = await fetchAnalysisData('company', currentYear.toString(), 'all', 'total');
-        
-        // 지역별로 배출량 집계
+        const response = await axiosInstance.get('/view/company', {
+          params: { year: businessYear, month: 0 },
+        });
+
+        const payload = Array.isArray(response.data) ? response.data : [];
+
         const regionEmissionMap = new Map<string, number>();
-        
-        companyData.forEach((company: any) => {
-          // address 필드에서 지역 추출 (예: "경기도 성남시" → "경기")
+
+        payload.forEach((company: any) => {
           const address = company.address || '';
           const regionMatch = address.match(/^([가-힣]+도|[가-힣]+시|세종)/);
           if (regionMatch) {
             const region = regionMatch[0];
             const current = regionEmissionMap.get(region) || 0;
-            regionEmissionMap.set(region, current + Number(company.totalEmission || 0));
+            const emission = Number(company.totalEmission || company.value || 0);
+            regionEmissionMap.set(region, current + emission);
           }
         });
-        
-        // Map을 배열로 변환
+
         const aggregatedData = Array.from(regionEmissionMap, ([region, value]) => ({
           region,
-          value: Math.round(value * 100) / 100 // 소수점 2자리
+          value: Math.round(value * 100) / 100,
         }));
-        
+
         setMapData(aggregatedData);
       } catch (error) {
         console.warn('Company data 조회 실패:', error);
@@ -309,6 +309,17 @@ export const YearlyHistorySection = () => {
 // -----------------------------------------------------------------------
 export const PurposePieSection = () => {
   const [pieData, setPieData] = useState<Array<{ name: string; value: number }>>([]);
+  const pieCX = 55; // 퍼센트 값으로 파이 중심을 화면 우측으로 이동
+
+  const renderCenterLabel = ({ cx, cy }: { cx?: number; cy?: number }) => {
+    if (cx === undefined || cy === undefined) return null;
+    return (
+      <text x={cx} y={cy} textAnchor="middle" dominantBaseline="middle" pointerEvents="none">
+        <tspan fill="#fff" fontSize={48} fontWeight={800}>100%</tspan>
+        <tspan x={cx} dy={28} fill="#e5e7eb" fontSize={16} fontWeight={700}>Total</tspan>
+      </text>
+    );
+  };
 
   useEffect(() => {
     fetchPurposeData().then((arr) => {
@@ -320,27 +331,41 @@ export const PurposePieSection = () => {
 
   if (pieData.length === 0) return <div className={cardBase}>로딩 중...</div>;
 
+  const legendItems = pieData.map((item, idx) => ({
+    label: item.name,
+    value: item.value,
+    color: COLORS[idx % COLORS.length],
+  }));
+
+  const renderLegend = () => (
+    <div className="flex flex-col gap-3 pr-4">
+      {legendItems.map((item, index) => (
+        <div key={`${item.label}-${index}`} className="flex items-center gap-3 text-white text-2xl font-extrabold">
+          <span className="w-4 h-4 rounded-sm border border-white/30" style={{ backgroundColor: item.color }} />
+          <span>
+            {item.label} : <b>{item.value}%</b>
+          </span>
+        </div>
+      ))}
+    </div>
+  );
+
   return (
     <div className={cardBase}>
       <h3 className="text-4xl font-extrabold mb-5 text-white text-center">{currentYear}년 운행 목적별 배출량</h3>
       <div className="flex-1 relative w-full h-full">
-        {/* 중앙 텍스트 - 절대 위치 */}
-        <div className="absolute inset-0 flex items-center justify-start pointer-events-none" style={{ paddingLeft: '20.00%' }}>
-          <div className="text-center">
-            <div className="text-5xl font-extrabold text-white">100%</div>
-            <div className="text-1xl text-gray-200 font-bold">Total</div>
-          </div>
-        </div>
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
             <Pie
               data={pieData}
-              cx="40%"
+              cx={`${pieCX}%`}
               cy="50%"
               innerRadius="45%"
               outerRadius="80%"
               paddingAngle={2}
               dataKey="value"
+              label={renderCenterLabel}
+              labelLine={false}
             >
               {pieData.map((_entry, index) => (
                 <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} stroke="#0f172a" strokeWidth={3} />
@@ -351,15 +376,8 @@ export const PurposePieSection = () => {
               layout="vertical"
               verticalAlign="middle"
               align="right"
+              content={renderLegend}
               wrapperStyle={{ fontSize: 24, color: '#fff', fontWeight: 800, paddingRight: '20px' }}
-              formatter={(value, entry: LegendPayload) => {
-                const payloadValue = entry?.payload && 'value' in entry.payload ? entry.payload.value : undefined;
-                return (
-                  <span className="text-white ml-2 font-extrabold text-2xl">
-                    {value} : <b>{payloadValue ?? '-'}%</b>
-                  </span>
-                );
-              }}
             />
           </PieChart>
         </ResponsiveContainer>
@@ -376,9 +394,7 @@ export const ReductionListSection = () => {
 
   useEffect(() => {
     fetchReductionActivities().then((arr) => {
-      // 최신 항목이 위로 오도록 역순 배열
-      const reversed = [...arr].reverse();
-      setActivities(reversed);
+      setActivities(arr);
     });
   }, []);
 
@@ -392,7 +408,7 @@ export const ReductionListSection = () => {
 
   return (
     <div className={cardBase}>
-      <h3 className="text-4xl font-extrabold mb-10 text-white text-center">최근 저감 활동 5건</h3>
+      <h3 className="text-4xl font-extrabold mb-10 text-white text-center">최근 저감 활동 {activities.length}건</h3>
       <ul className="space-y-0 text-white h-full flex flex-col justify-center">
         {activities.map((item) => (
           <li key={item.id} className="flex items-start gap-3 py-8 px-4 border-b border-white/10 hover:bg-white/5 transition-colors rounded">
