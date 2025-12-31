@@ -11,7 +11,7 @@ import {
 } from './DashboardWidgets';
 import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
-import { ArrowLeft } from 'lucide-react';
+import { Home } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 const ResponsiveGridLayout = WidthProvider(Responsive);
@@ -52,24 +52,24 @@ const DashboardPage: React.FC = () => {
   return (
     <div className="p-5 bg-linear-to-br bg-tr from-gray-900 to-gray-800 min-h-screen box-border text-white">
       {/* 메인 페이지 스타일의 큰 타이틀 */}
-      <div className="relative flex items-center justify-center mb-8">
+      <div className="relative flex items-center justify-center mb-6">
         {/* 로고: 왼쪽 절대 배치, 투명 배경 유지 */}
         <img
           src="/rogo.png"
           alt="HDM Logo"
-          className="absolute left-0 top-1/2 -translate-y-1/2 h-14 w-auto bg-transparent select-none object-contain"
+          className="absolute left-0 top-1/2 -translate-y-1/2 h-20 w-auto bg-transparent select-none object-contain"
           draggable={false}
         />
         {/* 중앙 제목 */}
-        <h1 className="text-6xl font-extrabold text-transparent bg-clip-text bg-linear-to-r from-blue-400 to-teal-400 text-center">
+        <h1 className="text-7xl font-extrabold text-transparent bg-clip-text bg-linear-to-r from-blue-400 to-teal-400 text-center leading-none">
           HDM Carbon Monitor
         </h1>
         {/* 우측 메인 버튼 */}
         <button
           onClick={() => navigate('/main')}
-          className="absolute right-0 flex items-center px-3 py-2 bg-white/10 backdrop-blur-sm text-white rounded-md shadow-sm hover:bg-white/20 font-bold text-sm border border-white/20"
+          className="absolute right-0 flex items-center px-6 py-4 bg-white/10 backdrop-blur-sm text-white rounded-lg shadow-sm hover:bg-white/20 font-bold text-lg border border-white/20"
         >
-          <ArrowLeft size={16} className="mr-1" /> 메인으로
+          <Home size={24} className="mr-2" /> 메인으로
         </button>
       </div>
 
