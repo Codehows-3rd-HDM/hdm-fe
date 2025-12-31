@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { X, Upload } from "lucide-react";
+import { X, Upload, ChevronLeft, ChevronRight, ZoomIn, ZoomOut } from "lucide-react";
 import Modal from "../Modal";
 import { type ReductionActivity } from "../../types/activity";
 
@@ -30,9 +30,12 @@ const ActivityFormModal: React.FC<ActivityFormModalProps> = ({
     imageUrls: [],
   });
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
-  // const [preview, setPreview] = useState<string[]>([]);
+  const [preview, setPreview] = useState<string[]>([]);
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [imageViewerOpen, setImageViewerOpen] = useState(false);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [zoomLevel, setZoomLevel] = useState(1);
   const [notice, setNotice] = useState<{
     open: boolean;
     title: string;
@@ -47,31 +50,98 @@ const ActivityFormModal: React.FC<ActivityFormModalProps> = ({
       ? [formData.imageUrl]
       : [];
 
+  const viewerImages = preview.length > 0 ? preview : displayImages;
+
+  const isReadOnly = mode === "view";
+
   useEffect(() => {
-    if (isOpen) {
-      if (initialData && (mode === "edit" || mode === "view")) {
-        setFormData(initialData);
-        // setPreview(initialData.imageUrl || null);
+    if (!isOpen) return;
+
+    // 모달 오픈 시 초기화
+    if (initialData && (mode === "edit" || mode === "view")) {
+      setFormData(initialData);
+      // 기존 이미지 미리보기 (상세 조회/수정 시)
+      if (initialData.imageUrls?.length) {
+        setPreview(initialData.imageUrls);
+      } else if (initialData.imageUrl) {
+        setPreview([initialData.imageUrl]);
       } else {
-        setFormData({
-          id: 0,
-          periodStart: "",
-          periodEnd: "",
-          activityName: "",
-          activityDetails: "",
-          costAmount: 0,
-          expectedEffect: "",
-          imageUrl: "",
-          imageUrls: [],
-        });
-        // setPreview(null);
+        setPreview([]);
       }
-      setImageFiles([]);
+    } else {
+      setFormData({
+        id: 0,
+        periodStart: "",
+        periodEnd: "",
+        activityName: "",
+        activityDetails: "",
+        costAmount: 0,
+        expectedEffect: "",
+        imageUrl: "",
+        imageUrls: [],
+      });
+      setPreview([]);
     }
+    setImageFiles([]);
+    setImageViewerOpen(false);
+    setCurrentImageIndex(0);
+    setZoomLevel(1);
   }, [isOpen, mode, initialData]);
 
+  useEffect(() => {
+    if (!isOpen) return;
+
+    // ESC 키: 뷰어 우선 닫기, 없으면 상세 모달 닫기
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        if (imageViewerOpen) {
+          e.preventDefault();
+          setImageViewerOpen(false);
+          return;
+        }
+        if (isReadOnly) {
+          e.preventDefault();
+          onClose();
+        }
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isOpen, imageViewerOpen, isReadOnly, onClose]);
+
   if (!isOpen) return null;
-  const isReadOnly = mode === "view";
+
+  const handleImageClick = (index: number) => {
+    if (viewerImages.length === 0) return;
+    setCurrentImageIndex(index);
+    setZoomLevel(1);
+    setImageViewerOpen(true);
+  };
+
+  const handlePrevImage = () => {
+    setCurrentImageIndex((prev) =>
+      prev > 0 ? prev - 1 : viewerImages.length - 1
+    );
+    setZoomLevel(1);
+  };
+
+  const handleNextImage = () => {
+    setCurrentImageIndex((prev) =>
+      prev < viewerImages.length - 1 ? prev + 1 : 0
+    );
+    setZoomLevel(1);
+  };
+
+  const handleZoomIn = () => {
+    setZoomLevel((prev) => Math.min(prev + 0.5, 3));
+  };
+
+  const handleZoomOut = () => {
+    setZoomLevel((prev) => Math.max(prev - 0.5, 0.5));
+  };
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -87,22 +157,18 @@ const ActivityFormModal: React.FC<ActivityFormModalProps> = ({
 
     setImageFiles(files);
 
+    // 이미지 미리보기 생성
+    const readers = files.map(
+      (file) =>
+        new Promise<string>((resolve) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result as string);
+          reader.readAsDataURL(file);
+        })
+    );
+    Promise.all(readers).then((urls) => setPreview(urls));
+
     e.target.value = "";
-
-    // if (e.target.files && e.target.files[0]) {
-    //   const file = e.target.files[0];
-
-    //   if (!file) return;
-    //   setImageFile(file);
-
-    //   //미리보기
-    //   const reader = new FileReader();
-    //   reader.onloadend = () => {
-    //     setPreview(reader.result as string);
-    //     setFormData((prev) => ({ ...prev, imageUrl: reader.result as string }));
-    //   };
-    //   reader.readAsDataURL(file);
-    // }
   };
 
   const validate = () => {
@@ -328,12 +394,14 @@ const ActivityFormModal: React.FC<ActivityFormModalProps> = ({
                   <Upload size={16} /> 선택
                 </label>
               )}
-              <span className="text-sm text-gray-500">
-                {/* {preview ? "파일 선택됨" : "선택된 파일 없음"} */}
-                {imageFiles.length > 0
-                  ? `${imageFiles.length}개 파일 선택됨`
-                  : "선택된 파일 없음"}
-              </span>
+              {!isReadOnly && (
+                <span className="text-sm text-gray-500">
+                  {/* {preview ? "파일 선택됨" : "선택된 파일 없음"} */}
+                  {imageFiles.length > 0
+                    ? `${imageFiles.length}개 파일 선택됨`
+                    : "선택된 파일 없음"}
+                </span>
+              )}
             </div>
             {imageFiles.length > 0 && (
               <ul className="mt-2 text-sm text-gray-700 list-disc list-inside">
@@ -347,33 +415,22 @@ const ActivityFormModal: React.FC<ActivityFormModalProps> = ({
                 ))}
               </ul>
             )}
-            {displayImages.length > 0 && (
+            {preview.length > 0 && (
               <div className="mt-3">
-                <p className="text-xs text-gray-500 mb-2">등록된 이미지</p>
-                <div className="max-h-80 overflow-y-auto pr-1">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    {displayImages.map((url, idx) => (
-                      <img
-                        key={`${url}-${idx}`}
-                        src={url}
-                        alt={`activity-${idx}`}
-                        loading="lazy"
-                        className="w-full h-52 object-cover rounded border"
-                      />
-                    ))}
-                  </div>
+                <p className="text-xs text-gray-500 mb-2">업로드 미리보기</p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {preview.map((url, idx) => (
+                    <img
+                      key={`preview-${idx}`}
+                      src={url}
+                      alt={`preview-${idx}`}
+                      onClick={() => handleImageClick(idx)}
+                      className="w-full h-40 object-contain rounded border bg-white cursor-pointer transition-transform hover:scale-[1.02]"
+                    />
+                  ))}
                 </div>
               </div>
             )}
-            {/* {preview && (
-              <div className="mt-2">
-                <img
-                  src={preview}
-                  alt="preview"
-                  className="max-h-40 rounded-md"
-                />
-              </div>
-            )} */}
           </div>
         </div>
 
@@ -400,6 +457,91 @@ const ActivityFormModal: React.FC<ActivityFormModalProps> = ({
           </button>
         </div>
       </div>
+
+      {/* 이미지 뷰어 모달 */}
+      {imageViewerOpen && viewerImages.length > 0 && (
+        <div
+          className="fixed inset-0 bg-black/90 flex items-center justify-center z-[2000]"
+          onClick={() => setImageViewerOpen(false)}
+        >
+          <button
+            onClick={() => setImageViewerOpen(false)}
+            className="absolute top-4 right-4 text-white hover:text-gray-300 z-10"
+          >
+            <X size={32} />
+          </button>
+
+          {/* 이전/다음 버튼 */}
+          {viewerImages.length > 1 && (
+            <>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handlePrevImage();
+                }}
+                className="absolute left-4 text-white hover:text-gray-300 z-10"
+              >
+                <ChevronLeft size={48} />
+              </button>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleNextImage();
+                }}
+                className="absolute right-4 text-white hover:text-gray-300 z-10"
+              >
+                <ChevronRight size={48} />
+              </button>
+            </>
+          )}
+
+          {/* 확대/축소 버튼 */}
+          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-4 bg-black/50 px-4 py-2 rounded-lg">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                handleZoomOut();
+              }}
+              className="text-white hover:text-gray-300"
+            >
+              <ZoomOut size={24} />
+            </button>
+            <span className="text-white">{Math.round(zoomLevel * 100)}%</span>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                handleZoomIn();
+              }}
+              className="text-white hover:text-gray-300"
+            >
+              <ZoomIn size={24} />
+            </button>
+          </div>
+
+          {/* 이미지 컨테이너 */}
+          <div
+            className="max-w-[90vw] max-h-[90vh] overflow-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <img
+              src={viewerImages[currentImageIndex]}
+              alt={`activity-${currentImageIndex}`}
+              style={{
+                transform: `scale(${zoomLevel})`,
+                transition: "transform 0.2s ease",
+              }}
+              className="max-w-full h-auto"
+            />
+          </div>
+
+          {/* 이미지 번호 표시 */}
+          {viewerImages.length > 1 && (
+            <div className="absolute top-4 left-1/2 -translate-x-1/2 text-white bg-black/50 px-3 py-1 rounded">
+              {currentImageIndex + 1} / {viewerImages.length}
+            </div>
+          )}
+        </div>
+      )}
 
       <Modal
         isOpen={notice.open}

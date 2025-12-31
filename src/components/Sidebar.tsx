@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { ChevronDown, Hexagon, Menu } from 'lucide-react'; // Menu 아이콘 추가
+import { ChevronDown, Hexagon, Menu, LogOut } from 'lucide-react'; // LogOut 아이콘 추가
 import { menuItems } from '../data/MenuData';
 import { useAuth } from '../hooks/useAuth';
 
@@ -20,6 +20,14 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggleSidebar }) => {
 
   // 권한 훅
   const { hasRole } = useAuth();
+
+  // 로그아웃 핸들러
+  const handleLogout = () => {
+    // 로컬 스토리지에서 토큰 제거
+    localStorage.removeItem('authToken');
+    // 로그인 페이지로 이동
+    navigate('/login');
+  };
 
   const handleToggleDepth1 = (title: string, hasSubItems: boolean, path?: string) => {
     // 사이드바가 접혀있을 때 (isOpen: false) 하위 메뉴가 있는 항목을 클릭하면
@@ -217,6 +225,22 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggleSidebar }) => {
             </div>
           );
         })}
+      </div>
+
+      {/* 로그아웃 버튼 */}
+      <div className="border-t border-gray-100 p-4">
+        <button
+          onClick={handleLogout}
+          className={`
+            flex items-center gap-3 px-3 py-2.5 w-full
+            rounded-lg text-red-600 hover:bg-red-50 transition-colors font-medium text-sm
+            ${isOpen ? 'justify-start' : 'justify-center'}
+          `}
+          title="로그아웃"
+        >
+          <LogOut size={18} />
+          {isOpen && <span>로그아웃</span>}
+        </button>
       </div>
     </div>
   );
