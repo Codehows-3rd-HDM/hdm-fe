@@ -38,7 +38,9 @@ export interface VehicleData {
   fuelType: string;       // 연료종류
   remark: string;           // 비고
   defaultScope?: string;         // Scope (운행목적 연동)
+  calcBaseDate?: string;       // 차량 등록일 (차를 탄 시작 날짜)
   isEditing?: boolean;
+  [key: string]: unknown;
 }
 
 // 2. 협력사명 및 주소지 정보 데이터 타입
@@ -46,12 +48,13 @@ export interface CompanyData {
   id: number;
   companyName: string;   // 협력사명
   supplyTypeName: string;   // 공급 유형
-  supplyCustomerName: string; // 공급 고객
+  customerName: string; // 공급 고객
   oneWayDistance: number; // 편도거리
   region: string;       // 지역 (시/도)
   detailAddress: string; // 상세주소
   remark: string;       // 비고
   isEditing?: boolean;
+  [key: string]: unknown;
 }
 
 // 3. 차종 및 연비 정보 데이터 타입
@@ -62,6 +65,7 @@ export interface CarModelData {
   fuelType: string;      // 연료종류
   customEfficiency: string;// 연비
   isEditing?: boolean;
+  [key: string]: unknown;
 }
 
 // 4. 공급 유형 정보 데이터 타입
@@ -69,6 +73,7 @@ export interface ProcessData {
   id: number;
   supplyType: string; // 공급 유형
   isEditing?: boolean;
+  [key: string]: unknown;
 }
 
 // 5. 운행 목적 정보 데이터 타입
@@ -77,14 +82,16 @@ export interface PurposeData {
   purpose: string; // 운행 목적
   scope: string;   // Scope
   isEditing?: boolean;
+  [key: string]: unknown;
 }
 
 // 6. 공급 고객 정보 데이터 타입
 export interface ProductData {
   id: number;
-  supplyCustomer: string; // 품목 구분명
+  customerName: string; // 공급 고객명
   note: string;         // 비고
   isEditing?: boolean;
+  [key: string]: unknown;
 }
 
 // ----------------------------------------------------------------------
@@ -100,6 +107,7 @@ export const VEHICLE_COLUMNS: ColumnDefinition<VehicleData>[] = [
   { id: 'operationPurposeName', header: '운행목적', searchable: true, sortable: true, editable: true, width: '8%', inputType: 'dynamic-select' },
   { id: 'defaultScope', header: 'Scope', searchable: false, sortable: true, editable: false, width: '8%' }, 
   { id: 'operationDistance', header: '편도거리(km)', searchable: false, sortable: true, editable: true, width: '8%', inputType: 'number' },
+  { id: 'calcBaseDate', header: '차량등록일', searchable: false, sortable: true, editable: false, width: '10%', inputType: 'text' },
   { id: 'parentCategoryName', header: '대분류', searchable: false, sortable: true, editable: true, width: '8%', inputType: 'dynamic-select' },
   { id: 'carCategoryName', header: '소분류', searchable: false, sortable: true, editable: true, width: '8%', inputType: 'dynamic-select' },
   { id: 'fuelType', header: '연료', searchable: false, sortable: true, editable: true, width: '8%', inputType: 'dynamic-select' },
@@ -111,7 +119,7 @@ export const VEHICLE_COLUMNS: ColumnDefinition<VehicleData>[] = [
 export const COMPANY_COLUMNS: ColumnDefinition<CompanyData>[] = [
   { id: 'companyName', header: '협력사명', searchable: true, sortable: true, editable: true, width: '15%', inputType: 'text' },
   { id: 'supplyTypeName', header: '공급 유형', searchable: true, sortable: true, editable: true, width: '12%', inputType: 'dynamic-select' },
-  { id: 'supplyCustomerName', header: '공급 고객', searchable: true, sortable: true, editable: true, width: '12%', inputType: 'dynamic-select' },
+  { id: 'customerName', header: '공급 고객', searchable: true, sortable: true, editable: true, width: '12%', inputType: 'dynamic-select' },
   { id: 'oneWayDistance', header: '편도거리(km)', searchable: false, sortable: true, editable: true, width: '10%', inputType: 'number' },
   { id: 'region', header: '지역 (시/도)', searchable: true, sortable: true, editable: true, width: '12%', inputType: 'select', selectOptions: REGION_OPTIONS },
   { id: 'detailAddress', header: '상세주소', searchable: true, sortable: false, editable: true, width: '25%', inputType: 'text' },
@@ -143,7 +151,7 @@ export const PURPOSE_COLUMNS: ColumnDefinition<PurposeData>[] = [
 
 // 6. 공급 고객 컬럼
 export const PRODUCT_COLUMNS: ColumnDefinition<ProductData>[] = [
-  { id: 'supplyCustomer', header: '공급 고객명', searchable: true, sortable: true, editable: true, width: '50%', inputType: 'text' },
+  { id: 'customerName', header: '공급 고객명', searchable: true, sortable: true, editable: true, width: '50%', inputType: 'text' },
   { id: 'note', header: '비고', searchable: false, sortable: false, editable: true, width: '30%', inputType: 'text' },
   { id: 'actions', header: '액션', searchable: false, sortable: false, editable: false, width: '20%' },
 ];

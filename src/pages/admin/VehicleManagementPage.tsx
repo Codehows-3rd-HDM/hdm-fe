@@ -1,17 +1,60 @@
 import React, { useState, useEffect } from 'react';
 import StandardDataManagementTable from '../../components/management/StandardDataManagementTable';
 import { type VehicleData, VEHICLE_COLUMNS } from '../../types/data';
-import { fetchRegistrationOptions, type OptionsData } from '../../apis/registerApi';
+import { fetchRegistrationOptions } from '../../apis/registerApi';
+import { fetchOperationPurposes, type OperationPurposeResponse } from '../../apis/operationPurposeApi';
+
+type VehicleOptions = {
+  operationPurposes: { id: number; name: string }[];
+  operationPurposesMap: Record<number, { purposeName: string; defaultScope?: number }>;
+  companies: { id: number; name: string; oneWayDistance?: number }[];
+  carCategories: { id: number; name: string }[];
+  carCategoryMap: Record<string, { id: number; name: string }[]>;
+  fuelTypes: { id: number; name: string }[];
+};
+
+// StrictMode에서의 이중 마운트로 인한 중복 호출을 방지하기 위해 모듈 단위 캐시 사용
+let vehicleOptionsCache: VehicleOptions | null = null;
+let vehicleOptionsPromise: Promise<VehicleOptions> | null = null;
+
+const loadVehicleOptions = async (): Promise<VehicleOptions> => {
+  if (vehicleOptionsCache) return vehicleOptionsCache;
+  if (!vehicleOptionsPromise) {
+    vehicleOptionsPromise = Promise.all([
+      fetchRegistrationOptions(),
+      fetchOperationPurposes(undefined, undefined, undefined, 0, 1000)
+    ]).then(([fetchedOptions, purposeResponse]) => {
+      const operationPurposesMap: Record<number, { purposeName: string; defaultScope?: number }> = {};
+      purposeResponse.content.forEach((purpose: OperationPurposeResponse) => {
+        operationPurposesMap[purpose.id] = {
+          purposeName: purpose.purposeName,
+          defaultScope: purpose.defaultScope
+        };
+      });
+
+      const prepared: VehicleOptions = {
+        operationPurposes: fetchedOptions.PURPOSE_OPTIONS || [],
+        operationPurposesMap,
+        companies: fetchedOptions.COMPANY_LIST || fetchedOptions.COMPANY_OPTIONS || [],
+        carCategories: fetchedOptions.CAT_LARGE_OPTIONS || [],
+        carCategoryMap: fetchedOptions.CAR_CATEGORY_MAP || {},
+        fuelTypes: fetchedOptions.FUEL_OPTIONS || []
+      };
+
+      vehicleOptionsCache = prepared;
+      return prepared;
+    }).finally(() => {
+      vehicleOptionsPromise = null;
+    });
+  }
+
+  return vehicleOptionsPromise;
+};
 
 const VehicleManagementPage: React.FC = () => {
-  const [options, setOptions] = useState<{
-    operationPurposes: { id: number; name: string }[];
-    companies: { id: number; name: string; oneWayDistance?: number }[];
-    carCategories: { id: number; name: string }[];
-    carCategoryMap: Record<string, { id: number; name: string }[]>;
-    fuelTypes: { id: number; name: string }[];
-  }>({
+  const [options, setOptions] = useState<VehicleOptions>({
     operationPurposes: [],
+    operationPurposesMap: {},
     companies: [],
     carCategories: [],
     carCategoryMap: {},
@@ -19,43 +62,25 @@ const VehicleManagementPage: React.FC = () => {
   });
 
   useEffect(() => {
-    const loadOptions = async () => {
-      try {
-        console.log('[VehicleManagementPage] 옵션 데이터 로딩 시작');
-        const fetchedOptions: OptionsData = await fetchRegistrationOptions();
-        console.log('[VehicleManagementPage] 로드된 옵션 데이터:', fetchedOptions);
-        console.log('[VehicleManagementPage] PURPOSE_OPTIONS:', fetchedOptions.PURPOSE_OPTIONS);
-        console.log('[VehicleManagementPage] COMPANY_OPTIONS:', fetchedOptions.COMPANY_OPTIONS);
-        console.log('[VehicleManagementPage] CAT_LARGE_OPTIONS:', fetchedOptions.CAT_LARGE_OPTIONS);
-        console.log('[VehicleManagementPage] FUEL_OPTIONS:', fetchedOptions.FUEL_OPTIONS);
-        
-        setOptions({
-          operationPurposes: fetchedOptions.PURPOSE_OPTIONS || [],
-          companies: fetchedOptions.COMPANY_LIST || fetchedOptions.COMPANY_OPTIONS || [],
-          carCategories: fetchedOptions.CAT_LARGE_OPTIONS || [],
-          carCategoryMap: fetchedOptions.CAR_CATEGORY_MAP || {},
-          fuelTypes: fetchedOptions.FUEL_OPTIONS || []
-        });
-        
-        console.log('[VehicleManagementPage] 설정된 옵션 상태:', {
-          operationPurposes: fetchedOptions.PURPOSE_OPTIONS || [],
-          companies: fetchedOptions.COMPANY_LIST || fetchedOptions.COMPANY_OPTIONS || [],
-          carCategories: fetchedOptions.CAT_LARGE_OPTIONS || [],
-          carCategoryMap: fetchedOptions.CAR_CATEGORY_MAP || {},
-          fuelTypes: fetchedOptions.FUEL_OPTIONS || []
-        });
-      } catch (error) {
+    let mounted = true;
+    loadVehicleOptions()
+      .then(data => {
+        if (mounted) setOptions(data);
+      })
+      .catch(error => {
         console.error('[VehicleManagementPage] 옵션 데이터 로딩 실패:', error);
-      }
+      });
+
+    return () => {
+      mounted = false;
     };
-    loadOptions();
   }, []);
 
   return (
     <StandardDataManagementTable<VehicleData>
       title="출입 차량 기준정보 관리"
       columns={VEHICLE_COLUMNS}
-      apiEndpoint="/admin/vehicles"
+      apiEndpoint="/admin/vehicle"
       disableDelete={false}
       options={options}
     />

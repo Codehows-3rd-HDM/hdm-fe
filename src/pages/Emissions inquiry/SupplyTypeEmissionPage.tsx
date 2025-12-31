@@ -17,7 +17,7 @@ const SupplyTypeEmissionPage: React.FC = () => {
       title="공급 유형별 탄소 배출량"
       hasScopeTabs={false}
       columns={COLUMNS}
-      dataType='process'
+      dataType='supplytype'
     />
   );
 };
