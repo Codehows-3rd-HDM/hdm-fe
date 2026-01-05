@@ -560,11 +560,9 @@ const DataUploadPage: React.FC = () => {
   const totalInvalidCount = invalidNiceRows.length + invalidS1Rows.length;
 
   return (
-    <>
-      <div style={{ padding: 'var(--padding-container)', marginBottom: 'var(--spacing-lg)' }}>
-        <Breadcrumb items={getBreadcrumbItems('/admin/data-upload')} />
-      </div>
-      <div className="font-sans bg-white" style={{ padding: 'var(--padding-container)' }}>
+    <div className="min-h-screen bg-gray-50 font-sans" style={{ padding: 'var(--padding-container)' }}>
+      <Breadcrumb items={getBreadcrumbItems('/admin/data-upload')} />
+
       {/*로딩 중일 때 화면 전체 덮어버림 */}
       {isLoading && <LoadingSpinner />}
 
@@ -1016,8 +1014,7 @@ const DataUploadPage: React.FC = () => {
         message={alertState.message}
         isSuccess={alertState.isSuccess}
       />
-      </div>
-    </>
+    </div>
   );
 };
 

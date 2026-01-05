@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import StandardDataManagementTable from '../../components/management/StandardDataManagementTable';
-import Breadcrumb from '../../components/Breadcrumb';
 import { getBreadcrumbItems } from '../../utils/breadcrumbHelper';
 import { type CompanyData, COMPANY_COLUMNS } from '../../types/data';
 import { fetchRegistrationOptions, type OptionsData } from '../../apis/registerApi';
@@ -56,17 +55,13 @@ const CompanyManagementPage: React.FC = () => {
   }, []);
 
   return (
-    <>
-      <div style={{ padding: 'var(--padding-container)', marginBottom: 'var(--spacing-lg)' }}>
-        <Breadcrumb items={getBreadcrumbItems('/admin/company/manage')} />
-      </div>
-      <StandardDataManagementTable<CompanyData>
-        title="협력사 및 주소지 기준정보 관리"
-        columns={COMPANY_COLUMNS}
-        apiEndpoint="/admin/company"
-        options={options}
-      />
-    </>
+    <StandardDataManagementTable<CompanyData>
+      title="협력사 및 주소지 기준정보 관리"
+      columns={COMPANY_COLUMNS}
+      apiEndpoint="/admin/company"
+      options={options}
+      breadcrumbItems={getBreadcrumbItems('/admin/company/manage')}
+    />
   );
 };
 

@@ -2,6 +2,8 @@ import React, { useState, useRef } from "react";
 import { Upload, FileSpreadsheet, Save, AlertCircle, X } from "lucide-react";
 import axios from "axios";
 import Modal from "../../../components/Modal";
+import Breadcrumb from "../../../components/Breadcrumb";
+import { getBreadcrumbItems } from "../../../utils/breadcrumbHelper";
 import { parseExcelFile } from "./utils/Parsing";
 import { mapToBaseInfoData } from "./utils/Mappers";
 import LoadingSpinner from "../../../components/LoadingSpinner";
@@ -327,6 +329,8 @@ const ExcelManagementPage: React.FC = () => {
       <div className="w-full h-full relative flex-1 flex flex-col" style={{ padding: 'var(--padding-container)' }}>
         {/* 로딩 중일 때 화면 전체 덮어버림 */}
         {isLoading && <LoadingSpinner />}
+
+        <Breadcrumb items={getBreadcrumbItems('/admin/excel/manage')} />
 
         {/* 1. Header Area */}
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4" style={{ marginBottom: 'var(--spacing-lg)' }}>

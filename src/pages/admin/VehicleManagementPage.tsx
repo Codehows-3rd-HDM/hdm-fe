@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import StandardDataManagementTable from '../../components/management/StandardDataManagementTable';
-import Breadcrumb from '../../components/Breadcrumb';
 import { getBreadcrumbItems } from '../../utils/breadcrumbHelper';
 import { type VehicleData, VEHICLE_COLUMNS } from '../../types/data';
 import { fetchRegistrationOptions } from '../../apis/registerApi';
@@ -79,18 +78,14 @@ const VehicleManagementPage: React.FC = () => {
   }, []);
 
   return (
-    <>
-      <div style={{ padding: 'var(--padding-container)', marginBottom: 'var(--spacing-lg)' }}>
-        <Breadcrumb items={getBreadcrumbItems('/admin/vehicle/manage')} />
-      </div>
-      <StandardDataManagementTable<VehicleData>
-        title="출입 차량 기준정보 관리"
-        columns={VEHICLE_COLUMNS}
-        apiEndpoint="/admin/vehicle"
-        disableDelete={false}
-        options={options}
-      />
-    </>
+    <StandardDataManagementTable<VehicleData>
+      title="출입 차량 기준정보 관리"
+      columns={VEHICLE_COLUMNS}
+      apiEndpoint="/admin/vehicle"
+      disableDelete={false}
+      options={options}
+      breadcrumbItems={getBreadcrumbItems('/admin/vehicle/manage')}
+    />
   );
 };
 
