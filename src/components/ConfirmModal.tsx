@@ -39,10 +39,11 @@ const ConfirmModal: React.FC<ConfirmModalProps> = ({
       {/* [수정 2] 모달 박스 (흰색 배경) */}
       {/* 기존에 있던 max-w-sm을 지우고, 위에서 만든 ${maxWidthClass} 변수를 넣어야 함 */}
       <div
-        className={`bg-white rounded-lg shadow-xl p-6 w-11/12 ${maxWidthClass} transform transition-all duration-300 scale-100 flex flex-col`}
+        className={`bg-white rounded-lg shadow-xl w-11/12 ${maxWidthClass} transform transition-all duration-300 scale-100 flex flex-col`}
+        style={{ padding: 'var(--padding-card)' }}
       >
         {/* 헤더 */}
-        <div className="flex justify-between items-start border-b pb-3 mb-4 shrink-0">
+        <div className="flex justify-between items-start border-b shrink-0" style={{ paddingBottom: 'var(--spacing-md)', marginBottom: 'var(--spacing-md)' }}>
           <h3 className="text-xl font-bold text-gray-800">{title}</h3>
           <button
             onClick={onClose}
@@ -68,19 +69,21 @@ const ConfirmModal: React.FC<ConfirmModalProps> = ({
         <div className="flex justify-center gap-2 shrink-0 mt-auto">
           <button
             onClick={onClose}
-            className="flex-1 py-2 px-4 font-bold text-gray-700 bg-gray-200 hover:bg-gray-300 rounded-lg transition-colors"
+            className="flex-1 font-bold text-gray-700 bg-gray-200 hover:bg-gray-300 rounded-lg transition-colors"
+            style={{ padding: 'var(--padding-btn)' }}
           >
             취소
           </button>
 
           <button
             onClick={onConfirm}
-            className={`flex-1 py-2 px-4 font-bold text-white rounded-lg transition-colors 
+            className={`flex-1 font-bold text-white rounded-lg transition-colors 
               ${
                 isWarning
                   ? "bg-red-600 hover:bg-red-700"
                   : "bg-blue-600 hover:bg-blue-700"
               }`}
+            style={{ padding: 'var(--padding-btn)' }}
           >
             등록
           </button>

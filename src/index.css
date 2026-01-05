@@ -23,6 +23,13 @@
   /* Responsive Padding */
   --padding-responsive: clamp(1rem, 3vw, 2rem);
   --padding-container: clamp(1.5rem, 5vw, 3rem);
+  --padding-card: clamp(1.5rem, 3vw, 2.5rem);
+  --padding-input: clamp(0.75rem, 2vw, 1.5rem);
+  --padding-btn: 0.5rem 1rem;
+  --padding-input-sm: 0.5rem 0.75rem;
+
+  /* Input Heights */
+  --height-input: 3.125rem;  /* 50px */
 
   /* Typography Scale (rem-based) */
   --text-xs: 0.75rem;      /* 12px */

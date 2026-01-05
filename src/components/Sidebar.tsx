@@ -78,7 +78,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggleSidebar }) => {
 >
       
       {/* 헤더 영역: 로고 및 토글 버튼 */}
-      <div className={`flex items-center ${isOpen ? 'justify-between px-5' : 'justify-center px-3'} pt-6 pb-4 border-b border-gray-100 mb-2 transition-all`}>
+      <div className={`flex items-center ${isOpen ? 'justify-between' : 'justify-center'} border-b border-gray-100 transition-all`} style={{ padding: `var(--spacing-lg) ${isOpen ? '1.25rem' : '0.75rem'} var(--spacing-md)`, marginBottom: 'var(--spacing-sm)' }}>
         {isOpen && (
           <img 
             src="/rogo1.png" 
@@ -92,8 +92,9 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggleSidebar }) => {
         {/* 햄버거 버튼: 항상 표시 */}
         <button 
           onClick={toggleSidebar}
-          className="p-2 rounded hover:bg-gray-100 text-gray-500 transition-colors"
+          className="rounded hover:bg-gray-100 text-gray-500 transition-colors"
           title={isOpen ? "메뉴 접기" : "메뉴 펼치기"}
+          style={{ padding: 'var(--spacing-sm)' }}
         >
           <Menu size={24} />
         </button>
@@ -116,17 +117,18 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggleSidebar }) => {
               {/* --- Level 1 --- */}
               <div
                 className={`
-                  flex items-center px-4 py-3 mb-1 cursor-pointer transition-all duration-200
-                  ${isOpen ? 'justify-between mx-2 rounded-lg' : 'justify-center mx-1 rounded-md'}
+                  flex items-center cursor-pointer transition-all duration-200
+                  ${isOpen ? 'justify-between rounded-lg' : 'justify-center rounded-md'}
                   ${isActive1 
                     ? 'text-blue-600 font-bold bg-blue-50' 
                     : 'text-gray-700 font-semibold hover:bg-gray-50'
                   }
                 `}
+                style={{ padding: 'var(--spacing-md) 1rem', margin: isOpen ? '0 0.5rem 0.25rem 0.5rem' : '0 0.25rem 0.25rem 0.25rem' }}
                 onClick={() => handleToggleDepth1(depth1.title, hasSub1, depth1.path)}
                 title={!isOpen ? depth1.title : undefined} // 접혔을 때 툴팁 효과
               >
-                <div className={`flex items-center ${isOpen ? 'gap-x-3' : ''}`}>
+                <div className={`flex items-center`} style={{ gap: isOpen ? '0.75rem' : '0' }}>
                   {Icon && <Icon size={22} strokeWidth={1.5} className="shrink-0" />}
                   
                   {/* 텍스트: 펼쳐졌을 때만 표시 */}
@@ -166,15 +168,16 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggleSidebar }) => {
                         {/* --- Level 2 --- */}
                         <div
                           className={`
-                            flex items-center justify-between pr-6 mb-1 cursor-pointer text-sm transition-colors duration-200 pl-12 py-2.5
+                            flex items-center justify-between cursor-pointer text-sm transition-colors duration-200
                             ${isHighlight2 
                               ? 'text-blue-600 font-semibold bg-blue-50' 
                               : 'text-gray-600 font-normal hover:bg-gray-50 hover:text-blue-600'
                             }
                           `}
+                          style={{ padding: '0.625rem 1.5rem 0.625rem 3rem', margin: '0.25rem 0' }}
                           onClick={() => handleToggleDepth2(depth2Key, hasSub2, depth2.path)}
                         >
-                          <div className="flex items-center gap-x-2">
+                          <div className="flex items-center" style={{ gap: '0.5rem' }}>
                             <span className={`text-lg leading-none ${isHighlight2 ? 'text-blue-600' : 'text-gray-300'}`}>~</span>
                             <span>{depth2.title}</span>
                           </div>
@@ -199,17 +202,19 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggleSidebar }) => {
                                 <div
                                   key={depth3.title}
                                   className={`
-                                    flex items-center pr-6 mb-1 cursor-pointer text-[13px] transition-colors duration-200 pl-18.5 py-2
+                                    flex items-center cursor-pointer text-[13px] transition-colors duration-200
                                     ${isActive3 
                                       ? 'text-blue-600 font-semibold bg-blue-50' 
                                       : 'text-gray-500 font-normal hover:bg-white hover:text-blue-600'
                                     }
                                   `}
+                                  style={{ padding: '0.5rem 1.5rem 0.5rem 4.625rem', margin: '0.25rem 0' }}
                                   onClick={() => navigate(depth3.path!)}
                                 >
                                   <Hexagon 
                                     size={10} 
-                                    className={`mr-2 ${isActive3 ? 'fill-blue-600 text-blue-600' : 'fill-gray-300 text-transparent'} stroke-none`} 
+                                    className={`${isActive3 ? 'fill-blue-600 text-blue-600' : 'fill-gray-300 text-transparent'} stroke-none`}
+                                    style={{ marginRight: '0.5rem' }}
                                   />
                                   <span>{depth3.title}</span>
                                 </div>
@@ -228,15 +233,16 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggleSidebar }) => {
       </div>
 
       {/* 로그아웃 버튼 */}
-      <div className="border-t border-gray-100 p-4">
+      <div className="border-t border-gray-100" style={{ padding: 'var(--spacing-md)' }}>
         <button
           onClick={handleLogout}
           className={`
-            flex items-center gap-3 px-3 py-2.5 w-full
+            flex items-center w-full
             rounded-lg text-red-600 hover:bg-red-50 transition-colors font-medium text-sm
             ${isOpen ? 'justify-start' : 'justify-center'}
           `}
           title="로그아웃"
+          style={{ gap: '0.75rem', padding: `var(--spacing-md) 0.75rem` }}
         >
           <LogOut size={18} />
           {isOpen && <span>로그아웃</span>}

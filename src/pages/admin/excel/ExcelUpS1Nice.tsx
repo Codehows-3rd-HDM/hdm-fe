@@ -564,7 +564,7 @@ const DataUploadPage: React.FC = () => {
       <div style={{ padding: 'var(--padding-container)', marginBottom: 'var(--spacing-lg)' }}>
         <Breadcrumb items={getBreadcrumbItems('/admin/data-upload')} />
       </div>
-      <div className="p-8 font-sans bg-white">
+      <div className="font-sans bg-white" style={{ padding: 'var(--padding-container)' }}>
       {/*로딩 중일 때 화면 전체 덮어버림 */}
       {isLoading && <LoadingSpinner />}
 
@@ -581,7 +581,8 @@ const DataUploadPage: React.FC = () => {
               연도 선택
             </span>
             <select
-              className="px-2 border border-gray-300 rounded-md w-28 h-9 bg-gray-50"
+              className="border border-gray-300 rounded-md w-28 bg-gray-50"
+              style={{ height: 'var(--height-input)', padding: 'var(--spacing-sm)' }}
               value={selectedYear}
               onChange={(e) => setSelectedYear(e.target.value)}
             >
@@ -598,7 +599,8 @@ const DataUploadPage: React.FC = () => {
               월 선택
             </span>
             <select
-              className="px-2 border border-gray-300 rounded-md w-28 h-9 bg-gray-50"
+              className="border border-gray-300 rounded-md w-28 bg-gray-50"
+              style={{ height: 'var(--height-input)', padding: 'var(--spacing-sm)' }}
               value={selectedMonth}
               onChange={(e) => setSelectedMonth(e.target.value)}
             >
@@ -613,7 +615,7 @@ const DataUploadPage: React.FC = () => {
           <div className="flex flex-col gap-2">
             {/* 1. 나이스파크 데이터 중복 경고 (파란색) */}
             {niceParkData.length > 0 && isNiceDataExisting && (
-              <div className="flex items-center gap-2 p-3 mt-2 text-sm font-bold text-blue-700 bg-blue-50 border border-blue-200 rounded">
+              <div className="flex items-center gap-2 text-sm font-bold text-blue-700 bg-blue-50 border border-blue-200 rounded" style={{ padding: 'var(--spacing-md)' }}>
                 <AlertCircle size={20} />
                 <span>
                   {selectedMonth === "0"
@@ -625,7 +627,7 @@ const DataUploadPage: React.FC = () => {
 
             {/* 2. 에스원 데이터 중복 경고 (주황색) */}
             {s1Data.length > 0 && isS1DataExisting && (
-              <div className="flex items-center gap-2 p-3 mt-2 text-sm font-bold text-orange-700 bg-orange-50 border border-orange-200 rounded">
+              <div className="flex items-center gap-2 text-sm font-bold text-orange-700 bg-orange-50 border border-orange-200 rounded" style={{ padding: 'var(--spacing-md)' }}>
                 <AlertCircle size={20} />
                 <span>
                   {selectedMonth === "0"
@@ -767,9 +769,9 @@ const DataUploadPage: React.FC = () => {
                         }
                       `}
                     >
-                      <td className="p-2 text-gray-800">{row.carNumber}</td>
-                      <td className="p-2 text-gray-800">{row.accessDate}</td>
-                      <td className="p-2 text-gray-800">{row.accessTime}</td>
+                      <td className="text-gray-800" style={{ padding: 'var(--spacing-sm)' }}>{row.carNumber}</td>
+                      <td className="text-gray-800" style={{ padding: 'var(--spacing-sm)' }}>{row.accessDate}</td>
+                      <td className="text-gray-800" style={{ padding: 'var(--spacing-sm)' }}>{row.accessTime}</td>
                     </tr>
                   ))
                 )}
