@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import type { ColumnDefinition } from '../../types/data';
+import Breadcrumb, { type BreadcrumbItem } from '../Breadcrumb';
 import { 
   ArrowUp, ArrowDown, ArrowUpDown, Search, Save, Trash2, X, CheckSquare, Edit2, Loader2 
 } from 'lucide-react'; 
@@ -15,6 +16,7 @@ interface StandardDataManagementTableProps<T> {
   apiEndpoint: string; // [변경] initialData 대신 endpoint만 받음
   disableDelete?: boolean; // 차종 모델 페이지에서 삭제 비활성화
   options?: ManagementOptions;
+  breadcrumbItems?: BreadcrumbItem[];
 }
 
 type ManagementOptions = {
@@ -34,7 +36,8 @@ const StandardDataManagementTable = <T extends { id: number; [key: string]: unkn
   columns, 
   apiEndpoint,
   disableDelete = false,
-  options
+  options,
+  breadcrumbItems
 }: StandardDataManagementTableProps<T>) => {
   // options가 없는 페이지에서는 새 객체가 렌더마다 생성되어 useEffect가 반복되지 않도록 메모이제이션
   const normalizedOptions: ManagementOptions = useMemo(() => options ?? EMPTY_OPTIONS, [options]);
@@ -1121,7 +1124,10 @@ const StandardDataManagementTable = <T extends { id: number; [key: string]: unkn
   // ----------------------------------------------------------------------
 
   return (
+    <>
     <div className="bg-gray-50 min-h-screen font-sans" style={{ padding: 'var(--padding-container)' }}>
+
+      {breadcrumbItems && <Breadcrumb items={breadcrumbItems} />}
       
       {/* 1. 타이틀 */}
       <h2 className="text-2xl font-bold text-gray-800 mb-6">{title}</h2>
@@ -1428,6 +1434,7 @@ const StandardDataManagementTable = <T extends { id: number; [key: string]: unkn
       isSuccess={errorTitle.includes('완료')}
     />
     </div>
+    </>
   );
 };
 
