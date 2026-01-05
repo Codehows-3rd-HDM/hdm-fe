@@ -209,22 +209,22 @@ const TargetComparisonPage: React.FC = () => {
   //   };
 
   return (
-    <div className="min-h-screen p-8 font-sans bg-gray-50">
+    <div className="min-h-screen font-sans bg-gray-50" style={{ padding: 'var(--padding-container)' }}>
       {/* 헤더 */}
-      <header className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-bold text-gray-800">
+      <header className="flex items-center justify-between" style={{ marginBottom: 'var(--spacing-lg)' }}>
+        <h2 className="font-bold text-gray-800" style={{ fontSize: 'clamp(1.25rem, 2vw, 1.5rem)' }}>
           목표 대비 탄소 배출량
         </h2>
       </header>
 
       {/* 1. 탭 (Scope 선택) */}
-      <div className="flex gap-2 pb-3 mb-6 border-b border-gray-200">
+      <div className="flex flex-wrap pb-3 border-b border-gray-200" style={{ gap: 'var(--spacing-sm)', marginBottom: 'var(--spacing-lg)' }}>
         {["total", "scope1", "scope3"].map((scope) => (
           <button
             key={scope}
             onClick={() => setSelectedScope(scope as ScopeType)}
             className={`
-                    px-5 py-2 text-sm font-semibold rounded-full transition-all duration-200 
+                    font-semibold rounded-full transition-all duration-200 
                     ${
                       selectedScope === scope
                         ? "bg-gray-800 text-white border-gray-800 shadow-md"
@@ -232,6 +232,7 @@ const TargetComparisonPage: React.FC = () => {
                     }
                     flex items-center
                 `}
+            style={{ padding: 'var(--spacing-sm) var(--spacing-lg)', fontSize: 'var(--text-sm)' }}
           >
             {scope === "total"
               ? "✓ 총 배출량"
@@ -243,8 +244,8 @@ const TargetComparisonPage: React.FC = () => {
       </div>
 
       {/* 2. KPI 카드 (연도 선택 포함) */}
-      <div className="flex flex-col gap-6 mb-8 md:flex-row">
-        <div className="relative flex flex-1 gap-5 p-6 bg-white border-l-4 shadow-lg rounded-xl border-amber-500">
+      <div className="flex flex-col gap-6 md:flex-row" style={{ marginBottom: 'var(--spacing-xl)' }}>
+        <div className="relative flex flex-1 bg-white border-l-4 shadow-lg rounded-xl border-amber-500" style={{ gap: 'var(--spacing-lg)', padding: 'var(--spacing-lg)' }}>
           {/* 총 배출량 (실적) */}
           <div className="flex-1 pr-5 border-r border-gray-200">
             <div className="mb-1 text-sm text-gray-600">

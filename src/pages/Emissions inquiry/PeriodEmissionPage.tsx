@@ -157,29 +157,30 @@ const PeriodEmissionPage: React.FC = () => {
   const isDecreased = diff < 0;
 
   return (
-    <div className="min-h-screen p-6 bg-gray-100">
+    <div className="min-h-screen bg-gray-100" style={{ padding: 'var(--padding-responsive)' }}>
       {/* 헤더 */}
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-bold text-gray-800">
+      <div className="flex items-center justify-between" style={{ marginBottom: 'var(--spacing-lg)' }}>
+        <h2 className="font-bold text-gray-800" style={{ fontSize: 'clamp(1.25rem, 2vw, 1.5rem)' }}>
           기간별 탄소 총 배출량 (Scope 1, Scope 3)
         </h2>
       </div>
 
       {/* 기간 선택 */}
-      <div className="p-5 mb-6 bg-white shadow-md rounded-xl">
-        <h3 className="flex items-center mb-4 text-lg font-bold text-gray-800">
-          <CalendarIcon size={18} className="mr-2" /> 기간 선택
+      <div className="bg-white shadow-md rounded-xl" style={{ padding: 'var(--spacing-lg)', marginBottom: 'var(--spacing-lg)' }}>
+        <h3 className="flex items-center font-bold text-gray-800" style={{ marginBottom: 'var(--spacing-md)', fontSize: 'var(--text-lg)' }}>
+          <CalendarIcon size={18} style={{ marginRight: 'var(--spacing-sm)' }} /> 기간 선택
         </h3>
 
-        <div className="flex items-end gap-8">
+        <div className="flex flex-wrap items-end" style={{ gap: 'var(--spacing-xl)' }}>
           {/* Start Date */}
           <div className="flex flex-col">
-            <label className="mb-1 text-xs text-gray-600">Start Date</label>
+            <label className="text-gray-600" style={{ marginBottom: 'var(--spacing-xs)', fontSize: 'var(--text-xs)' }}>Start Date</label>
             <input
               type="date"
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
-              className="w-40 px-3 py-2 text-sm font-bold border rounded-md cursor-pointer bg-gray-50"
+              className="font-bold border rounded-md cursor-pointer bg-gray-50"
+              style={{ width: 'clamp(9rem, 15vw, 10rem)', padding: 'var(--spacing-sm) var(--spacing-sm)', fontSize: 'var(--text-sm)' }}
             />
           </div>
 
@@ -187,12 +188,13 @@ const PeriodEmissionPage: React.FC = () => {
 
           {/* End Date */}
           <div className="flex flex-col">
-            <label className="mb-1 text-xs text-gray-600">End Date</label>
+            <label className="text-gray-600" style={{ marginBottom: 'var(--spacing-xs)', fontSize: 'var(--text-xs)' }}>End Date</label>
             <input
               type="date"
               value={endDate}
               onChange={(e) => setEndDate(e.target.value)}
-              className="w-40 px-3 py-2 text-sm font-bold border rounded-md cursor-pointer bg-gray-50"
+              className="font-bold border rounded-md cursor-pointer bg-gray-50"
+              style={{ width: 'clamp(9rem, 15vw, 10rem)', padding: 'var(--spacing-sm) var(--spacing-sm)', fontSize: 'var(--text-sm)' }}
             />
           </div>
 
@@ -200,7 +202,8 @@ const PeriodEmissionPage: React.FC = () => {
           <button
             onClick={fetchData}
             disabled={loading}
-            className="flex items-center gap-2 px-6 py-2 bg-blue-600 text-white font-bold rounded-md hover:bg-blue-700 disabled:bg-gray-400 cursor-pointer transition"
+            className="flex items-center bg-blue-600 text-white font-bold rounded-md hover:bg-blue-700 disabled:bg-gray-400 cursor-pointer transition"
+            style={{ gap: 'var(--spacing-sm)', padding: 'var(--spacing-sm) var(--spacing-lg)' }}
           >
             <Search size={18} />
             조회
@@ -209,9 +212,9 @@ const PeriodEmissionPage: React.FC = () => {
       </div>
 
       {/* 하단 콘텐츠 */}
-      <div className="flex items-stretch gap-6">
+      <div className="flex flex-col lg:flex-row items-stretch" style={{ gap: 'var(--spacing-lg)' }}>
         {/* 차트 */}
-        <div className="bg-white rounded-xl shadow-md p-6 flex-1 min-h-200 flex flex-col">
+        <div className="bg-white rounded-xl shadow-md flex-1 flex flex-col" style={{ padding: 'var(--spacing-lg)', minHeight: 'clamp(20rem, 40vh, 25rem)' }}>
           {loading ? (
             <div className="flex-1 flex items-center justify-center">
               <LoadingSpinner />
@@ -230,7 +233,7 @@ const PeriodEmissionPage: React.FC = () => {
             </div>
           ) : (
             <>
-              <h3 className="mb-6 text-3xl font-semibold text-center text-gray-600">
+              <h3 className="font-semibold text-center text-gray-600" style={{ marginBottom: 'var(--spacing-lg)', fontSize: 'clamp(1.25rem, 2vw, 1.875rem)' }}>
                 기간별 탄소배출량
               </h3>
               <ResponsiveContainer width="100%" height="100%">
