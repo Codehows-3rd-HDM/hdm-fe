@@ -157,44 +157,40 @@ const PeriodEmissionPage: React.FC = () => {
   const isDecreased = diff < 0;
 
   return (
-    <div className="min-h-screen bg-gray-100" style={{ padding: 'var(--padding-responsive)' }}>
+    <div className="min-h-full font-sans bg-gray-50" style={{ padding: 'var(--padding-container)' }}>
       {/* 헤더 */}
       <div className="flex items-center justify-between" style={{ marginBottom: 'var(--spacing-lg)' }}>
         <h2 className="font-bold text-gray-800" style={{ fontSize: 'clamp(1.25rem, 2vw, 1.5rem)' }}>
-          기간별 탄소 총 배출량 (Scope 1, Scope 3)
+          기간별 탄소 총 배출량
         </h2>
       </div>
 
-      {/* 기간 선택 */}
-      <div className="bg-white shadow-md rounded-xl" style={{ padding: 'var(--spacing-lg)', marginBottom: 'var(--spacing-lg)' }}>
-        <h3 className="flex items-center font-bold text-gray-800" style={{ marginBottom: 'var(--spacing-md)', fontSize: 'var(--text-lg)' }}>
-          <CalendarIcon size={18} style={{ marginRight: 'var(--spacing-sm)' }} /> 기간 선택
-        </h3>
-
-        <div className="flex flex-wrap items-end" style={{ gap: 'var(--spacing-xl)' }}>
+      {/* 필터 영역 - 기간 선택 */}
+      <div className="bg-white border border-gray-100 shadow-sm rounded-xl" style={{ padding: 'var(--spacing-lg)', marginBottom: 'var(--spacing-lg)' }}>
+        <div className="flex flex-wrap items-end" style={{ gap: 'var(--spacing-lg)' }}>
           {/* Start Date */}
-          <div className="flex flex-col">
-            <label className="text-gray-600" style={{ marginBottom: 'var(--spacing-xs)', fontSize: 'var(--text-xs)' }}>Start Date</label>
+          <div className="flex flex-col" style={{ gap: 'var(--spacing-xs)' }}>
+            <label className="font-bold text-gray-500" style={{ fontSize: 'var(--text-xs)' }}>▼ 시작일</label>
             <input
               type="date"
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
-              className="font-bold border rounded-md cursor-pointer bg-gray-50"
-              style={{ width: 'clamp(9rem, 15vw, 10rem)', padding: 'var(--spacing-sm) var(--spacing-sm)', fontSize: 'var(--text-sm)' }}
+              className="bg-white border border-gray-300 rounded-md outline-none cursor-pointer focus:ring-2 focus:ring-blue-500"
+              style={{ width: 'clamp(9rem, 15vw, 10rem)', padding: 'var(--spacing-sm)', fontSize: 'var(--text-sm)' }}
             />
           </div>
 
-          <span className="pb-2 font-bold text-gray-600">to</span>
+          <span className="font-bold text-gray-500" style={{ paddingBottom: 'var(--spacing-sm)' }}>~</span>
 
           {/* End Date */}
-          <div className="flex flex-col">
-            <label className="text-gray-600" style={{ marginBottom: 'var(--spacing-xs)', fontSize: 'var(--text-xs)' }}>End Date</label>
+          <div className="flex flex-col" style={{ gap: 'var(--spacing-xs)' }}>
+            <label className="font-bold text-gray-500" style={{ fontSize: 'var(--text-xs)' }}>▼ 종료일</label>
             <input
               type="date"
               value={endDate}
               onChange={(e) => setEndDate(e.target.value)}
-              className="font-bold border rounded-md cursor-pointer bg-gray-50"
-              style={{ width: 'clamp(9rem, 15vw, 10rem)', padding: 'var(--spacing-sm) var(--spacing-sm)', fontSize: 'var(--text-sm)' }}
+              className="bg-white border border-gray-300 rounded-md outline-none cursor-pointer focus:ring-2 focus:ring-blue-500"
+              style={{ width: 'clamp(9rem, 15vw, 10rem)', padding: 'var(--spacing-sm)', fontSize: 'var(--text-sm)' }}
             />
           </div>
 
@@ -202,19 +198,19 @@ const PeriodEmissionPage: React.FC = () => {
           <button
             onClick={fetchData}
             disabled={loading}
-            className="flex items-center bg-blue-600 text-white font-bold rounded-md hover:bg-blue-700 disabled:bg-gray-400 cursor-pointer transition"
-            style={{ gap: 'var(--spacing-sm)', padding: 'var(--spacing-sm) var(--spacing-lg)' }}
+            className="flex items-center font-bold text-white transition-colors bg-green-600 rounded-md shadow-sm hover:bg-green-700 disabled:bg-gray-400"
+            style={{ gap: 'var(--spacing-xs)', padding: 'var(--spacing-sm) var(--spacing-md)' }}
           >
-            <Search size={18} />
+            <Search size={16} />
             조회
           </button>
         </div>
       </div>
 
-      {/* 하단 콘텐츠 */}
-      <div className="flex flex-col lg:flex-row items-stretch" style={{ gap: 'var(--spacing-lg)' }}>
+      {/* 차트 및 통계 영역 */}
+      <div className="flex flex-col lg:flex-row" style={{ gap: 'var(--spacing-lg)' }}>
         {/* 차트 */}
-        <div className="bg-white rounded-xl shadow-md flex-1 flex flex-col" style={{ padding: 'var(--spacing-lg)', minHeight: 'clamp(20rem, 40vh, 25rem)' }}>
+        <div className="flex-1 bg-white rounded-xl shadow-sm border border-gray-100 flex flex-col" style={{ padding: 'var(--spacing-lg)', minHeight: 'clamp(20rem, 40vh, 25rem)' }}>
           {loading ? (
             <div className="flex-1 flex items-center justify-center">
               <LoadingSpinner />
@@ -298,55 +294,57 @@ const PeriodEmissionPage: React.FC = () => {
         </div>
 
         {/* 정보 카드 */}
-        <div className="w-105 flex flex-col gap-6">
-          {/* 카드 1 */}
-          <div className="flex flex-col justify-center p-6 bg-white shadow-md rounded-xl">
-            <div className="mb-8">
-              <div className="mb-3 text-lg font-semibold text-gray-700">
+        <div className="flex flex-col" style={{ width: 'clamp(18rem, 25vw, 26rem)', gap: 'var(--spacing-lg)' }}>
+          {/* 카드 1 - 배출량 비교 */}
+          <div className="bg-white shadow-sm border border-gray-100 rounded-xl" style={{ padding: 'var(--spacing-lg)' }}>
+            <div style={{ marginBottom: 'var(--spacing-xl)' }}>
+              <div className="text-gray-600 font-semibold" style={{ marginBottom: 'var(--spacing-sm)', fontSize: 'var(--text-base)' }}>
                 전년도 동기간 배출량
               </div>
-              <div className="text-5xl font-bold text-gray-800 leading-tight">
+              <div className="font-bold text-gray-800 leading-tight" style={{ fontSize: 'clamp(2rem, 4vw, 3rem)' }}>
                 {formatEmissionWithComma(summary.prevTotal)}
               </div>
-              <div className="mt-2 text-2xl font-medium text-gray-500">tCO2eq</div>
+              <div className="font-medium text-gray-500" style={{ marginTop: 'var(--spacing-xs)', fontSize: 'var(--text-lg)' }}>tCO2eq</div>
             </div>
             <div>
-              <div className="mb-3 text-lg font-semibold text-gray-700">
+              <div className="text-gray-600 font-semibold" style={{ marginBottom: 'var(--spacing-sm)', fontSize: 'var(--text-base)' }}>
                 선택기간 총 배출량
               </div>
               <div
-                className={`text-6xl font-bold leading-tight ${
+                className={`font-bold leading-tight ${
                   isDecreased ? "text-green-600" : "text-red-600"
                 }`}
+                style={{ fontSize: 'clamp(2.5rem, 5vw, 3.75rem)' }}
               >
                 {formatEmissionWithComma(summary.currentTotal)}
               </div>
-              <div className="mt-2 text-2xl font-medium text-gray-500">tCO2eq</div>
+              <div className="font-medium text-gray-500" style={{ marginTop: 'var(--spacing-xs)', fontSize: 'var(--text-lg)' }}>tCO2eq</div>
               <div
-                className={`flex items-center mt-4 font-bold text-xl ${
+                className={`flex items-center font-bold ${
                   isDecreased ? "text-green-600" : "text-red-600"
                 }`}
+                style={{ marginTop: 'var(--spacing-md)', fontSize: 'var(--text-lg)' }}
               >
                 {isDecreased ? (
-                  <TrendingDown size={24} className="mr-2" />
+                  <TrendingDown size={20} style={{ marginRight: 'var(--spacing-xs)' }} />
                 ) : (
-                  <TrendingUp size={24} className="mr-2" />
+                  <TrendingUp size={20} style={{ marginRight: 'var(--spacing-xs)' }} />
                 )}
                 <span>{formatEmissionWithComma(Math.abs(diff))} tCO2eq</span>
-                <span className="ml-2">({percent}%)</span>
+                <span style={{ marginLeft: 'var(--spacing-xs)' }}>({percent}%)</span>
               </div>
             </div>
           </div>
 
-          {/* 카드 2 */}
-          <div className="bg-white rounded-xl shadow-md p-6 h-50 flex flex-col justify-center">
-            <div className="mb-3 text-lg font-semibold text-gray-700">
+          {/* 카드 2 - 운행거리 */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 flex flex-col justify-center" style={{ padding: 'var(--spacing-lg)' }}>
+            <div className="text-gray-600 font-semibold" style={{ marginBottom: 'var(--spacing-sm)', fontSize: 'var(--text-base)' }}>
               선택기간 총 운행거리
             </div>
-            <div className="text-6xl font-bold text-gray-800 leading-tight">
+            <div className="font-bold text-gray-800 leading-tight" style={{ fontSize: 'clamp(2.5rem, 5vw, 3.75rem)' }}>
               {formatEmissionWithComma(summary.distance)}
             </div>
-            <div className="mt-2 text-2xl font-medium text-gray-500">km</div>
+            <div className="font-medium text-gray-500" style={{ marginTop: 'var(--spacing-xs)', fontSize: 'var(--text-lg)' }}>km</div>
           </div>
         </div>
       </div>
