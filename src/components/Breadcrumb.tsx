@@ -12,7 +12,7 @@ interface BreadcrumbProps {
 
 const Breadcrumb: React.FC<BreadcrumbProps> = ({ items }) => {
   return (
-    <nav className="flex items-center text-gray-500" style={{ marginBottom: 'var(--spacing-sm)', fontSize: 'var(--text-sm)' }}>
+    <nav className="flex items-center text-gray-500" style={{ marginBottom: 'var(--spacing-lg)', fontSize: 'var(--text-sm)' }}>
       {items.map((item, index) => (
         <React.Fragment key={index}>
           {index > 0 && (
