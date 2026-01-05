@@ -89,6 +89,11 @@ export default function App() {
   const [reductionRatio, setReductionRatio] = useState<number>(95);
   const [distType, setDistType] = useState<DistributionType>('actual');
 
+  // 뷰 전환 시 Total 탭은 리스트 전용, 등록에서는 Scope1로 강제 전환
+  useEffect(() => {
+    if (view === 'register' && activeTab === 'Total') setActiveTab('Scope1');
+  }, [view, activeTab]);
+
   // =============================================================================
   // [5] Effects
   // =============================================================================
@@ -211,12 +216,24 @@ export default function App() {
     return `${(val / max) * 100}%`;
   };
 
+  // Total 값을 Scope1 + Scope3 합으로만 유지
+  const updateTotalFromScopes = (next: FullTargetState) => {
+    const scope1Monthly = next.Scope1.monthly;
+    const scope3Monthly = next.Scope3.monthly;
+    next.Total.monthly = scope1Monthly.map((s1, i) => ({
+      month: s1.month,
+      value: s1.value + (scope3Monthly[i]?.value ?? 0)
+    }));
+    next.Total.total = next.Total.monthly.reduce((sum, m) => sum + m.value, 0);
+  };
+
   // =============================================================================
   // [7] Handlers
   // =============================================================================
 
   const handleValueChange = (index: number, val: string) => {
     if (!targetState) return;
+    if (activeTab === 'Total') return; // Total은 직접 편집 불가
     const nVal = val === '' ? 0 : parseInt(val);
     const next = { ...targetState };
     const updatedMonthly = next[activeTab].monthly.map((mm, idx) => (
@@ -225,33 +242,8 @@ export default function App() {
     next[activeTab] = { ...next[activeTab], monthly: updatedMonthly };
     
     // 자동 계산: Total = Scope1 + Scope3
-    if (activeTab === 'Scope1') {
-      // Scope1 변경 → Total 갱신
-      const scope1Monthly = updatedMonthly;
-      const scope3Monthly = next.Scope3.monthly;
-      next.Total.monthly = scope1Monthly.map((s1, i) => ({
-        month: s1.month,
-        value: s1.value + scope3Monthly[i].value
-      }));
-      next.Total.total = next.Total.monthly.reduce((sum, m) => sum + m.value, 0);
-    } else if (activeTab === 'Scope3') {
-      // Scope3 변경 → Total 갱신
-      const scope1Monthly = next.Scope1.monthly;
-      const scope3Monthly = updatedMonthly;
-      next.Total.monthly = scope1Monthly.map((s1, i) => ({
-        month: s1.month,
-        value: s1.value + scope3Monthly[i].value
-      }));
-      next.Total.total = next.Total.monthly.reduce((sum, m) => sum + m.value, 0);
-    } else if (activeTab === 'Total') {
-      // Total 변경 → Scope1은 비율 유지, Scope3 조정
-      const totalMonthly = updatedMonthly;
-      const scope1Monthly = next.Scope1.monthly;
-      next.Scope3.monthly = totalMonthly.map((t, i) => ({
-        month: t.month,
-        value: Math.max(0, t.value - scope1Monthly[i].value)
-      }));
-      next.Scope3.total = next.Scope3.monthly.reduce((sum, m) => sum + m.value, 0);
+    if (activeTab === 'Scope1' || activeTab === 'Scope3') {
+      updateTotalFromScopes(next);
     }
     
     setTargetState(next);
@@ -259,27 +251,22 @@ export default function App() {
 
   const handleTotalChange = (val: string) => {
     if (!targetState) return;
+    if (activeTab === 'Total') return; // Total은 직접 편집 불가
     const nVal = val === '' ? 0 : parseInt(val);
     const next = { ...targetState };
     next[activeTab] = { ...next[activeTab], total: nVal };
-    
-    // 자동 계산: Total = Scope1 + Scope3
-    if (activeTab === 'Scope1') {
-      // Scope1 연간합 변경 → Total 갱신
-      next.Total.total = nVal + next.Scope3.total;
-    } else if (activeTab === 'Scope3') {
-      // Scope3 연간합 변경 → Total 갱신
-      next.Total.total = next.Scope1.total + nVal;
-    } else if (activeTab === 'Total') {
-      // Total 연간합 변경 → Scope3 조정
-      next.Scope3.total = Math.max(0, nVal - next.Scope1.total);
+
+    // Scope1/Scope3 변경 시 Total 재계산
+    if (activeTab === 'Scope1' || activeTab === 'Scope3') {
+      updateTotalFromScopes(next);
     }
-    
+
     setTargetState(next);
   };
 
   const applyRatioDistribution = () => {
     if (!targetState || baseActuals.length === 0) return;
+    if (activeTab === 'Total') return; // Total은 직접 편집 불가
     const factor = reductionRatio / 100;
     const newTotal = Math.round(baseActualTotal * factor);
     let tempSum = 0;
@@ -295,24 +282,8 @@ export default function App() {
     next[activeTab] = { total: newTotal, monthly: newMonthly };
     
     // Total = Scope1 + Scope3 자동 계산
-    if (activeTab === 'Scope1') {
-      next.Total.monthly = newMonthly.map((s1, i) => ({
-        month: s1.month,
-        value: s1.value + next.Scope3.monthly[i].value
-      }));
-      next.Total.total = next.Total.monthly.reduce((sum, m) => sum + m.value, 0);
-    } else if (activeTab === 'Scope3') {
-      next.Total.monthly = next.Scope1.monthly.map((s1, i) => ({
-        month: s1.month,
-        value: s1.value + newMonthly[i].value
-      }));
-      next.Total.total = next.Total.monthly.reduce((sum, m) => sum + m.value, 0);
-    } else if (activeTab === 'Total') {
-      next.Scope3.monthly = newMonthly.map((t, i) => ({
-        month: t.month,
-        value: Math.max(0, t.value - next.Scope1.monthly[i].value)
-      }));
-      next.Scope3.total = next.Scope3.monthly.reduce((sum, m) => sum + m.value, 0);
+    if (activeTab === 'Scope1' || activeTab === 'Scope3') {
+      updateTotalFromScopes(next);
     }
     
     setTargetState(next);
@@ -320,6 +291,7 @@ export default function App() {
 
   const applyEqualDistribution = () => {
     if (!targetState) return;
+    if (activeTab === 'Total') return; // Total은 직접 편집 불가
     const currentTotal = targetState[activeTab].total || 0;
     const monthlyAvg = Math.floor(currentTotal / 12);
     const remainder = currentTotal - (monthlyAvg * 12);
@@ -333,24 +305,8 @@ export default function App() {
     next[activeTab] = { ...next[activeTab], monthly: newMonthly };
     
     // Total = Scope1 + Scope3 자동 계산
-    if (activeTab === 'Scope1') {
-      next.Total.monthly = newMonthly.map((s1, i) => ({
-        month: s1.month,
-        value: s1.value + next.Scope3.monthly[i].value
-      }));
-      next.Total.total = next.Total.monthly.reduce((sum, m) => sum + m.value, 0);
-    } else if (activeTab === 'Scope3') {
-      next.Total.monthly = next.Scope1.monthly.map((s1, i) => ({
-        month: s1.month,
-        value: s1.value + newMonthly[i].value
-      }));
-      next.Total.total = next.Total.monthly.reduce((sum, m) => sum + m.value, 0);
-    } else if (activeTab === 'Total') {
-      next.Scope3.monthly = newMonthly.map((t, i) => ({
-        month: t.month,
-        value: Math.max(0, t.value - next.Scope1.monthly[i].value)
-      }));
-      next.Scope3.total = next.Scope3.monthly.reduce((sum, m) => sum + m.value, 0);
+    if (activeTab === 'Scope1' || activeTab === 'Scope3') {
+      updateTotalFromScopes(next);
     }
     
     setTargetState(next);
@@ -389,6 +345,8 @@ export default function App() {
 
   if (!targetState || !currentData) return <div className="p-20 text-center font-bold text-slate-400">데이터를 불러오는 중입니다...</div>;
 
+  const navTabs: EmissionCategory[] = view === 'register' ? ['Scope1', 'Scope3'] : ['Total', 'Scope1', 'Scope3'];
+
   return (
     <div className="min-h-screen bg-[#f8fafc] text-slate-800 font-sans">
       <div className="w-full max-w-425 mx-auto p-6 md:p-10 space-y-8">
@@ -406,7 +364,12 @@ export default function App() {
           </div>
           
           <button 
-            onClick={() => { setView(view === 'list' ? 'register' : 'list'); setIsEditMode(false); }}
+            onClick={() => { 
+              const nextView = view === 'list' ? 'register' : 'list';
+              setView(nextView);
+              setIsEditMode(false);
+              setActiveTab(nextView === 'register' ? 'Scope1' : 'Total');
+            }}
             className={`flex items-center gap-3 px-8 py-4 rounded-2xl font-black transition-all shadow-xl hover:-translate-y-1 active:translate-y-0 ${
               view === 'list' 
               ? 'bg-slate-900 text-white shadow-slate-200' 
@@ -422,7 +385,7 @@ export default function App() {
           
           {/* Tabs */}
           <nav className="flex bg-slate-50/50 border-b border-slate-100 p-2">
-            {(['Total', 'Scope1', 'Scope3'] as EmissionCategory[]).map((tab) => (
+            {navTabs.map((tab) => (
               <button
                 key={tab}
                 onClick={() => { setActiveTab(tab); setIsEditMode(false); }}
@@ -459,14 +422,18 @@ export default function App() {
                       <div className="space-y-1">
                         <p className="text-slate-500 font-black text-xs uppercase tracking-widest">Total Annual Target</p>
                         {isEditMode ? (
-                          <div className="flex items-center gap-2 border-b-2 border-sky-500 pb-1 max-w-75 mx-auto md:mx-0">
-                            <input 
-                              type="number"
-                              value={currentData.total}
-                              onChange={(e) => handleTotalChange(e.target.value)}
-                              className="bg-transparent text-5xl font-black text-white outline-none w-full"
-                            />
-                            <span className="text-xl font-bold text-slate-500">t</span>
+                          <div className="flex flex-col gap-1 max-w-75 mx-auto md:mx-0">
+                            <div className="flex items-center gap-2 border-b-2 border-sky-500 pb-1">
+                              <input 
+                                type="number"
+                                value={currentData.total}
+                                onChange={(e) => handleTotalChange(e.target.value)}
+                                readOnly={activeTab === 'Total'}
+                                className={`bg-transparent text-5xl font-black text-white outline-none w-full ${activeTab === 'Total' ? 'cursor-not-allowed opacity-70' : ''}`}
+                              />
+                              <span className="text-xl font-bold text-slate-500">t</span>
+                            </div>
+                            {activeTab === 'Total' && <span className="text-xs font-bold text-slate-400">Total은 Scope1+Scope3 합계로 자동 계산됩니다.</span>}
                           </div>
                         ) : (
                           <div className="text-5xl font-black tracking-tighter">
@@ -477,7 +444,9 @@ export default function App() {
                     </div>
 
                     <div className="flex flex-col gap-3 w-full md:w-64">
-                      {isEditMode ? (
+                      {activeTab === 'Total' ? (
+                        <div className="w-full py-5 rounded-2xl font-black bg-slate-200 text-slate-500 text-center">Total은 합계 전용</div>
+                      ) : isEditMode ? (
                         <>
                           <button onClick={() => setIsEditMode(false)} className="w-full py-4 rounded-2xl font-black bg-slate-800 hover:bg-slate-700 transition-all">수정 취소</button>
                           <button 
@@ -556,9 +525,9 @@ export default function App() {
                           <input
                             type="number"
                             value={m.value}
-                            readOnly={!isEditMode}
+                            readOnly={!isEditMode || activeTab === 'Total'}
                             onChange={(e) => handleValueChange(i, e.target.value)}
-                            className="w-full bg-transparent text-xl font-black outline-none text-slate-700"
+                            className={`w-full bg-transparent text-xl font-black outline-none text-slate-700 ${activeTab === 'Total' ? 'cursor-not-allowed opacity-70' : ''}`}
                           />
                         </div>
                       ))}
@@ -711,10 +680,12 @@ export default function App() {
                             type="number"
                             value={currentData.total}
                             onChange={(e) => handleTotalChange(e.target.value)}
-                            className="text-4xl font-black text-sky-600 outline-none w-48 bg-sky-50 rounded-2xl px-4 py-1"
+                            readOnly={activeTab === 'Total'}
+                            className={`text-4xl font-black text-sky-600 outline-none w-48 bg-sky-50 rounded-2xl px-4 py-1 ${activeTab === 'Total' ? 'cursor-not-allowed opacity-70' : ''}`}
                           />
                           <span className="text-xl font-bold text-slate-400">t</span>
                         </div>
+                        {activeTab === 'Total' && <p className="text-[11px] font-bold text-slate-400">Total은 Scope1과 Scope3 합계로 자동 계산됩니다.</p>}
                       </div>
                     </div>
 
@@ -736,8 +707,9 @@ export default function App() {
                           <input 
                             type="number"
                             value={m.value}
+                            readOnly={activeTab === 'Total'}
                             onChange={(e) => handleValueChange(i, e.target.value)}
-                            className="w-full bg-transparent text-xl font-black text-slate-700 outline-none"
+                            className={`w-full bg-transparent text-xl font-black text-slate-700 outline-none ${activeTab === 'Total' ? 'cursor-not-allowed opacity-70' : ''}`}
                           />
                           <div className="mt-2 text-[10px] font-bold text-slate-300">Prev: {baseActuals[i]?.value.toLocaleString()}</div>
                         </div>

@@ -1335,7 +1335,7 @@ const StandardDataManagementTable = <T extends { id: number; [key: string]: unkn
               disabled={currentPage === 0}
               className={`${pageBtnBase} ${currentPage === 0 ? pageBtnDisabled : pageBtnDefault}`}
             >
-              ⏮
+              ◀◀
             </button>
             <button
               onClick={() => handlePageChange(Math.max(currentGroupStart - pageGroupSize, 0))}
@@ -1381,7 +1381,7 @@ const StandardDataManagementTable = <T extends { id: number; [key: string]: unkn
               disabled={currentPage === totalPages - 1}
               className={`${pageBtnBase} ${currentPage === totalPages - 1 ? pageBtnDisabled : pageBtnDefault}`}
             >
-              ⏭
+              ▶▶
             </button>
         </div>
 
