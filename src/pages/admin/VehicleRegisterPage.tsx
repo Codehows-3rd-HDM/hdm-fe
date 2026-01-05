@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { RefreshCw, ChevronDown } from 'lucide-react';
 import Modal from '../../components/Modal';
+import Breadcrumb from '../../components/Breadcrumb';
+import { getBreadcrumbItems } from '../../utils/breadcrumbHelper';
 // [API] 분리된 API 모듈 임포트
 import { 
   fetchRegistrationOptions, 
@@ -430,6 +432,11 @@ const VehicleBasicRegisterPage: React.FC = () => {
 
   return (
     <div className="p-8 bg-gray-50 min-h-screen font-sans">
+      {/* 브레드크럼 */}
+      <div style={{ marginBottom: 'var(--spacing-lg)' }}>
+        <Breadcrumb items={getBreadcrumbItems('/admin/vehicle/register')} />
+      </div>
+      
       <div className="flex items-center gap-4 mb-10 p-4 bg-white rounded-lg shadow-md">
         <div className="relative min-w-[300px]">
           <select 

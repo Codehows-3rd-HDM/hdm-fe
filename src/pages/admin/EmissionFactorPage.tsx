@@ -5,6 +5,8 @@ import {
   type EmissionFactor,
 } from "../../apis/emissionFactorApi";
 import { Pencil, Check, X } from "lucide-react";
+import Breadcrumb from "../../components/Breadcrumb";
+import { getBreadcrumbItems } from "../../utils/breadcrumbHelper";
 
 const EmissionFactorPageInline: React.FC = () => {
   const [data, setData] = useState<EmissionFactor[]>([]);
@@ -47,6 +49,11 @@ const EmissionFactorPageInline: React.FC = () => {
 
   return (
     <div className="p-8">
+      {/* 브레드크럼 */}
+      <div style={{ marginBottom: 'var(--spacing-lg)' }}>
+        <Breadcrumb items={getBreadcrumbItems('/admin/emission-factor')} />
+      </div>
+      
       <h2 className="text-2xl font-bold mb-6 text-gray-800 text-center">
         탄소 배출 계수 관리
       </h2>

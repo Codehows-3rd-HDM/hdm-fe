@@ -12,6 +12,8 @@ import {
 } from "recharts";
 import { Download, ChevronDown, Search } from "lucide-react";
 import KoreaMapChart from "../../components/analysis/KoreaMapChart";
+import Breadcrumb from "../../components/Breadcrumb";
+import { getBreadcrumbItems } from "../../utils/breadcrumbHelper";
 
 // --- Mock Data ---
 // Note: Map data is now fetched from mapApi automatically
@@ -297,6 +299,9 @@ const CompanyEmissionPage: React.FC = () => {
 
   return (
     <div className="min-h-screen p-8 font-sans bg-gray-50">
+      {/* 브레드크럼 */}
+      <Breadcrumb items={getBreadcrumbItems('/view/company')} />
+      
       {/* 헤더 */}
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-2xl font-bold text-gray-800">

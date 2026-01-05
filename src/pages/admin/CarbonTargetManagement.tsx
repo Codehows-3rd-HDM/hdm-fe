@@ -5,6 +5,8 @@ import {
   Database, Target
 } from 'lucide-react';
 import carbonTargetApi, { type EmissionCategory, type FullTargetState, type MonthlyData } from '../../apis/carbonTargetApi';
+import Breadcrumb from '../../components/Breadcrumb';
+import { getBreadcrumbItems } from '../../utils/breadcrumbHelper';
 
 // =============================================================================
 // [2] Local Type Definitions
@@ -34,7 +36,8 @@ const YearSelect = ({ value, onChange, options, displayText, buttonClassName }: 
         type="button"
         onClick={() => setOpen((v) => !v)}
         onBlur={() => setOpen(false)}
-        className={buttonClassName ?? 'w-full bg-white border-2 border-slate-200 rounded-2xl px-6 py-4 font-black text-xl text-slate-700 outline-none focus:border-sky-500 focus:ring-4 focus:ring-sky-100 transition-all flex items-center justify-between'}
+        className={buttonClassName ?? 'w-full bg-white border-2 border-slate-200 rounded-2xl font-black text-slate-700 outline-none focus:border-sky-500 focus:ring-4 focus:ring-sky-100 transition-all flex items-center justify-between'}
+        style={{ padding: 'var(--padding-input)', fontSize: 'var(--text-xl)' }}
       >
         <span>{renderText(value)}</span>
         <span className="text-slate-400 text-sm">▼</span>
@@ -47,7 +50,8 @@ const YearSelect = ({ value, onChange, options, displayText, buttonClassName }: 
               type="button"
               onMouseDown={(e) => e.preventDefault()}
               onClick={() => { onChange(y); setOpen(false); }}
-              className={`w-full text-left px-5 py-3 text-slate-700 hover:bg-sky-50 hover:text-sky-700 transition-colors ${y === value ? 'bg-sky-50 text-sky-700 font-bold' : ''}`}
+              className={`w-full text-left text-slate-700 hover:bg-sky-50 hover:text-sky-700 transition-colors ${y === value ? 'bg-sky-50 text-sky-700 font-bold' : ''}`}
+              style={{ padding: 'var(--spacing-sm) var(--spacing-md)' }}
             >
               {renderText(y)}
             </button>
@@ -349,7 +353,10 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-[#f8fafc] text-slate-800 font-sans">
-      <div className="w-full max-w-425 mx-auto p-6 md:p-10 space-y-8">
+      <div className="w-full max-w-425 mx-auto space-y-8" style={{ padding: 'clamp(1.5rem, 3vw, 2.5rem)' }}>
+        
+        {/* 브레드크럼 */}
+        <Breadcrumb items={getBreadcrumbItems('/admin/target-view')} />
         
         {/* Header */}
         <header className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
@@ -400,13 +407,13 @@ export default function App() {
             ))}
           </nav>
 
-          <div className="p-8 md:p-14">
+          <div style={{ padding: 'clamp(1.5rem, 3vw, 2.5rem)' }}>
             {view === 'list' ? (
               /* ================================================================= LIST VIEW */
               <div className="space-y-12">
                 <section className="flex flex-col lg:flex-row gap-8">
                   {/* Summary Card */}
-                  <div className="flex-1 bg-slate-900 rounded-[2.5rem] p-10 text-white flex flex-col md:flex-row items-center justify-between gap-10">
+                  <div className="flex-1 bg-slate-900 rounded-[2.5rem] text-white flex flex-col md:flex-row items-center justify-between" style={{ padding: 'var(--padding-card)', gap: 'var(--spacing-2xl)' }}>
                     <div className="space-y-6 w-full md:w-auto text-center md:text-left">
                       <div className="space-y-1">
                         <p className="text-slate-500 font-black text-xs uppercase tracking-widest">Target Year Selection</p>
@@ -466,7 +473,7 @@ export default function App() {
                   </div>
 
                   {/* Diff Status */}
-                  <div className={`lg:w-80 rounded-[2.5rem] p-10 border-2 flex flex-col justify-center items-center text-center transition-all ${diffAmount === 0 ? 'bg-emerald-50 border-emerald-100' : 'bg-amber-50 border-amber-100'}`}>
+                  <div className={`lg:w-80 rounded-[2.5rem] border-2 flex flex-col justify-center items-center text-center transition-all ${diffAmount === 0 ? 'bg-emerald-50 border-emerald-100' : 'bg-amber-50 border-amber-100'}`} style={{ padding: 'var(--padding-card)' }}>
                     <div className={`p-4 rounded-full mb-4 ${diffAmount === 0 ? 'bg-emerald-100 text-emerald-600' : 'bg-amber-100 text-amber-600'}`}>
                       {diffAmount === 0 ? <CheckCircle size={32} /> : <AlertCircle size={32} />}
                     </div>
@@ -483,7 +490,7 @@ export default function App() {
                     <h3 className="text-xl font-black flex items-center gap-2 text-slate-400">
                       <div className="w-1.5 h-6 bg-sky-500 rounded-full" /> 월별 분포 그래프
                     </h3>
-                    <div className="h-112.5 flex gap-4 bg-slate-50/50 rounded-[2.5rem] p-10 relative border border-slate-100">
+                    <div className="h-112.5 flex gap-4 bg-slate-50/50 rounded-[2.5rem] relative border border-slate-100" style={{ padding: 'var(--padding-card)' }}>
                       {/* Y-Axis Markers */}
                       <div className="flex flex-col justify-between h-[calc(100%-40px)] text-[10px] font-black text-slate-400 w-12 pt-1 pb-1">
                         {yAxisMarkers.map(m => <div key={m}>{m >= 1000 ? (m/1000).toFixed(1)+'k' : m}</div>)}
@@ -520,7 +527,7 @@ export default function App() {
                     </div>
                     <div className="grid grid-cols-2 gap-3">
                       {currentData.monthly.map((m, i) => (
-                        <div key={i} className={`p-4 rounded-3xl border-2 transition-all ${isEditMode ? 'bg-white border-sky-400 shadow-lg shadow-sky-50 ring-4 ring-sky-50' : 'bg-slate-50 border-transparent'}`}>
+                        <div key={i} className={`rounded-3xl border-2 transition-all ${isEditMode ? 'bg-white border-sky-400 shadow-lg shadow-sky-50 ring-4 ring-sky-50' : 'bg-slate-50 border-transparent'}`} style={{ padding: 'var(--spacing-md)' }}>
                           <label className="text-[10px] font-black text-slate-400 uppercase block mb-1">{m.month}월</label>
                           <input
                             type="number"
@@ -532,7 +539,7 @@ export default function App() {
                         </div>
                       ))}
                     </div>
-                    <div className="p-8 bg-slate-900 rounded-4xl flex justify-between items-center text-white shadow-xl shadow-slate-200">
+                    <div className="bg-slate-900 rounded-4xl flex justify-between items-center text-white shadow-xl shadow-slate-200" style={{ padding: 'var(--padding-card)' }}>
                       <span className="font-bold text-slate-500 uppercase tracking-tighter text-sm">Monthly Sum</span>
                       <span className="text-3xl font-black">{monthlySum.toLocaleString()}</span>
                     </div>
@@ -545,7 +552,7 @@ export default function App() {
                 
                 {/* Registration Controls */}
                 <aside className="xl:col-span-4 space-y-8">
-                  <div className="bg-slate-50/80 rounded-[3rem] p-10 border border-slate-200 space-y-10 sticky top-10">
+                  <div className="bg-slate-50/80 rounded-[3rem] border border-slate-200 space-y-10 sticky top-10" style={{ padding: 'var(--padding-card)' }}>
                     <div className="space-y-6">
                       <h4 className="text-lg font-black flex items-center gap-2 text-slate-700">
                         <Target size={22} className="text-sky-600" /> 신규 목표 설정
@@ -565,14 +572,16 @@ export default function App() {
                         <div className="flex flex-col gap-3">
                           <button 
                             onClick={() => setRegType('ratio')}
-                            className={`flex items-center justify-between p-6 rounded-2xl border-2 transition-all ${regType === 'ratio' ? 'bg-white border-sky-500 shadow-xl shadow-sky-100' : 'border-slate-200 text-slate-400 hover:border-slate-300'}`}
+                            className={`flex items-center justify-between rounded-2xl border-2 transition-all ${regType === 'ratio' ? 'bg-white border-sky-500 shadow-xl shadow-sky-100' : 'border-slate-200 text-slate-400 hover:border-slate-300'}`}
+                            style={{ padding: 'var(--spacing-lg)' }}
                           >
                             <span className="font-bold">기준실적 대비 설정</span>
                             <div className={`w-6 h-6 rounded-full border-[6px] ${regType === 'ratio' ? 'border-sky-500' : 'border-slate-200'}`} />
                           </button>
                           <button 
                             onClick={() => setRegType('manual')}
-                            className={`flex items-center justify-between p-6 rounded-2xl border-2 transition-all ${regType === 'manual' ? 'bg-white border-sky-500 shadow-xl shadow-sky-100' : 'border-slate-200 text-slate-400 hover:border-slate-300'}`}
+                            className={`flex items-center justify-between rounded-2xl border-2 transition-all ${regType === 'manual' ? 'bg-white border-sky-500 shadow-xl shadow-sky-100' : 'border-slate-200 text-slate-400 hover:border-slate-300'}`}
+                            style={{ padding: 'var(--spacing-lg)' }}
                           >
                             <span className="font-bold">직접 수동 입력</span>
                             <div className={`w-6 h-6 rounded-full border-[6px] ${regType === 'manual' ? 'border-sky-500' : 'border-slate-200'}`} />
@@ -634,7 +643,7 @@ export default function App() {
                       </div>
                     </div>
 
-                    <div className="h-112.5 w-full bg-slate-50/50 rounded-[3rem] p-12 border border-slate-200 flex items-end justify-between gap-5 relative overflow-hidden shadow-inner">
+                    <div className="h-112.5 w-full bg-slate-50/50 rounded-[3rem] border border-slate-200 flex items-end justify-between gap-5 relative overflow-hidden shadow-inner" style={{ padding: 'clamp(1.5rem, 3vw, 3rem)' }}>
                       {/* Y-Axis Labeling */}
                       <div className="flex flex-col justify-between h-[calc(100%-40px)] text-[10px] font-black text-slate-400 absolute left-4 top-12 bottom-12 pointer-events-none">
                         {yAxisMarkers.map(m => <div key={m}>{m >= 1000 ? (m/1000).toFixed(1)+'k' : m}</div>)}
@@ -672,7 +681,7 @@ export default function App() {
                   </section>
 
                   <section className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="bg-white p-10 rounded-[2.5rem] border-2 border-slate-100 flex justify-between items-center shadow-sm">
+                    <div className="bg-white rounded-[2.5rem] border-2 border-slate-100 flex justify-between items-center shadow-sm" style={{ padding: 'var(--padding-card)' }}>
                       <div className="space-y-2">
                         <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest">연간 총 목표 설정</p>
                         <div className="flex items-baseline gap-2">
@@ -689,7 +698,7 @@ export default function App() {
                       </div>
                     </div>
 
-                    <div className={`p-10 rounded-[2.5rem] flex justify-between items-center transition-all shadow-xl ${diffAmount === 0 ? 'bg-slate-900 shadow-slate-200' : 'bg-amber-500 shadow-amber-200'}`}>
+                    <div className={`rounded-[2.5rem] flex justify-between items-center transition-all shadow-xl ${diffAmount === 0 ? 'bg-slate-900 shadow-slate-200' : 'bg-amber-500 shadow-amber-200'}`} style={{ padding: 'var(--padding-card)' }}>
                       <div className="text-white space-y-1">
                         <p className="text-[11px] font-black opacity-50 uppercase tracking-widest">Monthly Diff</p>
                         <p className="text-3xl font-black">{diffAmount === 0 ? '정합성 일치' : `${diffAmount.toLocaleString()} t`}</p>
@@ -702,7 +711,7 @@ export default function App() {
                   <div className="bg-white border-2 border-slate-100 rounded-[3rem] overflow-hidden">
                     <div className="grid grid-cols-3 md:grid-cols-6 gap-0">
                       {currentData.monthly.map((m, i) => (
-                        <div key={i} className="p-6 border-b border-r border-slate-100 hover:bg-slate-50 transition-colors">
+                        <div key={i} className="border-b border-r border-slate-100 hover:bg-slate-50 transition-colors" style={{ padding: 'var(--spacing-lg)' }}>
                           <label className="text-[10px] font-black text-slate-400 uppercase mb-2 block">{m.month}월 목표</label>
                           <input 
                             type="number"
@@ -715,7 +724,7 @@ export default function App() {
                         </div>
                       ))}
                     </div>
-                    <div className="p-10 bg-slate-900 flex justify-between items-center text-white">
+                    <div className="bg-slate-900 flex justify-between items-center text-white" style={{ padding: 'var(--padding-card)' }}>
                       <div className="flex items-center gap-4">
                         <Database className="text-sky-500" />
                         <span className="font-black text-lg">전체 등록 연도: {regYear}년</span>

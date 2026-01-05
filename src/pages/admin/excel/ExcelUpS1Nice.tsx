@@ -6,6 +6,8 @@ import ConfirmModal from "../../../components/ConfirmModal";
 import { parseExcelFile } from "./utils/Parsing";
 import { mapToNiceParkData, mapToS1Data } from "./utils/Mappers";
 import LoadingSpinner from "../../../components/LoadingSpinner";
+import Breadcrumb from "../../../components/Breadcrumb";
+import { getBreadcrumbItems } from "../../../utils/breadcrumbHelper";
 
 // --- 타입 정의 ---
 interface NiceParkRow {
@@ -558,7 +560,11 @@ const DataUploadPage: React.FC = () => {
   const totalInvalidCount = invalidNiceRows.length + invalidS1Rows.length;
 
   return (
-    <div className="p-8 font-sans bg-white">
+    <>
+      <div style={{ padding: 'var(--padding-container)', marginBottom: 'var(--spacing-lg)' }}>
+        <Breadcrumb items={getBreadcrumbItems('/admin/data-upload')} />
+      </div>
+      <div className="p-8 font-sans bg-white">
       {/*로딩 중일 때 화면 전체 덮어버림 */}
       {isLoading && <LoadingSpinner />}
 
@@ -1008,7 +1014,8 @@ const DataUploadPage: React.FC = () => {
         message={alertState.message}
         isSuccess={alertState.isSuccess}
       />
-    </div>
+      </div>
+    </>
   );
 };
 

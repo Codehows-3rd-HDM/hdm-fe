@@ -18,6 +18,8 @@ import {
   Search,
 } from "lucide-react";
 import LoadingSpinner from "../../components/LoadingSpinner";
+import Breadcrumb from "../../components/Breadcrumb";
+import { getBreadcrumbItems } from "../../utils/breadcrumbHelper";
 
 const BASE_URL = import.meta.env.VITE_API_URL || "/api";
 
@@ -158,6 +160,9 @@ const PeriodEmissionPage: React.FC = () => {
 
   return (
     <div className="min-h-full font-sans bg-gray-50" style={{ padding: 'var(--padding-container)' }}>
+      {/* 브레드크럼 */}
+      <Breadcrumb items={getBreadcrumbItems('/view/period')} />
+      
       {/* 헤더 */}
       <div className="flex items-center justify-between" style={{ marginBottom: 'var(--spacing-lg)' }}>
         <h2 className="font-bold text-gray-800" style={{ fontSize: 'clamp(1.25rem, 2vw, 1.5rem)' }}>

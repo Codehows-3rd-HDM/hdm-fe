@@ -20,6 +20,7 @@ import {
   Loader2,
   ChevronDown,
 } from "lucide-react";
+import Breadcrumb, { type BreadcrumbItem } from "../Breadcrumb";
 import type {
   AnalysisColumn,
   AnalysisData,
@@ -65,6 +66,7 @@ interface CarbonAnalysisTemplateProps {
   hasScopeTabs?: boolean;
   columns: AnalysisColumn[];
   dataType: AnalysisDataType;
+  breadcrumbItems?: BreadcrumbItem[];
 }
 
 const CarbonAnalysisTemplate: React.FC<CarbonAnalysisTemplateProps> = ({
@@ -72,6 +74,7 @@ const CarbonAnalysisTemplate: React.FC<CarbonAnalysisTemplateProps> = ({
   hasScopeTabs = false,
   columns,
   dataType,
+  breadcrumbItems,
 }) => {
   // --- 상태 관리 ---
   const [data, setData] = useState<AnalysisData[]>([]);
@@ -293,6 +296,9 @@ const CarbonAnalysisTemplate: React.FC<CarbonAnalysisTemplateProps> = ({
   // --- 렌더링 ---
   return (
     <div ref={componentRef} className="min-h-full font-sans bg-gray-50" style={{ padding: 'var(--padding-container)' }}>
+      {/* 브레드크럼 */}
+      {breadcrumbItems && <Breadcrumb items={breadcrumbItems} />}
+      
       {/* 헤더 */}
       <div className="flex items-center justify-between" style={{ marginBottom: 'var(--spacing-lg)' }}>
         <h2 className="font-bold text-gray-800" style={{ fontSize: 'clamp(1.25rem, 2vw, 1.5rem)' }}>{title}</h2>
