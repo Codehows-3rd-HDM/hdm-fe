@@ -1,11 +1,17 @@
 import React, { useState, useMemo, useRef, useEffect } from "react";
-import { Upload, AlertCircle, Save, X, Search } from "lucide-react";
-import axios from "axios";
 import Modal from "../../../components/Modal";
 import ConfirmModal from "../../../components/ConfirmModal";
 import { parseExcelFile } from "./utils/Parsing";
 import { mapToNiceParkData, mapToS1Data } from "./utils/Mappers";
 import LoadingSpinner from "../../../components/LoadingSpinner";
+import {
+  checkExcelExistence,
+  validateNiceParkData,
+  validateS1Data,
+  uploadNiceParkData,
+  uploadS1Data,
+} from "../../../apis/s1NiceApi";
+import { AlertCircle, Save, Search, Upload, X } from "lucide-react";
 
 // --- 타입 정의 ---
 interface NiceParkRow {
@@ -25,9 +31,7 @@ interface S1Row {
   isInvalid: boolean;
 }
 
-const BASE_URL = import.meta.env.VITE_API_URL || "/api";
-
-const DataUploadPage: React.FC = () => {
+const ExcelUpS1NicePage: React.FC = () => {
   const [selectedYear, setSelectedYear] = useState<string>(
     new Date().getFullYear().toString()
   );
@@ -82,7 +86,7 @@ const DataUploadPage: React.FC = () => {
   // 로딩 상태 관리 (true면 스피너 뜸, false면 안 뜸)
   const [isLoading, setIsLoading] = useState(false);
 
-  // ✅ [수정] 연도/월 변경 시, 업로드된 데이터가 있다면 무조건 초기화
+  // [수정] 연도/월 변경 시, 업로드된 데이터가 있다면 무조건 초기화
   useEffect(() => {
     // 데이터가 있을 때만 동작 (없으면 신경 안 씀)
     if (niceParkData.length > 0 || s1Data.length > 0) {
@@ -105,14 +109,11 @@ const DataUploadPage: React.FC = () => {
     }
   }, [selectedYear, selectedMonth]); // 연도나 월이 바뀔 때마다 실행됨
 
-  // ✅ 데이터 존재 여부 확인 (파일이 있거나, 날짜가 바뀔 때 실행)
+  // 데이터 존재 여부 확인 (파일이 있거나, 날짜가 바뀔 때 실행)
   useEffect(() => {
     const checkDataExistence = async () => {
       // 1. 연도가 없으면 체크 안 함
       if (!selectedYear) return;
-
-      const token = sessionStorage.getItem("token");
-      if (!token) return;
 
       // 2. 초기화
       setIsNiceDataExisting(false);
@@ -121,15 +122,13 @@ const DataUploadPage: React.FC = () => {
       // 3. 나이스파크가 업로드되어 있을 때만 체크
       if (niceParkData.length > 0) {
         try {
-          const res = await axios.get(`${BASE_URL}/admin/excel/check`, {
-            params: {
-              year: selectedYear,
-              month: selectedMonth,
-              source: "NICE", // 꼬리표 부착
-            },
-            headers: { Authorization: `Bearer ${token}` },
-          });
-          setIsNiceDataExisting(res.data.exists);
+          // [변경] API 함수 사용
+          const data = await checkExcelExistence(
+            selectedYear,
+            selectedMonth,
+            "NICE"
+          );
+          setIsNiceDataExisting(data.exists);
         } catch (err) {
           console.error("나이스 데이터 확인 중 오류:", err);
         }
@@ -138,15 +137,13 @@ const DataUploadPage: React.FC = () => {
       // 4. 에스원이 업로드되어 있을 때만 체크
       if (s1Data.length > 0) {
         try {
-          const res = await axios.get(`${BASE_URL}/admin/excel/check`, {
-            params: {
-              year: selectedYear,
-              month: selectedMonth,
-              source: "S1", // 꼬리표
-            },
-            headers: { Authorization: `Bearer ${token}` },
-          });
-          setIsS1DataExisting(res.data.exists);
+          // [변경] axios 직접 호출 -> API 함수 사용
+          const data = await checkExcelExistence(
+            selectedYear,
+            selectedMonth,
+            "S1"
+          );
+          setIsS1DataExisting(data.exists);
         } catch (err) {
           console.error("S1 데이터 확인 중 오류:", err);
         }
@@ -164,22 +161,12 @@ const DataUploadPage: React.FC = () => {
     rows: NiceParkRow[]
   ): Promise<number | void> => {
     try {
-      const token = sessionStorage.getItem("token");
-      if (!token) return;
-      // (가정) 백엔드에 요청 보냄
-      const res = await axios.post(
-        `${BASE_URL}/admin/excel/is-valid/nicepark`,
-        rows,
-        // 2. 헤더 (토큰)
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-      const response = res.data;
+      // [변경] axios.post, token 제거 -> API 함수 호출
+      // 백엔드에서 리턴해주는 '유효하지 않은 데이터 목록'을 받음
+      const invalidList = await validateNiceParkData(rows);
+
       const invalidIdxSet = new Set(
-        response.map((data: { idx: any }) => data.idx)
+        invalidList.map((data: { idx: any }) => data.idx)
       );
       const checkedNiceParkData = rows.map((row) => {
         if (invalidIdxSet.has(row.idx)) {
@@ -199,23 +186,10 @@ const DataUploadPage: React.FC = () => {
   //2. s1 데이터 내 사원번호가 DB에 기준정보로 등록 되어있는지 여부
   const checkAndSetS1State = async (rows: S1Row[]): Promise<number | void> => {
     try {
-      const token = sessionStorage.getItem("token");
-      if (!token) return;
+      const invalidList = await validateS1Data(rows);
 
-      // (가정) 백엔드에 요청 보냄
-      const res = await axios.post(
-        `${BASE_URL}/admin/excel/is-valid/s1`,
-        rows,
-        // 2. 헤더 (토큰)
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-      const response = res.data;
       const invalidIdxSet = new Set(
-        response.map((data: { idx: any }) => data.idx)
+        invalidList.map((data: { idx: any }) => data.idx)
       );
       const checkedS1Data = rows.map((row) => {
         if (invalidIdxSet.has(row.idx)) {
@@ -246,38 +220,36 @@ const DataUploadPage: React.FC = () => {
       return;
     }
 
+    setIsLoading(true);
+
     // 2. 검증 수행 및 메시지 생성
     try {
       let confirmMsg = "";
       let hasError = false;
 
+      // 나이스와 S1 검증을 동시에 던집니다. 실행 순서가 아닌 '동시 출발'입니다.
+      const [niceInvalidCount, s1InvalidCount] = await Promise.all([
+        niceParkData.length > 0
+          ? checkAndSetNiceparkState(niceParkData)
+          : Promise.resolve(0),
+        s1Data.length > 0 ? checkAndSetS1State(s1Data) : Promise.resolve(0),
+      ]);
+
       // --- [나이스파크 검사] ---
       if (niceParkData.length > 0) {
-        // 이미 만들어둔 함수 호출 (State 갱신 + 에러 개수 반환)
-        const invalidCount =
-          (await checkAndSetNiceparkState(niceParkData)) || 0;
-
         const totalCount = niceParkData.length;
-        const successCount = totalCount - invalidCount;
-
-        confirmMsg += `[나이스파크]\n총 ${totalCount}건 (등록가능: ${successCount}건 / 등록불가: ${invalidCount}건)\n`;
-
-        if (invalidCount > 0) hasError = true;
+        const successCount = totalCount - (niceInvalidCount || 0);
+        confirmMsg += `[나이스파크]\n총 ${totalCount}건 (등록가능: ${successCount}건 / 등록불가: ${niceInvalidCount}건)\n`;
+        if ((niceInvalidCount || 0) > 0) hasError = true;
       }
 
       // --- [에스원 검사] ---
       if (s1Data.length > 0) {
-        if (confirmMsg) confirmMsg += "\n"; // 줄바꿈
-
-        // 이미 만들어둔 함수 호출
-        const invalidCount = (await checkAndSetS1State(s1Data)) || 0;
-
+        if (confirmMsg) confirmMsg += "\n";
         const totalCount = s1Data.length;
-        const successCount = totalCount - invalidCount;
-
-        confirmMsg += `[에스원]\n총 ${totalCount}건 (등록가능: ${successCount}건 / 등록불가: ${invalidCount}건)\n`;
-
-        if (invalidCount > 0) hasError = true;
+        const successCount = totalCount - (s1InvalidCount || 0);
+        confirmMsg += `[에스원]\n총 ${totalCount}건 (등록가능: ${successCount}건 / 등록불가: ${s1InvalidCount}건)\n`;
+        if ((s1InvalidCount || 0) > 0) hasError = true;
       }
 
       // 3. 최종 메시지 조합
@@ -294,7 +266,9 @@ const DataUploadPage: React.FC = () => {
       setIsConfirmModalOpen(true);
     } catch (error) {
       console.error("검사 프로세스 오류:", error);
-      alert("데이터 검증 중 오류가 발생했습니다.");
+      openAlertModal("오류", "데이터 검증 중 오류가 발생했습니다.", false);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -406,82 +380,78 @@ const DataUploadPage: React.FC = () => {
 
   // 서버 전송 핸들러 (등록 클릭 시)
   const handleSubmit = async () => {
-    // 확인 모달부터 닫기
-    setIsConfirmModalOpen(false);
-
-    // [시작] 스피너 켜기 (화면 잠금)
-    setIsLoading(true);
+    setIsConfirmModalOpen(false); // 확인 모달부터 닫기
+    setIsLoading(true); // 스피너 켜기
 
     // 1. 데이터 빈 값 체크
     if (niceParkData.length === 0 && s1Data.length === 0) {
       alert("업로드할 데이터가 없습니다.");
+      setIsLoading(false);
       return;
-    }
-
-    // 2. 토큰 체크
-    const token = sessionStorage.getItem("token");
-    if (!token) {
-      alert("로그인이 필요합니다.");
-      return; // 혹은 로그인 페이지로 리다이렉트
     }
 
     // 결과 메시지를 담을 변수
     const resultMessages: string[] = [];
 
     try {
+      // 비동기 함수들을 미리 정의하여 Promise.all에 던집니다.
+      const uploadTasks = [];
+
       if (niceParkData.length > 0) {
-        // 1. 프론트엔드에서 미리 계산 (전체 - 에러 = 저장될 개수)
-        const total = niceParkData.length;
-        const invalid = niceParkData.filter((row) => row.isInvalid).length;
-        const success = total - invalid;
+        uploadTasks.push(
+          (async () => {
+            // 1. 프론트엔드에서 미리 계산 (전체 - 에러 = 저장될 개수)
+            const total = niceParkData.length;
+            const invalid = niceParkData.filter((row) => row.isInvalid).length;
+            const success = total - invalid;
 
-        const res = await axios.post(
-          `${BASE_URL}/admin/excel/upload/nicepark`,
-          niceParkData,
-          {
-            params: { year: selectedYear, month: selectedMonth },
-            headers: { Authorization: `Bearer ${token}` },
-          }
+            const responseData = await uploadNiceParkData(
+              niceParkData,
+              selectedYear,
+              selectedMonth
+            );
+
+            // (3) 결과 메시지 직접 조립 (백엔드 응답 무시)
+            let msg = `[나이스파크] 총 ${total}건 중 ${success}건 저장 완료`;
+            if (invalid > 0) {
+              msg += `\n(기준정보 미등록 ${invalid}건 제외)`;
+            }
+            // 백엔드에서 온 "임직원 제외" 추가
+            if (
+              typeof responseData === "string" &&
+              responseData.startsWith("EXCLUDED:")
+            ) {
+              const excludedCars = responseData.replace("EXCLUDED:", "");
+              msg += `\n(임직원 차량 추가 제외: ${excludedCars})`;
+            }
+
+            resultMessages.push(msg);
+          })()
         );
-
-        // (3) 결과 메시지 직접 조립 (백엔드 응답 무시)
-        let msg = `[나이스파크] 총 ${total}건 중 ${success}건 저장 완료`;
-        if (invalid > 0) {
-          msg += `\n(기준정보 미등록 ${invalid}건 제외)`;
-        }
-        // 백엔드에서 온 "임직원 제외" 추가
-        if (res.data.startsWith("EXCLUDED:")) {
-          const s1Cars = res.data.replace("EXCLUDED:", "");
-          msg += `\n(임직원 차량 추가 제외: ${s1Cars})`;
-        }
-
-        resultMessages.push(msg);
       }
 
       if (s1Data.length > 0) {
-        // (1) 프론트엔드에서 개수 계산
-        const total = s1Data.length;
-        const invalid = s1Data.filter((row) => row.isInvalid).length;
-        const success = total - invalid;
+        uploadTasks.push(
+          (async () => {
+            // (1) 프론트엔드에서 개수 계산
+            const total = s1Data.length;
+            const invalid = s1Data.filter((row) => row.isInvalid).length;
+            const success = total - invalid;
 
-        await axios.post(`${BASE_URL}/admin/excel/upload/s1`, s1Data, {
-          params: {
-            year: selectedYear,
-            month: selectedMonth,
-          },
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        // (3) 결과 메시지 직접 조립
-        let msg = `[에스원] 총 ${total}건 중 ${success}건 저장 완료`;
-        if (invalid > 0) {
-          msg += `\n(기준정보 미등록 ${invalid}건 제외)`;
-        }
-        resultMessages.push(msg);
+            await uploadS1Data(s1Data, selectedYear, selectedMonth);
+
+            // (3) 결과 메시지 직접 조립
+            let msg = `[에스원] 총 ${total}건 중 ${success}건 저장 완료`;
+            if (invalid > 0) {
+              msg += `\n(기준정보 미등록 ${invalid}건 제외)`;
+            }
+            resultMessages.push(msg);
+          })()
+        );
       }
 
-      //alert("데이터가 성공적으로 등록되었습니다!");
+      // 동시 출발
+      await Promise.all(uploadTasks);
 
       console.log("백엔드 응답 데이터:", resultMessages);
 
@@ -497,16 +467,14 @@ const DataUploadPage: React.FC = () => {
       setNiceParkData([]);
       setS1Data([]);
 
-      // 기존 setIsDataExisting(true); 삭제하고 아래 코드로 대체
       // 방금 업로드를 성공했으니, 해당 데이터가 DB에 존재한다고 상태 업데이트
       if (niceParkData.length > 0) setIsNiceDataExisting(true);
       if (s1Data.length > 0) setIsS1DataExisting(true);
     } catch (error: any) {
       console.error("업로드 실패:", error);
 
-      // Axios 에러 처리
+      // 에러 처리
       let errorMessage = "데이터 업로드 중 오류가 발생했습니다.";
-
       if (error.response) {
         // 서버가 에러 응답(4xx, 5xx)을 준 경우
         errorMessage =
@@ -726,7 +694,29 @@ const DataUploadPage: React.FC = () => {
               </div>
             </div>
           </div>
-          <div className="overflow-y-auto border border-gray-200 rounded-md h-96">
+          <div
+            className={`overflow-y-auto border border-gray-200 rounded-md h-96
+          ${
+            isDragOverNice
+              ? "border-blue-500 bg-blue-50 text-blue-600"
+              : "border-gray-300 bg-gray-50"
+          }`}
+            onClick={() => niceFileInputRef.current?.click()}
+            onDragOver={(e) => {
+              e.preventDefault();
+              setIsDragOverNice(true);
+            }}
+            onDragLeave={(e) => {
+              e.preventDefault();
+              setIsDragOverNice(false);
+            }}
+            onDrop={(e) => {
+              e.preventDefault();
+              setIsDragOverNice(false);
+              if (e.dataTransfer.files.length > 0)
+                handleFileUpload(e.dataTransfer.files[0], "nice");
+            }}
+          >
             <table className="w-full text-sm">
               <thead className="bg-gray-100">
                 <tr>
@@ -861,7 +851,29 @@ const DataUploadPage: React.FC = () => {
               </div>
             </div>
           </div>
-          <div className="overflow-y-auto border border-gray-200 rounded-md h-96">
+          <div
+            className={`overflow-y-auto border border-gray-200 rounded-md h-96
+          ${
+            isDragOverS1
+              ? "border-blue-500 bg-blue-50 text-blue-600"
+              : "border-gray-300 bg-gray-50"
+          }`}
+            onClick={() => s1FileInputRef.current?.click()}
+            onDragOver={(e) => {
+              e.preventDefault();
+              setIsDragOverS1(true);
+            }}
+            onDragLeave={(e) => {
+              e.preventDefault();
+              setIsDragOverS1(false);
+            }}
+            onDrop={(e) => {
+              e.preventDefault();
+              setIsDragOverS1(false);
+              if (e.dataTransfer.files.length > 0)
+                handleFileUpload(e.dataTransfer.files[0], "s1");
+            }}
+          >
             <table className="w-full text-sm">
               <thead className="bg-gray-100">
                 <tr>
@@ -925,7 +937,9 @@ const DataUploadPage: React.FC = () => {
         onConfirm={handleSubmit}
         title="등록 확인"
         message={confirmMessage}
-        isWarning={confirmMessage.includes("오류")}
+        isWarning={
+          confirmMessage.includes("오류") || confirmMessage.includes("미등록")
+        }
         size={totalInvalidCount > 0 ? "lg" : "sm"}
       >
         {/* 등록 제외 데이터가 하나라도 있을 때만 표시 */}
@@ -1012,4 +1026,4 @@ const DataUploadPage: React.FC = () => {
   );
 };
 
-export default DataUploadPage;
+export default ExcelUpS1NicePage;

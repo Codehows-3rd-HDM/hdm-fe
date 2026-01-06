@@ -1,14 +1,16 @@
 import React, { useState, useRef } from "react";
 import { Upload, FileSpreadsheet, Save, AlertCircle, X } from "lucide-react";
-import axios from "axios";
 import Modal from "../../../components/Modal";
 import { parseExcelFile } from "./utils/Parsing";
 import { mapToBaseInfoData } from "./utils/Mappers";
 import LoadingSpinner from "../../../components/LoadingSpinner";
+import {
+  checkBaseInfoData,
+  uploadBaseInfoData,
+  downloadBaseInfoExcel,
+} from "../../../apis/baseInfoApi";
 
-const BASE_URL = import.meta.env.VITE_API_URL || "/api";
-
-const ExcelManagementPage: React.FC = () => {
+const ExcelUpDownBaseInfoPage: React.FC = () => {
   // --- [UI 상태] ---
   const [isDragOver, setIsDragOver] = useState(false);
   const [headers, setHeaders] = useState<string[]>([]);
@@ -40,22 +42,11 @@ const ExcelManagementPage: React.FC = () => {
 
   // --- [엑셀 검증 로직] ---
   const checkPreviewStatus = async (parsedData: any[]) => {
-    const token =
-      sessionStorage.getItem("token") || localStorage.getItem("token");
     try {
       // 1. 서버 비교 요청
-      const res = await axios.post(
-        `${BASE_URL}/admin/excel/upload/base-info/check`,
-        mapToBaseInfoData(parsedData),
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        }
+      const checkResults = await checkBaseInfoData(
+        mapToBaseInfoData(parsedData)
       );
-
-      const checkResults = res.data;
 
       // 2. 데이터 합치기
       const mergedData = parsedData.map((row, index) => {
@@ -235,19 +226,7 @@ const ExcelManagementPage: React.FC = () => {
     );
 
     try {
-      const token =
-        sessionStorage.getItem("token") || localStorage.getItem("token");
-
-      await axios.post(
-        `${BASE_URL}/admin/excel/upload/base-info`,
-        requestData,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
+      await uploadBaseInfoData(requestData);
 
       setAlertState({
         title: "업로드 성공",
@@ -276,26 +255,30 @@ const ExcelManagementPage: React.FC = () => {
   };
 
   const handleExcelDownload = async () => {
-    const token =
-      sessionStorage.getItem("token") || localStorage.getItem("token");
+    try {
+      setIsLoading(true);
 
-    const res = await axios.get(`${BASE_URL}/admin/excel/download/base-info`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-      responseType: "blob",
-    });
+      const blobData = await downloadBaseInfoExcel();
 
-    const blob = new Blob([res.data], {
-      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    });
+      // Blob 변환
+      const blob = new Blob([blobData], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
 
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "기준정보_전체.xlsx";
-    a.click();
-    window.URL.revokeObjectURL(url);
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "기준정보_전체.xlsx";
+      a.click();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      // 에러 처리
+      console.error("엑셀 다운로드 실패:", error);
+      alert("파일 다운로드 중 오류가 발생했습니다.");
+    } finally {
+      // 성공하든 실패하든 로딩 끄기
+      setIsLoading(false);
+    }
   };
 
   // [신규] 날짜 입력 핸들러
@@ -351,11 +334,12 @@ const ExcelManagementPage: React.FC = () => {
         {/* 2. Upload Area */}
         <div className="p-6 mb-6 bg-white border border-gray-200 shadow-sm rounded-xl">
           <div
-            className={`border-2 border-dashed rounded-lg h-32 flex flex-col items-center justify-center cursor-pointer transition-all ${
-              isDragOver
-                ? "border-blue-500 bg-blue-50 text-blue-500"
-                : "border-gray-300 bg-gray-50 text-gray-600"
-            }`}
+            className={`border-2 border-dashed rounded-lg h-32 flex flex-col items-center justify-center cursor-pointer transition-all 
+              ${
+                isDragOver
+                  ? "border-blue-500 bg-blue-50 text-blue-500"
+                  : "border-gray-300 bg-gray-50 text-gray-600"
+              }`}
             onDragOver={onDragOver}
             onDragLeave={() => setIsDragOver(false)}
             onDrop={onDrop}
@@ -555,4 +539,4 @@ const ExcelManagementPage: React.FC = () => {
   );
 };
 
-export default ExcelManagementPage;
+export default ExcelUpDownBaseInfoPage;
