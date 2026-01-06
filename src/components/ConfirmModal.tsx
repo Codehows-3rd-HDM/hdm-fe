@@ -19,71 +19,69 @@ const ConfirmModal: React.FC<ConfirmModalProps> = ({
   onConfirm,
   message,
   title,
-  isWarning = false, // 기본값은 false
+  isWarning = false,
   children,
   size = "sm",
 }) => {
   if (!isOpen) return null;
 
-  // 경고(오류)가 있으면 주황색/빨간색, 일반적인 확인이면 파란색/초록색 등
   const Icon = isWarning ? AlertTriangle : CheckCircle;
   const iconColor = isWarning ? "text-red-500" : "text-blue-500";
 
-  // ✅ [수정 1] 사이즈에 따라 너비 클래스 결정 (여기서 max-w 설정)
-  // sm이면 기존처럼 작게, lg면 넓게(2xl)
-  const maxWidthClass = size === "lg" ? "max-w-2xl" : "max-w-sm";
+  // 반응형 너비 클래스 (모바일/태블릿/데스크톱 대응)
+  const maxWidthClass = size === "lg" 
+    ? "max-w-[95vw] sm:max-w-xl md:max-w-2xl lg:max-w-4xl" 
+    : "max-w-[95vw] sm:max-w-sm md:max-w-md";
 
   const modalContent = (
     // 배경 (Overlay)
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center">
-      {/* [수정 2] 모달 박스 (흰색 배경) */}
-      {/* 기존에 있던 max-w-sm을 지우고, 위에서 만든 ${maxWidthClass} 변수를 넣어야 함 */}
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-2 sm:p-4">
+      {/* 모달 박스 - 반응형 너비 및 패딩 */}
       <div
-        className={`bg-white rounded-lg shadow-xl w-11/12 ${maxWidthClass} transform transition-all duration-300 scale-100 flex flex-col`}
-        style={{ padding: 'var(--padding-card)' }}
+        className={`bg-white rounded-lg shadow-xl w-full ${maxWidthClass} transform transition-all duration-300 scale-100 flex flex-col max-h-[95vh] sm:max-h-[90vh]`}
+        style={{ padding: 'clamp(1rem, 3vw, 2.5rem)' }}
       >
-        {/* 헤더 */}
-        <div className="flex justify-between items-start border-b shrink-0" style={{ paddingBottom: 'var(--spacing-md)', marginBottom: 'var(--spacing-md)' }}>
-          <h3 className="text-xl font-bold text-gray-800">{title}</h3>
+        {/* 헤더 - 반응형 폰트 크기 */}
+        <div className="flex justify-between items-start border-b shrink-0 pb-3 sm:pb-4 mb-3 sm:mb-4">
+          <h3 className="text-base sm:text-lg md:text-xl font-bold text-gray-800 leading-tight">{title}</h3>
           <button
             onClick={onClose}
-            className="p-1 rounded-full text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors"
+            className="p-1 rounded-full text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors shrink-0"
+            aria-label="Close modal"
           >
-            <X size={20} />
+            <X size={18} className="sm:w-5 sm:h-5" />
           </button>
         </div>
 
-        {/* 본문 영역 (내용이 길어지면 스크롤 생기게 처리하면 더 좋음) */}
-        <div className="flex flex-col items-center text-center overflow-y-auto max-h-[80vh]">
-          <Icon size={48} className={`mb-4 ${iconColor}`} />
+        {/* 본문 영역 - 스크롤 가능 */}
+        <div className="flex flex-col items-center text-center overflow-y-auto flex-1">
+          <Icon size={36} className={`sm:w-12 sm:h-12 mb-3 sm:mb-4 ${iconColor} shrink-0`} />
 
-          <p className="text-gray-700 font-semibold mb-6 whitespace-pre-wrap text-sm leading-relaxed">
+          <p className="text-gray-700 font-semibold mb-4 sm:mb-6 whitespace-pre-wrap text-xs sm:text-sm md:text-base leading-relaxed">
             {message}
           </p>
 
-          {/* [수정 3] children 렌더링 문법 오류 수정 */}
-          {children && <div className="w-full text-left mb-6">{children}</div>}
+          {/* children 영역 - 반응형 처리 */}
+          {children && <div className="w-full text-left mb-4 sm:mb-6">{children}</div>}
         </div>
 
-        {/* 버튼 영역 */}
-        <div className="flex justify-center gap-2 shrink-0 mt-auto">
+        {/* 버튼 영역 - 반응형 간격 및 패딩 */}
+        <div className="flex flex-col sm:flex-row justify-center gap-2 shrink-0 mt-auto pt-2">
           <button
             onClick={onClose}
-            className="flex-1 font-bold text-gray-700 bg-gray-200 hover:bg-gray-300 rounded-lg transition-colors"
-            style={{ padding: 'var(--padding-btn)' }}
+            className="flex-1 font-bold text-sm sm:text-base text-gray-700 bg-gray-200 hover:bg-gray-300 rounded-lg transition-colors py-2 sm:py-2.5 px-4"
           >
             취소
           </button>
 
           <button
             onClick={onConfirm}
-            className={`flex-1 font-bold text-white rounded-lg transition-colors 
+            className={`flex-1 font-bold text-sm sm:text-base text-white rounded-lg transition-colors py-2 sm:py-2.5 px-4
               ${
                 isWarning
                   ? "bg-red-600 hover:bg-red-700"
                   : "bg-blue-600 hover:bg-blue-700"
               }`}
-            style={{ padding: 'var(--padding-btn)' }}
           >
             등록
           </button>
@@ -91,7 +89,6 @@ const ConfirmModal: React.FC<ConfirmModalProps> = ({
       </div>
     </div>
   );
-  // 2. document.body로 렌더링 위치를 옮깁니다. (사이드바 영향 탈출!)
   return ReactDOM.createPortal(modalContent, document.body);
 };
 

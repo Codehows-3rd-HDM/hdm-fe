@@ -980,28 +980,28 @@ const ExcelUpS1NicePage: React.FC = () => {
       >
         {/* 등록 제외 데이터가 하나라도 있을 때만 표시 */}
         {totalInvalidCount > 0 && (
-          <div className="p-3 mt-4 text-left border rounded-lg bg-red-50">
-            <h4 className="flex items-center gap-2 mb-3 text-sm font-bold text-red-600">
-              등록 제외 리스트 ({totalInvalidCount}건)
+          <div className="p-2 sm:p-3 mt-3 sm:mt-4 text-left border rounded-lg bg-red-50">
+            <h4 className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 mb-2 sm:mb-3 text-xs sm:text-sm font-bold text-red-600">
+              <span>등록 제외 리스트 ({totalInvalidCount}건)</span>
               <span className="text-xs font-normal text-gray-500">
                 (기준정보 미등록 데이터)
               </span>
             </h4>
 
-            <div className="space-y-4">
+            <div className="space-y-3 sm:space-y-4">
               {/* ================= 나이스파크 ================= */}
               {invalidNiceRows.length > 0 && (
-                <div className="p-3 bg-white border rounded-lg">
-                  <h5 className="mb-2 text-sm font-bold text-red-600">
+                <div className="p-2 sm:p-3 bg-white border rounded-lg">
+                  <h5 className="mb-2 text-xs sm:text-sm font-bold text-red-600">
                     나이스파크 등록 제외 차량 ({invalidNiceRows.length}건)
                   </h5>
 
-                  <div className="overflow-y-auto border border-red-200 rounded max-h-48">
-                    <table className="w-full text-xs border-collapse">
+                  <div className="overflow-x-auto overflow-y-auto border border-red-200 rounded max-h-36 sm:max-h-48">
+                    <table className="w-full text-xs border-collapse min-w-[300px]">
                       <thead className="sticky top-0 bg-red-100">
                         <tr>
-                          <th className="p-2 text-left">차량번호</th>
-                          <th className="p-2 text-left">입차일시</th>
+                          <th className="p-1.5 sm:p-2 text-left whitespace-nowrap">차량번호</th>
+                          <th className="p-1.5 sm:p-2 text-left whitespace-nowrap">입차일시</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -1021,24 +1021,24 @@ const ExcelUpS1NicePage: React.FC = () => {
 
               {/* ================= 에스원 ================= */}
               {invalidS1Rows.length > 0 && (
-                <div className="p-3 bg-white border rounded-lg">
-                  <h5 className="mb-2 text-sm font-bold text-red-600">
+                <div className="p-2 sm:p-3 bg-white border rounded-lg">
+                  <h5 className="mb-2 text-xs sm:text-sm font-bold text-red-600">
                     에스원 등록 제외 이력 ({invalidS1Rows.length}건)
                   </h5>
 
-                  <div className="overflow-y-auto border border-red-200 rounded max-h-48">
-                    <table className="w-full text-xs border-collapse">
+                  <div className="overflow-x-auto overflow-y-auto border border-red-200 rounded max-h-36 sm:max-h-48">
+                    <table className="w-full text-xs border-collapse min-w-[250px]">
                       <thead className="sticky top-0 bg-red-100">
                         <tr>
-                          <th className="p-2 text-left">사원번호</th>
-                          <th className="p-2 text-left">출입일자</th>
+                          <th className="p-1.5 sm:p-2 text-left whitespace-nowrap">사원번호</th>
+                          <th className="p-1.5 sm:p-2 text-left whitespace-nowrap">출입일자</th>
                         </tr>
                       </thead>
                       <tbody>
                         {invalidS1Rows.map((row, idx) => (
                           <tr key={idx} className="border-t">
-                            <td className="p-2 font-bold">{row.memberId}</td>
-                            <td className="p-2">{row.accessDate}</td>
+                            <td className="p-1.5 sm:p-2 font-bold whitespace-nowrap">{row.memberId}</td>
+                            <td className="p-1.5 sm:p-2 whitespace-nowrap">{row.accessDate}</td>
                           </tr>
                         ))}
                       </tbody>
