@@ -28,7 +28,7 @@ export const parseExcelFile = (
       try {
         const data = new Uint8Array(e.target?.result as ArrayBuffer);
 
-        // ✅ 날짜 파싱은 여기서 결정됨
+        // 날짜 파싱은 여기서 결정
         const workbook = XLSX.read(data, {
           type: "array",
           cellDates: true,

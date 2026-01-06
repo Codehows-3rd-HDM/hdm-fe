@@ -1,16 +1,18 @@
 import React, { useState, useRef } from "react";
 import { Upload, FileSpreadsheet, Save, AlertCircle, X } from "lucide-react";
-import axios from "axios";
 import Modal from "../../../components/Modal";
 import Breadcrumb from "../../../components/Breadcrumb";
 import { getBreadcrumbItems } from "../../../utils/breadcrumbHelper";
 import { parseExcelFile } from "./utils/Parsing";
 import { mapToBaseInfoData } from "./utils/Mappers";
 import LoadingSpinner from "../../../components/LoadingSpinner";
+import {
+  checkBaseInfoData,
+  uploadBaseInfoData,
+  downloadBaseInfoExcel,
+} from "../../../apis/baseInfoApi";
 
-const BASE_URL = import.meta.env.VITE_API_URL || "/api";
-
-const ExcelManagementPage: React.FC = () => {
+const ExcelUpDownBaseInfoPage: React.FC = () => {
   // --- [UI 상태] ---
   const [isDragOver, setIsDragOver] = useState(false);
   const [headers, setHeaders] = useState<string[]>([]);
@@ -42,22 +44,11 @@ const ExcelManagementPage: React.FC = () => {
 
   // --- [엑셀 검증 로직] ---
   const checkPreviewStatus = async (parsedData: any[]) => {
-    const token =
-      sessionStorage.getItem("token") || localStorage.getItem("token");
     try {
       // 1. 서버 비교 요청
-      const res = await axios.post(
-        `${BASE_URL}/admin/excel/upload/base-info/check`,
-        mapToBaseInfoData(parsedData),
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        }
+      const checkResults = await checkBaseInfoData(
+        mapToBaseInfoData(parsedData)
       );
-
-      const checkResults = res.data;
 
       // 2. 데이터 합치기
       const mergedData = parsedData.map((row, index) => {
@@ -237,19 +228,7 @@ const ExcelManagementPage: React.FC = () => {
     );
 
     try {
-      const token =
-        sessionStorage.getItem("token") || localStorage.getItem("token");
-
-      await axios.post(
-        `${BASE_URL}/admin/excel/upload/base-info`,
-        requestData,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
+      await uploadBaseInfoData(requestData);
 
       setAlertState({
         title: "업로드 성공",
@@ -278,26 +257,30 @@ const ExcelManagementPage: React.FC = () => {
   };
 
   const handleExcelDownload = async () => {
-    const token =
-      sessionStorage.getItem("token") || localStorage.getItem("token");
+    try {
+      setIsLoading(true);
 
-    const res = await axios.get(`${BASE_URL}/admin/excel/download/base-info`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-      responseType: "blob",
-    });
+      const blobData = await downloadBaseInfoExcel();
 
-    const blob = new Blob([res.data], {
-      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    });
+      // Blob 변환
+      const blob = new Blob([blobData], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
 
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "기준정보_전체.xlsx";
-    a.click();
-    window.URL.revokeObjectURL(url);
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "기준정보_전체.xlsx";
+      a.click();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      // 에러 처리
+      console.error("엑셀 다운로드 실패:", error);
+      alert("파일 다운로드 중 오류가 발생했습니다.");
+    } finally {
+      // 성공하든 실패하든 로딩 끄기
+      setIsLoading(false);
+    }
   };
 
   // [신규] 날짜 입력 핸들러
@@ -326,14 +309,20 @@ const ExcelManagementPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 min-w-0 flex flex-col">
-      <div className="w-full h-full relative flex-1 flex flex-col" style={{ padding: 'var(--padding-container)' }}>
+      <div
+        className="w-full h-full relative flex-1 flex flex-col"
+        style={{ padding: "var(--padding-container)" }}
+      >
         {/* 로딩 중일 때 화면 전체 덮어버림 */}
         {isLoading && <LoadingSpinner />}
 
-        <Breadcrumb items={getBreadcrumbItems('/admin/excel/manage')} />
+        <Breadcrumb items={getBreadcrumbItems("/admin/excel/base-info")} />
 
         {/* 1. Header Area */}
-        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4" style={{ marginBottom: 'var(--spacing-lg)' }}>
+        <div
+          className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4"
+          style={{ marginBottom: "var(--spacing-lg)" }}
+        >
           <div>
             <h2 className="mb-2 text-2xl font-bold text-gray-800">
               통합 기준정보 관리
@@ -346,7 +335,7 @@ const ExcelManagementPage: React.FC = () => {
           <button
             onClick={handleExcelDownload}
             className="flex-shrink-0 flex items-center text-sm font-bold text-gray-700 bg-white border rounded-lg shadow-sm hover:bg-gray-50"
-            style={{ padding: 'var(--padding-btn)' }}
+            style={{ padding: "var(--padding-btn)" }}
           >
             <FileSpreadsheet size={16} className="mr-2 text-green-600" />
             기준정보 엑셀 다운로드
@@ -354,14 +343,20 @@ const ExcelManagementPage: React.FC = () => {
         </div>
 
         {/* 2. Upload Area */}
-        <div className="bg-white border border-gray-200 shadow-sm rounded-xl" style={{ padding: 'var(--padding-card)', marginBottom: 'var(--spacing-lg)' }}>
+        <div
+          className="bg-white border border-gray-200 shadow-sm rounded-xl"
+          style={{
+            padding: "var(--padding-card)",
+            marginBottom: "var(--spacing-lg)",
+          }}
+        >
           <div
             className={`border-2 border-dashed rounded-lg flex flex-col items-center justify-center cursor-pointer transition-all ${
               isDragOver
                 ? "border-blue-500 bg-blue-50 text-blue-500"
                 : "border-gray-300 bg-gray-50 text-gray-600"
             }`}
-            style={{ height: '8rem' }}
+            style={{ height: "8rem" }}
             onDragOver={onDragOver}
             onDragLeave={() => setIsDragOver(false)}
             onDrop={onDrop}
@@ -390,32 +385,38 @@ const ExcelManagementPage: React.FC = () => {
         {excelData.length > 0 ? (
           // [수정 3] 테이블 영역이 남은 높이를 꽉 채우도록 flex-1 적용 (선택 사항)
           <div className="bg-white border rounded-xl shadow-sm overflow-hidden flex flex-col max-h-[70vh] min-h-0">
-            <div className="flex items-center justify-between border-b border-gray-200 bg-gray-50 flex-shrink-0" style={{ padding: 'var(--spacing-md)' }}>
+            <div
+              className="flex items-center justify-between border-b border-gray-200 bg-gray-50 flex-shrink-0"
+              style={{ padding: "var(--spacing-md)" }}
+            >
               <h3 className="flex items-center font-bold text-gray-700">
                 <span className="px-2 py-1 mr-2 text-xs text-green-800 bg-green-100 rounded-full">
                   {excelData.length}건
                 </span>
                 데이터 검증 및 미리보기
               </h3>
-              <div className="flex gap-2" style={{ gap: 'var(--spacing-sm)' }}>
+              <div className="flex gap-2" style={{ gap: "var(--spacing-sm)" }}>
                 <button
                   onClick={handleReset}
                   className="border border-gray-300 bg-white text-gray-600 rounded text-sm hover:bg-gray-100 flex items-center"
-                  style={{ padding: '0.375rem 0.75rem' }}
+                  style={{ padding: "0.375rem 0.75rem" }}
                 >
                   <X size={14} className="mr-1" /> 취소
                 </button>
                 <button
                   onClick={handleServerUpload}
                   className="bg-blue-600 text-white rounded text-sm font-bold hover:bg-blue-700 flex items-center shadow-sm"
-                  style={{ padding: '0.375rem 1rem' }}
+                  style={{ padding: "0.375rem 1rem" }}
                 >
                   <Save size={16} className="mr-2" /> 등록
                 </button>
               </div>
             </div>
 
-            <div className="flex text-sm text-gray-600 border-b bg-white flex-shrink-0" style={{ gap: 'var(--spacing-md)', padding: 'var(--spacing-md)' }}>
+            <div
+              className="flex text-sm text-gray-600 border-b bg-white flex-shrink-0"
+              style={{ gap: "var(--spacing-md)", padding: "var(--spacing-md)" }}
+            >
               <span className="flex items-center gap-1">
                 <span className="w-4 h-4 bg-green-100 border border-green-200 rounded"></span>{" "}
                 신규
@@ -435,12 +436,18 @@ const ExcelManagementPage: React.FC = () => {
               <table className="w-full table-auto text-sm border-collapse">
                 <thead className="sticky top-0 z-20 bg-gray-100 border-b shadow-sm">
                   <tr>
-                    <th className="sticky left-0 z-30 bg-gray-100 text-center w-20 min-w-[80px] whitespace-nowrap border-r" style={{ padding: '0.75rem 1rem' }}>
+                    <th
+                      className="sticky left-0 z-30 bg-gray-100 text-center w-20 min-w-[80px] whitespace-nowrap border-r"
+                      style={{ padding: "0.75rem 1rem" }}
+                    >
                       상태
                     </th>
 
                     {/* 2. [추가] 기준일 헤더 (수동 추가) */}
-                    <th className="text-center min-w-[140px] whitespace-nowrap bg-gray-100 font-bold text-blue-700" style={{ padding: '0.75rem 1rem' }}>
+                    <th
+                      className="text-center min-w-[140px] whitespace-nowrap bg-gray-100 font-bold text-blue-700"
+                      style={{ padding: "0.75rem 1rem" }}
+                    >
                       차량등록일
                     </th>
 
@@ -448,12 +455,15 @@ const ExcelManagementPage: React.FC = () => {
                       <th
                         key={header}
                         className="text-center min-w-[150px] whitespace-nowrap bg-gray-100"
-                        style={{ padding: '0.75rem 1rem' }}
+                        style={{ padding: "0.75rem 1rem" }}
                       >
                         {header}
                       </th>
                     ))}
-                    <th className="sticky right-0 z-30 bg-gray-100 text-center min-w-[160px] border-l" style={{ padding: '0.75rem 1rem' }}>
+                    <th
+                      className="sticky right-0 z-30 bg-gray-100 text-center min-w-[160px] border-l"
+                      style={{ padding: "0.75rem 1rem" }}
+                    >
                       비고
                     </th>
                   </tr>
@@ -466,7 +476,10 @@ const ExcelManagementPage: React.FC = () => {
                         row.rowStatus
                       )} hover:bg-gray-50`}
                     >
-                      <td className="sticky left-0 z-10 bg-white text-center border-r" style={{ padding: '0.75rem 1rem' }}>
+                      <td
+                        className="sticky left-0 z-10 bg-white text-center border-r"
+                        style={{ padding: "0.75rem 1rem" }}
+                      >
                         <span
                           className={`px-2 py-1 rounded text-xs font-bold border
                           ${
@@ -486,7 +499,10 @@ const ExcelManagementPage: React.FC = () => {
                       </td>
 
                       {/* 2. [추가] 차량등록일 입력창 (<input type="date">) */}
-                      <td className="text-center" style={{ padding: '0.75rem 0.5rem' }}>
+                      <td
+                        className="text-center"
+                        style={{ padding: "0.75rem 0.5rem" }}
+                      >
                         <input
                           type="date"
                           value={row.calcBaseDate || ""} // 값이 없으면 빈칸
@@ -516,7 +532,7 @@ const ExcelManagementPage: React.FC = () => {
                         <td
                           key={header}
                           className="text-center min-w-[150px] break-words"
-                          style={{ padding: '0.75rem 1rem' }}
+                          style={{ padding: "0.75rem 1rem" }}
                         >
                           {row[header]}
                         </td>
@@ -534,7 +550,7 @@ const ExcelManagementPage: React.FC = () => {
                             : // 3. 그 외 (흰색)
                               "bg-white"
                         }`}
-                        style={{ padding: '0.75rem 1rem' }}
+                        style={{ padding: "0.75rem 1rem" }}
                       >
                         {row.message}
                       </td>
@@ -545,8 +561,15 @@ const ExcelManagementPage: React.FC = () => {
             </div>
           </div>
         ) : (
-          <div className="text-center text-gray-400 bg-white border border-gray-200 border-dashed rounded-xl" style={{ padding: '3rem' }}>
-            <AlertCircle size={48} className="mx-auto opacity-20" style={{ marginBottom: 'var(--spacing-md)' }} />
+          <div
+            className="text-center text-gray-400 bg-white border border-gray-200 border-dashed rounded-xl"
+            style={{ padding: "3rem" }}
+          >
+            <AlertCircle
+              size={48}
+              className="mx-auto opacity-20"
+              style={{ marginBottom: "var(--spacing-md)" }}
+            />
             <p className="text-lg font-medium text-gray-300">
               업로드된 데이터가 없습니다.
             </p>
@@ -565,4 +588,4 @@ const ExcelManagementPage: React.FC = () => {
   );
 };
 
-export default ExcelManagementPage;
+export default ExcelUpDownBaseInfoPage;
