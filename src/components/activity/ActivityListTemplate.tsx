@@ -8,6 +8,7 @@ import {
   Image as ImageIcon,
   Search,
   Loader2,
+  RotateCcw,
 } from "lucide-react";
 import Modal from "../Modal";
 import ActivityFormModal from "./ActivityFormModal";
@@ -333,19 +334,20 @@ const ActivityListTemplate: React.FC<ActivityListTemplateProps> = ({
         <div className="flex items-center gap-2 ml-auto">
           <button
             onClick={handleSearch}
-            className="bg-blue-600 text-white rounded-md font-semibold flex items-center gap-2 hover:bg-blue-700"
-            style={{ padding: 'var(--padding-btn)' }}
+            className="h-10 px-4 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors font-semibold text-sm whitespace-nowrap flex items-center gap-2"
+            title="조회"
           >
-            <Search size={16} /> 조회
+            <Search size={16} />
+            조회
           </button>
-          {(filterPeriodStart || filterPeriodEnd) && (
-            <button
-              onClick={handleResetFilter}
-              className="text-xs text-gray-500 underline"
-            >
-              필터 초기화
-            </button>
-          )}
+          <button
+            onClick={handleResetFilter}
+            className="h-10 px-4 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition-colors font-semibold text-sm whitespace-nowrap flex items-center gap-2"
+            title="초기화"
+          >
+            <RotateCcw size={16} />
+            초기화
+          </button>
         </div>
       </div>
 

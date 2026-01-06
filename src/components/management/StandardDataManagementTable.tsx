@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import type { ColumnDefinition } from '../../types/data';
 import Breadcrumb, { type BreadcrumbItem } from '../Breadcrumb';
 import { 
-  ArrowUp, ArrowDown, ArrowUpDown, Search, Save, Trash2, X, CheckSquare, Edit2, Loader2 
+  ArrowUp, ArrowDown, ArrowUpDown, Search, Save, Trash2, X, CheckSquare, Edit2, Loader2, RotateCcw 
 } from 'lucide-react'; 
 // import ExcelUploadModal from '../common/ExcelUploadModal';
 import Modal from '../Modal';
@@ -1140,8 +1140,7 @@ const StandardDataManagementTable = <T extends { id: number; [key: string]: unkn
           <select 
             value={String(searchColumn)} 
             onChange={(e) => setSearchColumn(e.target.value as 'all' | keyof T)}
-            className="border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 outline-none"
-            style={{ padding: 'var(--padding-input-sm)' }}
+            className="h-10 px-3 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-white"
           >
             <option value="all">전체 검색</option>
             {searchableColumns.map(key => (
@@ -1155,24 +1154,44 @@ const StandardDataManagementTable = <T extends { id: number; [key: string]: unkn
               placeholder="검색어를 입력하세요"
               value={searchInput}
               onChange={(e) => {
-                const next = e.target.value;
-                setSearchInput(next);
-                if (!isComposing) {
-                  setSearchQuery(next);
-                }
+                setSearchInput(e.target.value);
               }}
               onCompositionStart={() => setIsComposing(true)}
               onCompositionEnd={(e) => {
                 setIsComposing(false);
-                const finalValue = e.currentTarget.value;
-                setSearchInput(finalValue);
-                setSearchQuery(finalValue);
+                setSearchInput(e.currentTarget.value);
               }}
-              className="w-full rounded-md text-sm focus:ring-2 focus:ring-blue-500 outline-none"
-              style={{ paddingLeft: 'var(--spacing-2xl)', paddingRight: 'var(--spacing-sm)', paddingTop: 'var(--padding-input-sm)', paddingBottom: 'var(--padding-input-sm)', border: '1px solid rgb(209, 213, 219)' }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !isComposing) {
+                  setSearchQuery(searchInput);
+                }
+              }}
+              className="w-full h-10 pl-10 pr-3 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 outline-none"
             />
-            <Search size={16} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+            <Search size={16} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none" />
           </div>
+
+          <button
+            onClick={() => setSearchQuery(searchInput)}
+            className="h-10 px-4 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors font-semibold text-sm whitespace-nowrap flex items-center gap-2"
+            title="검색"
+          >
+            <Search size={16} />
+            검색
+          </button>
+
+          <button
+            onClick={() => {
+              setSearchInput('');
+              setSearchQuery('');
+              setCurrentPage(0);
+            }}
+            className="h-10 px-4 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition-colors font-semibold text-sm whitespace-nowrap flex items-center gap-2"
+            title="초기화"
+          >
+            <RotateCcw size={16} />
+            초기화
+          </button>
         </div>
       </div>
       
