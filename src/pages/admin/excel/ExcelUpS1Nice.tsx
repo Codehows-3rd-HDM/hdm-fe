@@ -1007,8 +1007,8 @@ const ExcelUpS1NicePage: React.FC = () => {
                       <tbody>
                         {invalidNiceRows.map((row, idx) => (
                           <tr key={idx} className="border-t">
-                            <td className="p-2 font-bold">{row.carNumber}</td>
-                            <td className="p-2">
+                            <td className="p-1.5 sm:p-2 font-bold whitespace-nowrap">{row.carNumber}</td>
+                            <td className="p-1.5 sm:p-2 whitespace-nowrap">
                               {row.accessDate} {row.accessTime}
                             </td>
                           </tr>
