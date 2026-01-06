@@ -212,13 +212,13 @@ const TargetComparisonPage: React.FC = () => {
   //   };
 
   return (
-    <div className="min-h-full font-sans bg-gray-50" style={{ padding: 'var(--padding-container)' }}>
+    <div className="min-h-full font-sans bg-gray-50" style={{ padding: 'var(--padding-responsive)' }}>
       {/* 브레드크럼 */}
       <Breadcrumb items={getBreadcrumbItems('/view/target')} />
       
       {/* 헤더 */}
       <div className="flex items-center justify-between" style={{ marginBottom: 'var(--spacing-lg)' }}>
-        <h2 className="font-bold text-gray-800" style={{ fontSize: 'clamp(1.25rem, 2vw, 1.5rem)' }}>
+        <h2 className="font-bold text-gray-800" style={{ fontSize: 'clamp(1.5rem, 2vw, 1.75rem)' }}>
           목표 대비 탄소 배출량
         </h2>
       </div>
@@ -238,8 +238,8 @@ const TargetComparisonPage: React.FC = () => {
               }
             `}
             style={{ 
-              padding: 'var(--spacing-sm) var(--spacing-lg)',
-              fontSize: 'var(--text-sm)'
+              padding: 'var(--spacing-xs) var(--spacing-md)',
+              fontSize: 'var(--text-base)'
             }}
           >
             {scope === "total"
@@ -252,17 +252,17 @@ const TargetComparisonPage: React.FC = () => {
       </div>
 
       {/* 필터 영역 - 연도 선택 및 KPI */}
-      <div className="bg-white border border-gray-100 shadow-sm rounded-xl" style={{ padding: 'var(--spacing-lg)', marginBottom: 'var(--spacing-lg)' }}>
+      <div className="bg-white border border-gray-100 shadow-sm rounded-xl" style={{ padding: 'var(--spacing-md)', marginBottom: 'var(--spacing-md)' }}>
         <div className="flex flex-col md:flex-row" style={{ gap: 'var(--spacing-lg)' }}>
           {/* 연도 선택 */}
           <div className="flex flex-col" style={{ gap: 'var(--spacing-xs)' }}>
-            <label className="font-bold text-gray-500" style={{ fontSize: 'var(--text-xs)' }}>▼ 연도 선택</label>
+            <label className="font-bold text-gray-500" style={{ fontSize: 'var(--text-sm)' }}>▼ 연도 선택</label>
             <div className="relative">
               <select
                 value={selectedYear}
                 onChange={(e) => setSelectedYear(e.target.value)}
                 className="bg-white border border-gray-300 rounded-md outline-none appearance-none cursor-pointer focus:ring-2 focus:ring-blue-500"
-                style={{ width: 'clamp(7rem, 10vw, 8rem)', padding: 'var(--spacing-sm)', paddingRight: 'var(--spacing-xl)', fontSize: 'var(--text-sm)' }}
+                style={{ width: 'clamp(7rem, 10vw, 8rem)', padding: 'var(--spacing-xs)', paddingRight: 'var(--spacing-lg)', fontSize: 'var(--text-base)' }}
               >
                 {years.map((y) => (
                   <option key={y} value={y}>
@@ -280,15 +280,15 @@ const TargetComparisonPage: React.FC = () => {
           {/* KPI 표시 */}
           <div className="flex-1 flex flex-col md:flex-row" style={{ gap: 'var(--spacing-lg)' }}>
             {/* 총 배출량 (실적) */}
-            <div className="flex-1 border-r border-gray-200" style={{ paddingRight: 'var(--spacing-lg)' }}>
-              <div className="text-gray-600" style={{ marginBottom: 'var(--spacing-xs)', fontSize: 'var(--text-sm)' }}>
+            <div className="flex-1 border-r border-gray-200" style={{ paddingRight: 'var(--spacing-md)' }}>
+              <div className="text-gray-600" style={{ marginBottom: 'var(--spacing-xs)', fontSize: 'var(--text-base)' }}>
                 {selectedYear}년도 총 배출량
               </div>
-              <div className={`font-extrabold ${statusColorClass}`} style={{ marginBottom: 'var(--spacing-xs)', fontSize: 'clamp(1.5rem, 3vw, 2.25rem)' }}>
+              <div className={`font-extrabold ${statusColorClass}`} style={{ marginBottom: 'var(--spacing-xs)', fontSize: 'clamp(1.75rem, 3vw, 2.5rem)' }}>
                 {chartData.totalActual.toLocaleString()}{" "}
-                <span className="text-gray-700" style={{ fontSize: 'clamp(0.875rem, 1.5vw, 1.25rem)' }}>tCO2eq</span>
+                <span className="text-gray-700" style={{ fontSize: 'clamp(1rem, 1.5vw, 1.5rem)' }}>tCO2eq</span>
               </div>
-              <div className={`flex items-center font-bold ${statusColorClass}`} style={{ fontSize: 'var(--text-sm)' }}>
+              <div className={`flex items-center font-bold ${statusColorClass}`} style={{ fontSize: 'var(--text-base)' }}>
                 {isExceeded ? (
                   <TrendingUp size={16} style={{ marginRight: 'var(--spacing-xs)' }} />
                 ) : (
@@ -297,19 +297,19 @@ const TargetComparisonPage: React.FC = () => {
                 {diff > 0 ? "+" : ""}
                 {diff.toLocaleString()} tCO2eq ({percentStr}%)
               </div>
-              <div className="text-right text-gray-500" style={{ marginTop: 'var(--spacing-xs)', fontSize: 'var(--text-xs)' }}>
+              <div className="text-right text-gray-500" style={{ marginTop: 'var(--spacing-xs)', fontSize: 'var(--text-sm)' }}>
                 *{monthCriterionText}
               </div>
             </div>
 
             {/* 목표 배출량 */}
             <div className="flex-1">
-              <div className="text-gray-600" style={{ marginBottom: 'var(--spacing-xs)', fontSize: 'var(--text-sm)' }}>
+              <div className="text-gray-600" style={{ marginBottom: 'var(--spacing-xs)', fontSize: 'var(--text-base)' }}>
                 {selectedYear}년 목표 배출량
               </div>
-              <div className="font-extrabold text-gray-800" style={{ marginBottom: 'var(--spacing-xs)', fontSize: 'clamp(1.5rem, 3vw, 2.25rem)' }}>
+              <div className="font-extrabold text-gray-800" style={{ marginBottom: 'var(--spacing-xs)', fontSize: 'clamp(1.75rem, 3vw, 2.5rem)' }}>
                 {chartData.totalTarget.toLocaleString()}{" "}
-                <span className="text-gray-700" style={{ fontSize: 'clamp(0.875rem, 1.5vw, 1.25rem)' }}>tCO2eq</span>
+                <span className="text-gray-700" style={{ fontSize: 'clamp(1rem, 1.5vw, 1.5rem)' }}>tCO2eq</span>
               </div>
             </div>
           </div>
@@ -319,8 +319,8 @@ const TargetComparisonPage: React.FC = () => {
       {/* 차트 영역 */}
       <div className="flex flex-col" style={{ gap: 'var(--spacing-lg)' }}>
         {/* 연간 비교 차트 */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100" style={{ padding: 'var(--spacing-lg)', height: 'clamp(20rem, 40vh, 25rem)' }}>
-          <h3 className="text-center text-gray-800 font-bold" style={{ marginBottom: 'var(--spacing-sm)', fontSize: 'var(--text-lg)' }}>
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100" style={{ padding: 'var(--spacing-md)', height: 'clamp(20rem, 40vh, 25rem)' }}>
+          <h3 className="text-center text-gray-800 font-bold" style={{ marginBottom: 'var(--spacing-sm)', fontSize: 'var(--text-xl)' }}>
             {selectedYear}년 탄소 배출량 비교 (실적 vs 목표)
           </h3>
         <ResponsiveContainer width="100%" height="90%">
@@ -387,11 +387,11 @@ const TargetComparisonPage: React.FC = () => {
       </div>
 
         {/* 월별 추이 차트 */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100" style={{ padding: 'var(--spacing-lg)', height: 'clamp(25rem, 50vh, 31.25rem)' }}>
-          <h3 className="text-center text-gray-800 font-bold" style={{ marginBottom: 'var(--spacing-xs)', fontSize: 'var(--text-lg)' }}>
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100" style={{ padding: 'var(--spacing-md)', height: 'clamp(25rem, 50vh, 31.25rem)' }}>
+          <h3 className="text-center text-gray-800 font-bold" style={{ marginBottom: 'var(--spacing-xs)', fontSize: 'var(--text-xl)' }}>
             {selectedYear}년 월별 탄소 배출량 추이
           </h3>
-          <div className="text-right text-gray-500" style={{ marginBottom: 'var(--spacing-md)', fontSize: 'var(--text-xs)' }}>
+          <div className="text-right text-gray-500" style={{ marginBottom: 'var(--spacing-md)', fontSize: 'var(--text-sm)' }}>
             *{monthCriterionText}
           </div>
 

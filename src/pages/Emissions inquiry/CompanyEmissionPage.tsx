@@ -309,7 +309,6 @@ const CompanyEmissionPage: React.FC = () => {
               className="bg-white border border-gray-300 rounded-md outline-none cursor-pointer"
               style={{ width: 'clamp(7rem, 10vw, 8rem)', padding: 'var(--spacing-sm) 2rem var(--spacing-sm) var(--spacing-sm)', fontSize: 'var(--text-sm)' }}
             >
-              <option value="all">전체</option>
               {years.map((y) => (
                 <option key={y} value={y}>
                   {y}년
