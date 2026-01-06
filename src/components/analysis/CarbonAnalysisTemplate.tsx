@@ -456,18 +456,20 @@ const CarbonAnalysisTemplate: React.FC<CarbonAnalysisTemplateProps> = ({
       {/* 차트 영역 */}
       {!loading && processedData.length > 0 && (
         <div
-          className="flex flex-col lg:flex-row"
+          className="flex flex-col lg:flex-row items-stretch"
           style={{
             gap: "var(--spacing-lg)",
             marginBottom: "var(--spacing-xl)",
-            minHeight: "clamp(25rem, 50vh, 31.25rem)",
+            height: "32rem",
+            maxHeight: "32rem",
+            minHeight: "32rem",
           }}
         >
           {/* 파이 차트 */}
           <div
             className={`
                 ${selectedMonth === "all" ? "lg:flex-1" : "w-full"} 
-                bg-white rounded-xl shadow-sm border border-gray-100 flex flex-col items-center justify-center relative
+                bg-white rounded-xl shadow-sm border border-gray-100 flex flex-col items-center justify-center relative h-full
             `}
             style={{ padding: "var(--spacing-lg)" }}
           >
@@ -530,7 +532,7 @@ const CarbonAnalysisTemplate: React.FC<CarbonAnalysisTemplateProps> = ({
 
           {/* 라인 차트 */}
           {selectedMonth === "all" && (
-            <div className="lg:flex-2 bg-white rounded-xl p-6 shadow-sm border border-gray-100 flex flex-col">
+            <div className="flex-1 bg-white rounded-xl p-6 shadow-sm border border-gray-100 flex flex-col h-full">
               <h4 className="mb-6 text-lg font-bold text-gray-800">
                 {selectedYear}년 월별 추이
               </h4>
