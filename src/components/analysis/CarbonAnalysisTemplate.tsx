@@ -80,12 +80,11 @@ const CarbonAnalysisTemplate: React.FC<CarbonAnalysisTemplateProps> = ({
   const [data, setData] = useState<AnalysisData[]>([]);
   const [loading, setLoading] = useState(false);
   const [yearOptions, setYearOptions] = useState<string[]>([]);
+  const [isYearsLoaded, setIsYearsLoaded] = useState(false); // 연도 로드 완료 플래그
 
   // 현재 연도를 기본값으로 설정
   const currentYear = new Date().getFullYear();
-  const [selectedYear, setSelectedYear] = useState<string>(
-    currentYear.toString()
-  );
+  const [selectedYear, setSelectedYear] = useState<string | null>(null); // 초기값을 null로 설정
 
   const [selectedScope, setSelectedScope] = useState<ScopeType>("total");
   const [selectedMonth, setSelectedMonth] = useState<string>("all");
@@ -102,7 +101,7 @@ const CarbonAnalysisTemplate: React.FC<CarbonAnalysisTemplateProps> = ({
 
   const componentRef = useRef<HTMLDivElement>(null);
 
-  // --- [API] 연도 목록 로딩 ---
+  // --- [API] 연도 목록 로딩 (초기 로드만) ---
   useEffect(() => {
     const loadYears = async () => {
       try {
@@ -111,26 +110,31 @@ const CarbonAnalysisTemplate: React.FC<CarbonAnalysisTemplateProps> = ({
           .sort((a, b) => b - a)
           .map((y) => y.toString());
         setYearOptions(yearStrings);
-
-        // 현재 연도가 목록에 있으면 그대로, 없으면 첫 번째 연도로 설정
+        // 첫 번째(최신) 연도로 selectedYear 초기화
         if (yearStrings.length > 0) {
-          //  현재 선택된 연도(기본값 2026)가 목록에 없으면
-          if (!yearStrings.includes(selectedYear)) {
-            // 목록 중 가장 최신 연도(index 0)로 강제 설정
-            setSelectedYear(yearStrings[0]);
-          }
+          setSelectedYear(yearStrings[0]);
+        } else {
+          setSelectedYear(currentYear.toString());
         }
       } catch (error) {
         console.error("Failed to load available years:", error);
         // 실패 시 현재 연도만 표시
         setYearOptions([currentYear.toString()]);
+        setSelectedYear(currentYear.toString());
+      } finally {
+        setIsYearsLoaded(true); // 연도 로드 완료 표시
       }
     };
     loadYears();
-  }, [currentYear, selectedYear]);
+  }, []); // 마운트 시 한 번만 실행
 
   // --- [API] 데이터 로딩 ---
   useEffect(() => {
+    // selectedYear이 설정될 때까지 대기
+    if (!selectedYear || !isYearsLoaded) {
+      return;
+    }
+
     const loadData = async () => {
       setLoading(true);
       try {
@@ -162,7 +166,7 @@ const CarbonAnalysisTemplate: React.FC<CarbonAnalysisTemplateProps> = ({
       }
     };
     loadData();
-  }, [dataType, selectedYear, selectedMonth, selectedScope]); // 필터 변경 시 재호출
+  }, [dataType, selectedYear, selectedMonth, selectedScope, isYearsLoaded]); // 필터 변경 시 재호출
 
   // --- 데이터 필터링 (클라이언트 측 검색/정렬) ---
   const processedData = useMemo(() => {
@@ -377,7 +381,7 @@ const CarbonAnalysisTemplate: React.FC<CarbonAnalysisTemplateProps> = ({
           </label>
           <div className="relative">
             <select
-              value={selectedYear}
+              value={selectedYear || ""}
               onChange={(e) => {
                 setSelectedYear(e.target.value);
                 if (e.target.value === "all") setSelectedMonth("all");
@@ -390,6 +394,7 @@ const CarbonAnalysisTemplate: React.FC<CarbonAnalysisTemplateProps> = ({
                 fontSize: "var(--text-sm)",
               }}
             >
+              <option value="">선택 중...</option>
               <option value="all">전체</option>
               {yearOptions.map((y) => (
                 <option key={y} value={y}>
@@ -405,7 +410,7 @@ const CarbonAnalysisTemplate: React.FC<CarbonAnalysisTemplateProps> = ({
         </div>
 
         {/* 월 선택 */}
-        {selectedYear !== "all" && (
+        {selectedYear && selectedYear !== "all" && (
           <div className="flex flex-col" style={{ gap: "var(--spacing-xs)" }}>
             <label
               className="font-bold text-gray-500"

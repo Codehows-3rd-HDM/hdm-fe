@@ -15,30 +15,6 @@ import KoreaMapChart from "../../components/analysis/KoreaMapChart";
 import Breadcrumb from "../../components/Breadcrumb";
 import { getBreadcrumbItems } from "../../utils/breadcrumbHelper";
 
-// --- Mock Data ---
-// Note: Map data is now fetched from mapApi automatically
-
-// 2. 협력사 데이터 (전체 데이터)
-// const MOCK_COMPANY_DATA = Array.from({ length: 30 }, (_, i) => ({
-//   id: i + 1,
-//   name: `협력사 ${String.fromCharCode(65 + (i % 26))}${i}`,
-//   value: Math.floor(Math.random() * 5000) + 500,
-//   address: i % 2 === 0 ? "경기도 성남시" : "울산광역시 북구",
-//   ratio: 0,
-// })).sort((a, b) => b.value - a.value);
-
-// 3. 그래프용 Top5 데이터
-//const TOP5_COMPANY_DATA = MOCK_COMPANY_DATA.slice(0, 5);
-
-// 총합 → 비율 계산
-// const totalEmission = MOCK_COMPANY_DATA.reduce(
-//   (acc, curr) => acc + curr.value,
-//   0
-// );
-// MOCK_COMPANY_DATA.forEach(
-//   (d) => (d.ratio = parseFloat(((d.value / totalEmission) * 100).toFixed(1)))
-// );
-
 //==================================================================
 // 타입 정의 (DTO와 프론트 맞춤)
 interface CompanyData {
@@ -380,9 +356,9 @@ const CompanyEmissionPage: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 h-150" style={{ gap: 'var(--spacing-lg)', marginBottom: '2.5rem' }}>
         {/* 왼쪽: 지역별 탄소 배출량 지도 */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 h-150" style={{ padding: 'var(--spacing-md)' }}>
-          <h3 className="text-lg font-bold text-gray-800" style={{ marginBottom: 'var(--spacing-sm)' }}>
+          {/* <h3 className="text-lg font-bold text-gray-800" style={{ marginBottom: 'var(--spacing-sm)' }}>
             지역별 탄소 배출량
-          </h3>
+          </h3> */}
           <div className="h-150">
             <KoreaMapChart data={regionData} />
           </div>

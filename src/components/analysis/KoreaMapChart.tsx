@@ -108,7 +108,7 @@ const KoreaMapChart: React.FC<KoreaMapChartProps> = ({
     }
   }, [maxValue, theme]);
 
-  const containerHeight = large ? "h-[550px]" : "h-[535px]";
+  const containerHeight = large ? "h-[550px]" : "h-[565px]";
   const projectionScale = defaultFitAll ? 6000 : large ? 8500 : 7000;
   const projectionCenter = defaultFitAll ? [127.5, 36.3] : [127.8, 36.4];
 
@@ -148,7 +148,7 @@ const KoreaMapChart: React.FC<KoreaMapChartProps> = ({
             theme === "dark" ? "text-white" : "text-gray-800"
           }`}
         >
-          지역별 배출량
+          협력사 지역별 배출량
         </h4>
         <div className="space-y-4">
           {leftRegions.map(({ regionName, value }) => (

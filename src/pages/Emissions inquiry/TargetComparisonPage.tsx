@@ -83,8 +83,9 @@ const TargetComparisonPage: React.FC = () => {
   useEffect(() => {
     const fetchYears = async () => {
       try {
+        // 목표 대비 페이지는 실적+목표 모두 있는 연도 필요
         const response = await axios.get<number[]>(
-          `${BASE_URL}/view/common/years`
+          `${BASE_URL}/view/common/years/all`
         );
         const yearList = response.data;
 

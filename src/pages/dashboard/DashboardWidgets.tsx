@@ -124,7 +124,7 @@ export const TextSummarySection = () => {
             {isGood ? '✓' : '✕'} {Math.abs(Number(diffPercent))}%
           </div>
           <div className={`mt-2 font-semibold ${isGood ? 'text-emerald-300' : 'text-rose-300'}`} style={{ fontSize: 'clamp(1rem, 2vw, 1.875rem)' }}>
-            {isGood ? '목표 달성 정도' : '목표 초과'}
+            {isGood ? '감축률' : '목표 초과'}
           </div>
         </div>
       </div>
@@ -233,9 +233,6 @@ export const MonthlyScopeSection = () => {
   );
 };
 
-// -----------------------------------------------------------------------
-// [Partner Map Section - 협력사 지역별 현황]
-// -----------------------------------------------------------------------
 // -----------------------------------------------------------------------
 // [Partner Map Section - 협력사 지역별 현황]
 // -----------------------------------------------------------------------
