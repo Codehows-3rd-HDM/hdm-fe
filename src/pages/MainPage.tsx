@@ -10,7 +10,7 @@ const MainPage: React.FC = () => {
   const { role } = useAuth();
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 text-white font-sans" style={{ padding: 'var(--padding-container)' }}>
+    <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 text-white font-sans" style={{ padding: 'var(--padding-responsive)' }}>
       <div className="text-center animate-fade-in-up">
         {/* 로고 영역 (이미지 대신 텍스트로 대체하거나 이미지 사용 가능) */}
         <h1 className="text-6xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-teal-400" style={{ marginBottom: 'var(--spacing-md)' }}>

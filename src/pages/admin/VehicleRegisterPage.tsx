@@ -75,7 +75,7 @@ const RequiredLabel: React.FC<{ children: React.ReactNode; isRequired?: boolean 
   children,
   isRequired = false,
 }) => (
-  <label className="font-semibold text-sm text-gray-700">
+  <label className="font-semibold text-base text-gray-700">
     {children}
     {isRequired && <span className="ml-1 text-red-500">*</span>}
   </label>
@@ -308,7 +308,7 @@ const VehicleBasicRegisterPage: React.FC = () => {
   // -------------------------
   // 렌더링 도우미 (Tailwind)
   // -------------------------
-  const twInput = 'h-11 px-3 border border-gray-300 bg-gray-100 rounded text-sm outline-none focus:ring-2 focus:ring-sky-400 focus:border-sky-400 transition-colors w-full';
+  const twInput = 'h-11 px-3 border border-gray-300 bg-gray-100 rounded text-base outline-none focus:ring-2 focus:ring-sky-400 focus:border-sky-400 transition-colors w-full';
   const twSelectBase = twInput + ' cursor-pointer appearance-none bg-white';
   
   const SelectField: React.FC<{ name: keyof IntegratedFormData; idName?: keyof IntegratedFormData; label: string; options: string[] | {id: number, name: string}[]; isRequired?: boolean; value: string; }> = ({ name, idName, label, options, isRequired = false, value }) => (
@@ -370,7 +370,7 @@ const VehicleBasicRegisterPage: React.FC = () => {
             <SelectField name="categoryLarge" idName="categoryLargeId" label="차종 대분류" options={options.CAT_LARGE_OPTIONS} isRequired value={formData.categoryLarge} />
             <SelectField name="categorySmall" idName="categorySmallId" label="차종 소분류" options={options.CAR_CATEGORY_MAP?.[formData.categoryLarge] ?? options.CAT_SMALL_OPTIONS} isRequired value={formData.categorySmall} />
             <SelectField name="fuelType" idName="fuelTypeId" label="연료종류" options={options.FUEL_OPTIONS} isRequired value={formData.fuelType} />
-            <div className="col-span-3 flex flex-col gap-1"><RequiredLabel>비고</RequiredLabel><textarea name="remark" value={formData.remark} onChange={handleChange} className="w-full h-28 p-3 border border-gray-300 bg-gray-100 rounded text-sm outline-none" /></div>
+            <div className="col-span-3 flex flex-col gap-1"><RequiredLabel>비고</RequiredLabel><textarea name="remark" value={formData.remark} onChange={handleChange} className="w-full h-28 p-2 border border-gray-300 bg-gray-100 rounded text-base outline-none" /></div>
           </>
         );
 
@@ -384,7 +384,7 @@ const VehicleBasicRegisterPage: React.FC = () => {
             <SelectField name="customerName" idName="customerId" label="공급 고객" options={options.SUPPLY_CUSTOMER_OPTIONS} isRequired value={formData.customerName} />
             <SelectField name="region" label="지역 (도/시)" options={options.REGION_OPTIONS} isRequired value={formData.region} />
             <div className="col-span-2 flex flex-col gap-1"><RequiredLabel isRequired>상세주소</RequiredLabel><input name="addressDetail" value={formData.addressDetail} onChange={handleChange} className={twInput} placeholder="나머지 상세 주소" /></div>
-            <div className="col-span-3 flex flex-col gap-1"><RequiredLabel>비고</RequiredLabel><textarea name="remark" value={formData.remark} onChange={handleChange} className="w-full h-28 p-3 border border-gray-300 bg-gray-100 rounded text-sm outline-none" /></div>
+            <div className="col-span-3 flex flex-col gap-1"><RequiredLabel>비고</RequiredLabel><textarea name="remark" value={formData.remark} onChange={handleChange} className="w-full h-28 p-2 border border-gray-300 bg-gray-100 rounded text-base outline-none" /></div>
           </>
         );
 
@@ -421,7 +421,7 @@ const VehicleBasicRegisterPage: React.FC = () => {
         return (
           <>
             <div className="col-span-3 flex flex-col gap-1"><RequiredLabel isRequired>공급 고객명</RequiredLabel><input name="customerName" value={formData.customerName} onChange={handleChange} className={twInput} /></div>
-            <div className="col-span-3 flex flex-col gap-1"><RequiredLabel>비고</RequiredLabel><textarea name="remark" value={formData.remark} onChange={handleChange} className="w-full h-28 p-3 border border-gray-300 bg-gray-100 rounded text-sm outline-none" /></div>
+            <div className="col-span-3 flex flex-col gap-1"><RequiredLabel>비고</RequiredLabel><textarea name="remark" value={formData.remark} onChange={handleChange} className="w-full h-28 p-2 border border-gray-300 bg-gray-100 rounded text-base outline-none" /></div>
           </>
         );
 
@@ -431,7 +431,7 @@ const VehicleBasicRegisterPage: React.FC = () => {
   };
 
   return (
-    <div className="p-8 bg-gray-50 min-h-screen font-sans">
+    <div className="p-6 bg-gray-50 min-h-screen font-sans">
       {/* 브레드크럼 */}
       <div style={{ marginBottom: 'var(--spacing-lg)' }}>
         <Breadcrumb items={getBreadcrumbItems('/admin/vehicle/register')} />
@@ -442,7 +442,7 @@ const VehicleBasicRegisterPage: React.FC = () => {
           <select 
             value={currentPage} 
             onChange={handlePageChange} 
-            className="text-lg font-bold p-3 border border-gray-300 rounded-lg shadow-sm w-full bg-white text-gray-800 focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-all cursor-pointer appearance-none pr-10"
+            className="text-xl font-bold p-2 border border-gray-300 rounded-lg shadow-sm w-full bg-white text-gray-800 focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-all cursor-pointer appearance-none pr-10"
             disabled={isLoading}
           >
             {PAGE_OPTIONS.map(p => <option key={p}>{p}</option>)}
@@ -458,20 +458,20 @@ const VehicleBasicRegisterPage: React.FC = () => {
             >
             <RefreshCw size={20} /> 
             </button>
-            <span className="text-sm font-medium text-gray-600">초기화</span>
+            <span className="text-base font-medium text-gray-600">초기화</span>
         </div>
       </div>
 
       {validationErrors.length > 0 && (
         <div className="mb-6 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg shadow-sm">
           <p className="font-bold mb-2">필수 입력 항목을 채워주세요.</p>
-          <ul className="list-disc ml-5 space-y-1 text-sm">
+          <ul className="list-disc ml-5 space-y-1 text-base">
             {validationErrors.map((error, index) => <li key={index}>{error}</li>)}
           </ul>
         </div>
       )}
 
-      <div className="bg-white p-8 rounded-lg shadow-xl">
+      <div className="bg-white p-6 rounded-lg shadow-xl">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-x-10 gap-y-8">{renderFields()}</div>
       </div>
 
@@ -479,7 +479,7 @@ const VehicleBasicRegisterPage: React.FC = () => {
         <button 
           onClick={handleSubmit} 
           disabled={isLoading || isSubmitting}
-          className={`w-48 h-12 text-white font-bold rounded-lg shadow-lg transition-colors transform hover:scale-105 ${
+          className={`w-48 h-12 text-white text-lg font-bold rounded-lg shadow-lg transition-colors transform hover:scale-105 ${
             isLoading || isSubmitting ? 'bg-gray-400 cursor-not-allowed' : 'bg-sky-500 hover:bg-sky-600'
           }`}
         >

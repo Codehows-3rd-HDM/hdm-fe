@@ -311,7 +311,7 @@ const ExcelUpDownBaseInfoPage: React.FC = () => {
     <div className="min-h-screen bg-gray-50 min-w-0 flex flex-col">
       <div
         className="w-full h-full relative flex-1 flex flex-col"
-        style={{ padding: "var(--padding-container)" }}
+        style={{ padding: "var(--padding-responsive)" }}
       >
         {/* 로딩 중일 때 화면 전체 덮어버림 */}
         {isLoading && <LoadingSpinner />}
@@ -324,7 +324,7 @@ const ExcelUpDownBaseInfoPage: React.FC = () => {
           style={{ marginBottom: "var(--spacing-lg)" }}
         >
           <div>
-            <h2 className="mb-2 text-2xl font-bold text-gray-800">
+            <h2 className="mb-2 text-3xl font-bold text-gray-800">
               통합 기준정보 관리
             </h2>
             <p className="text-gray-500">
@@ -334,7 +334,7 @@ const ExcelUpDownBaseInfoPage: React.FC = () => {
           </div>
           <button
             onClick={handleExcelDownload}
-            className="flex-shrink-0 flex items-center text-sm font-bold text-gray-700 bg-white border rounded-lg shadow-sm hover:bg-gray-50"
+            className="flex-shrink-0 flex items-center text-base font-bold text-gray-700 bg-white border rounded-lg shadow-sm hover:bg-gray-50"
             style={{ padding: "var(--padding-btn)" }}
           >
             <FileSpreadsheet size={16} className="mr-2 text-green-600" />
@@ -368,7 +368,7 @@ const ExcelUpDownBaseInfoPage: React.FC = () => {
                 isDragOver ? "text-blue-500" : "text-gray-400"
               }`}
             />
-            <span className="text-lg font-bold">클릭하여 엑셀 파일 업로드</span>
+            <span className="text-xl font-bold">클릭하여 엑셀 파일 업로드</span>
             <input
               type="file"
               ref={fileInputRef}
@@ -387,10 +387,10 @@ const ExcelUpDownBaseInfoPage: React.FC = () => {
           <div className="bg-white border rounded-xl shadow-sm overflow-hidden flex flex-col max-h-[70vh] min-h-0">
             <div
               className="flex items-center justify-between border-b border-gray-200 bg-gray-50 flex-shrink-0"
-              style={{ padding: "var(--spacing-md)" }}
+              style={{ padding: "var(--spacing-sm)" }}
             >
               <h3 className="flex items-center font-bold text-gray-700">
-                <span className="px-2 py-1 mr-2 text-xs text-green-800 bg-green-100 rounded-full">
+                <span className="px-2 py-1 mr-2 text-sm text-green-800 bg-green-100 rounded-full">
                   {excelData.length}건
                 </span>
                 데이터 검증 및 미리보기
@@ -398,14 +398,14 @@ const ExcelUpDownBaseInfoPage: React.FC = () => {
               <div className="flex gap-2" style={{ gap: "var(--spacing-sm)" }}>
                 <button
                   onClick={handleReset}
-                  className="border border-gray-300 bg-white text-gray-600 rounded text-sm hover:bg-gray-100 flex items-center"
+                  className="border border-gray-300 bg-white text-gray-600 rounded text-base hover:bg-gray-100 flex items-center"
                   style={{ padding: "0.375rem 0.75rem" }}
                 >
                   <X size={14} className="mr-1" /> 취소
                 </button>
                 <button
                   onClick={handleServerUpload}
-                  className="bg-blue-600 text-white rounded text-sm font-bold hover:bg-blue-700 flex items-center shadow-sm"
+                  className="bg-blue-600 text-white rounded text-base font-bold hover:bg-blue-700 flex items-center shadow-sm"
                   style={{ padding: "0.375rem 1rem" }}
                 >
                   <Save size={16} className="mr-2" /> 등록
@@ -414,8 +414,8 @@ const ExcelUpDownBaseInfoPage: React.FC = () => {
             </div>
 
             <div
-              className="flex text-sm text-gray-600 border-b bg-white flex-shrink-0"
-              style={{ gap: "var(--spacing-md)", padding: "var(--spacing-md)" }}
+              className="flex text-base text-gray-600 border-b bg-white flex-shrink-0"
+              style={{ gap: "var(--spacing-sm)", padding: "var(--spacing-sm)" }}
             >
               <span className="flex items-center gap-1">
                 <span className="w-4 h-4 bg-green-100 border border-green-200 rounded"></span>{" "}
@@ -433,7 +433,7 @@ const ExcelUpDownBaseInfoPage: React.FC = () => {
 
             {/* [수정 4] max-h 대신 flex-1로 남은 공간 꽉 채우기 + 오버플로우 발생 시 스크롤 */}
             <div className="relative w-full overflow-auto flex-1">
-              <table className="w-full table-auto text-sm border-collapse">
+              <table className="w-full table-auto text-base border-collapse">
                 <thead className="sticky top-0 z-20 bg-gray-100 border-b shadow-sm">
                   <tr>
                     <th
