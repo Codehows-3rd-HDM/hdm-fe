@@ -202,7 +202,7 @@ const App: React.FC = () => {
                 element={<ProductManagementPage />}
               />
               <Route
-                path="excel/base-info"
+                path="excel/upload/base-info"
                 element={<ExcelUpDownBaseInfoPage />}
               />
               {/* 4-3. 배출 관련 설정 */}
@@ -224,7 +224,10 @@ const App: React.FC = () => {
                 path="activity-manage"
                 element={<ActivityManagementPage />}
               />
-              <Route path="excel/s1-nice" element={<ExcelUpS1NicePage />} />
+              <Route
+                path="excel/upload/s1-nice"
+                element={<ExcelUpS1NicePage />}
+              />
             </Route>
           </Route>
 

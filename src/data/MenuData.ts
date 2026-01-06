@@ -61,7 +61,10 @@ export const menuItems: MenuItem[] = [
             title: "공급 고객 정보 관리",
             path: "/admin/supply-customer/manage",
           },
-          { title: "기준 정보 액셀 관리", path: "/admin/excel/base-info" },
+          {
+            title: "기준 정보 액셀 관리",
+            path: "/admin/excel/upload/base-info",
+          },
         ],
       },
       { title: "탄소 배출계수 관리", path: "/admin/emission-factor" }, // API: /emission-factor
@@ -69,7 +72,7 @@ export const menuItems: MenuItem[] = [
       { title: "탄소 배출 목표 조회", path: "/admin/target-view" }, // API: /target
       // { title: '대시보드 관리', path: '/admin/dashboard-setting' }, 기존엔 있었는데 미구현
       { title: "저감활동 기록 관리", path: "/admin/activity-manage" },
-      { title: "출입 데이터 업로드", path: "/admin/excel/s1-nice" }, // API: /upload/nicepark, /upload/s1
+      { title: "출입 데이터 업로드", path: "/admin/excel/upload/s1-nice" }, // API: /upload/nicepark, /upload/s1
     ],
     requiredRoles: ["SUPERADMIN", "ADMIN"],
   },

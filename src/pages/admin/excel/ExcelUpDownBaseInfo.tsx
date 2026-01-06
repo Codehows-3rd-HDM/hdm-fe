@@ -316,7 +316,9 @@ const ExcelUpDownBaseInfoPage: React.FC = () => {
         {/* 로딩 중일 때 화면 전체 덮어버림 */}
         {isLoading && <LoadingSpinner />}
 
-        <Breadcrumb items={getBreadcrumbItems("/admin/excel/base-info")} />
+        <Breadcrumb
+          items={getBreadcrumbItems("/admin/excel/upload/base-info")}
+        />
 
         {/* 1. Header Area */}
         <div

@@ -29,7 +29,7 @@ const ConfirmModal: React.FC<ConfirmModalProps> = ({
   const Icon = isWarning ? AlertTriangle : CheckCircle;
   const iconColor = isWarning ? "text-red-500" : "text-blue-500";
 
-  // ✅ [수정 1] 사이즈에 따라 너비 클래스 결정 (여기서 max-w 설정)
+  // [수정 1] 사이즈에 따라 너비 클래스 결정 (여기서 max-w 설정)
   // sm이면 기존처럼 작게, lg면 넓게(2xl)
   const maxWidthClass = size === "lg" ? "max-w-2xl" : "max-w-sm";
 
@@ -40,10 +40,16 @@ const ConfirmModal: React.FC<ConfirmModalProps> = ({
       {/* 기존에 있던 max-w-sm을 지우고, 위에서 만든 ${maxWidthClass} 변수를 넣어야 함 */}
       <div
         className={`bg-white rounded-lg shadow-xl w-11/12 ${maxWidthClass} transform transition-all duration-300 scale-100 flex flex-col`}
-        style={{ padding: 'var(--padding-card)' }}
+        style={{ padding: "var(--padding-card)" }}
       >
         {/* 헤더 */}
-        <div className="flex justify-between items-start border-b shrink-0" style={{ paddingBottom: 'var(--spacing-md)', marginBottom: 'var(--spacing-md)' }}>
+        <div
+          className="flex justify-between items-start border-b shrink-0"
+          style={{
+            paddingBottom: "var(--spacing-md)",
+            marginBottom: "var(--spacing-md)",
+          }}
+        >
           <h3 className="text-xl font-bold text-gray-800">{title}</h3>
           <button
             onClick={onClose}
@@ -70,7 +76,7 @@ const ConfirmModal: React.FC<ConfirmModalProps> = ({
           <button
             onClick={onClose}
             className="flex-1 font-bold text-gray-700 bg-gray-200 hover:bg-gray-300 rounded-lg transition-colors"
-            style={{ padding: 'var(--padding-btn)' }}
+            style={{ padding: "var(--padding-btn)" }}
           >
             취소
           </button>
@@ -83,7 +89,7 @@ const ConfirmModal: React.FC<ConfirmModalProps> = ({
                   ? "bg-red-600 hover:bg-red-700"
                   : "bg-blue-600 hover:bg-blue-700"
               }`}
-            style={{ padding: 'var(--padding-btn)' }}
+            style={{ padding: "var(--padding-btn)" }}
           >
             등록
           </button>

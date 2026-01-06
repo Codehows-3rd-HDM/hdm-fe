@@ -532,7 +532,7 @@ const ExcelUpS1NicePage: React.FC = () => {
       className="min-h-screen bg-gray-50 font-sans"
       style={{ padding: "var(--padding-container)" }}
     >
-      <Breadcrumb items={getBreadcrumbItems("/admin/excel/s1-nice")} />
+      <Breadcrumb items={getBreadcrumbItems("/admin/excel/upload/s1-nice")} />
 
       {/*로딩 중일 때 화면 전체 덮어버림 */}
       {isLoading && <LoadingSpinner />}
@@ -974,7 +974,7 @@ const ExcelUpS1NicePage: React.FC = () => {
         title="등록 확인"
         message={confirmMessage}
         isWarning={
-          confirmMessage.includes("오류") || confirmMessage.includes("미등록")
+          confirmMessage.includes("오류") //|| confirmMessage.includes("미등록")
         }
         size={totalInvalidCount > 0 ? "lg" : "sm"}
       >
