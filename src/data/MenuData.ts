@@ -49,7 +49,7 @@ export const menuItems: MenuItem[] = [
           { title: '공급 유형 정보 관리', path: '/admin/supply-type/manage' },
           { title: '운행목적 정보 관리', path: '/admin/purpose/manage' },
           { title: '공급 고객 정보 관리', path: '/admin/supply-customer/manage' },
-          { title: '기준 정보 액셀 관리', path: '/admin/excel/manage' },
+          { title: '기준 정보 엑셀 관리', path: '/admin/excel/manage' },
         ],
       },
       { title: '탄소 배출계수 관리', path: '/admin/emission-factor' }, // API: /emission-factor
