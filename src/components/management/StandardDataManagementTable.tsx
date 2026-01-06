@@ -67,7 +67,7 @@ const StandardDataManagementTable = <T extends { id: number; [key: string]: unkn
   const [currentPage, setCurrentPage] = useState(0); // Spring Boot Page는 0부터 시작
   const [totalPages, setTotalPages] = useState(0);
   const [totalElements, setTotalElements] = useState(0);
-  const [pageSize] = useState(15); // 추후 페이지 크기 변경 기능 추가 시 사용
+  const [pageSize] = useState(10); // 추후 페이지 크기 변경 기능 추가 시 사용
 
   // 대분류 선택 상태 추적 (차량 관리에서 소분류 필터링용)
   const [selectedParentCategories, setSelectedParentCategories] = useState<Record<number, string>>({});
