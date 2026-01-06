@@ -73,7 +73,7 @@ const MainLayout = () => {
   };
 
   return (
-    <div className="flex min-h-screen overflow-hidden">
+    <div className="flex min-h-screen w-full overflow-hidden">
       {/* 대시보드 아닐 때만 사이드바 표시 */}
       {!isDashboard && (
         <div className={`print:hidden transition-all duration-300`}>
@@ -83,11 +83,18 @@ const MainLayout = () => {
 
       {/* 메인 콘텐츠 영역: 사이드바 너비만큼 margin-left 조정 */}
       <main
-        className={`min-w-0 flex-1 transition-all duration-300 ease-in-out ${
-          isDashboard ? "ml-0" : isSidebarOpen ? "ml-65" : "ml-20"
-        }`}
+        style={{
+          marginLeft: isDashboard
+            ? "0"
+            : isSidebarOpen
+            ? "var(--sidebar-expanded)"
+            : "var(--sidebar-collapsed)",
+          transition: "margin-left 300ms ease-in-out",
+          minWidth: 0,
+          flex: 1,
+        }}
       >
-        <div className={`${!isDashboard ? "" : ""}`}>
+        <div className="w-full h-full">
           <Outlet />
         </div>
       </main>

@@ -1,6 +1,7 @@
 import React from 'react';
 import CarbonAnalysisTemplate from '../../components/analysis/CarbonAnalysisTemplate';
 import type { AnalysisColumn } from '../../types/analysis';
+import { getBreadcrumbItems } from '../../utils/breadcrumbHelper';
 
 const COLUMNS: AnalysisColumn[] = [
   { id: 'name', header: '연료', align: 'left' },
@@ -15,6 +16,7 @@ const FuelEmissionPage: React.FC = () => {
       hasScopeTabs={true}
       columns={COLUMNS}
       dataType='fuel'
+      breadcrumbItems={getBreadcrumbItems('/view/fuel')}
     />
   );
 };

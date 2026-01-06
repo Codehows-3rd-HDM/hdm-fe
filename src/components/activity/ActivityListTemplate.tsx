@@ -11,7 +11,9 @@ import {
 } from "lucide-react";
 import Modal from "../Modal";
 import ActivityFormModal from "./ActivityFormModal";
-import { type ReductionActivity } from "../../types/activity";
+import Breadcrumb from "../Breadcrumb";
+import type { BreadcrumbItem } from "../Breadcrumb";
+import type { ReductionActivity } from "../../types/activity";
 import {
   fetchActivities,
   fetchActivity,
@@ -69,10 +71,12 @@ const MOCK_ACTIVITIES: ReductionActivity[] = [
 
 interface ActivityListTemplateProps {
   isAdmin: boolean;
+  breadcrumbItems?: BreadcrumbItem[];
 }
 
 const ActivityListTemplate: React.FC<ActivityListTemplateProps> = ({
   isAdmin,
+  breadcrumbItems,
 }) => {
   const [activities, setActivities] = useState<ReductionActivity[]>([]);
   const [filterPeriodStart, setFilterPeriodStart] = useState("");
@@ -265,7 +269,10 @@ const ActivityListTemplate: React.FC<ActivityListTemplateProps> = ({
   };
 
   return (
-    <div className="px-6 py-4">
+    <div style={{ padding: 'var(--spacing-lg) var(--padding-container)' }}>
+      {/* 브레드크럼 */}
+      {breadcrumbItems && <Breadcrumb items={breadcrumbItems} />}
+      
       {/* HEADER */}
       <div className="flex justify-between items-center mb-8">
         <div>
@@ -281,7 +288,8 @@ const ActivityListTemplate: React.FC<ActivityListTemplateProps> = ({
           {isAdmin && (
             <button
               onClick={handleRegisterClick}
-              className="px-4 py-2 bg-blue-600 text-white rounded-md font-semibold flex items-center gap-2 hover:bg-blue-700"
+              className="bg-blue-600 text-white rounded-md font-semibold flex items-center gap-2 hover:bg-blue-700"
+              style={{ padding: 'var(--padding-btn)' }}
             >
               <Plus size={18} /> 등록
             </button>
@@ -289,7 +297,8 @@ const ActivityListTemplate: React.FC<ActivityListTemplateProps> = ({
 
           <button
             onClick={handleExcelDownload}
-            className="px-4 py-2 bg-white border border-green-600 text-green-600 rounded-md font-semibold flex items-center gap-2 hover:bg-green-50"
+            className="bg-white border border-green-600 text-green-600 rounded-md font-semibold flex items-center gap-2 hover:bg-green-50"
+            style={{ padding: 'var(--padding-btn)' }}
           >
             <Download size={18} /> Excel
           </button>
@@ -297,7 +306,7 @@ const ActivityListTemplate: React.FC<ActivityListTemplateProps> = ({
       </div>
 
       {/* 기간 필터 */}
-      <div className="bg-white shadow-sm rounded-lg p-5 mb-6 flex flex-wrap items-center gap-3">
+      <div className="bg-white shadow-sm rounded-lg flex flex-wrap items-center gap-3 mb-6" style={{ padding: 'var(--spacing-md)' }}>
         <div className="flex items-center gap-2 text-sm font-semibold text-gray-700">
           <Calendar size={18} className="text-gray-500" />
           <span>활동 기간 :</span>
@@ -308,21 +317,24 @@ const ActivityListTemplate: React.FC<ActivityListTemplateProps> = ({
             type="date"
             value={filterPeriodStart}
             onChange={(e) => setFilterPeriodStart(e.target.value)}
-            className="px-3 py-2 border rounded-md text-sm"
+            className="border rounded-md text-sm"
+            style={{ padding: 'var(--spacing-sm) var(--spacing-md)' }}
           />
           <span className="text-gray-400">~</span>
           <input
             type="date"
             value={filterPeriodEnd}
             onChange={(e) => setFilterPeriodEnd(e.target.value)}
-            className="px-3 py-2 border rounded-md text-sm"
+            className="border rounded-md text-sm"
+            style={{ padding: 'var(--spacing-sm) var(--spacing-md)' }}
           />
         </div>
 
         <div className="flex items-center gap-2 ml-auto">
           <button
             onClick={handleSearch}
-            className="px-4 py-2 bg-blue-600 text-white rounded-md font-semibold flex items-center gap-2 hover:bg-blue-700"
+            className="bg-blue-600 text-white rounded-md font-semibold flex items-center gap-2 hover:bg-blue-700"
+            style={{ padding: 'var(--padding-btn)' }}
           >
             <Search size={16} /> 조회
           </button>
@@ -404,13 +416,15 @@ const ActivityListTemplate: React.FC<ActivityListTemplateProps> = ({
                 <div className="flex md:justify-end gap-2 text-sm">
                   <button
                     onClick={(e) => handleEditClick(e, activity)}
-                    className="px-3 py-2 border rounded-md text-blue-600 border-blue-100 hover:bg-blue-50"
+                    className="border rounded-md text-blue-600 border-blue-100 hover:bg-blue-50"
+                    style={{ padding: 'var(--spacing-sm) var(--spacing-md)' }}
                   >
                     <Edit2 size={14} />
                   </button>
                   <button
                     onClick={(e) => handleDeleteClick(e, activity.id)}
-                    className="px-3 py-2 border rounded-md text-red-600 border-red-100 hover:bg-red-50"
+                    className="border rounded-md text-red-600 border-red-100 hover:bg-red-50"
+                    style={{ padding: 'var(--spacing-sm) var(--spacing-md)' }}
                   >
                     <Trash2 size={14} />
                   </button>

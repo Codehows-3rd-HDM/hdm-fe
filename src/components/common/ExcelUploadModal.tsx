@@ -83,9 +83,9 @@ const ExcelUploadModal: React.FC<ExcelUploadModalProps> = ({
 
   return (
     <div className="fixed inset-0 bg-opacity-100 flex items-center justify-center z-[1000]">
-      <div className="bg-white rounded-lg w-[800px] max-w-[95%] max-h-[90vh] flex flex-col shadow-lg overflow-hidden">
+      <div className="bg-white rounded-lg w-[800px] max-w-[95%] max-h-[90vh] flex flex-col shadow-lg overflow-hidden" style={{ padding: 'var(--padding-card)' }}>
         {/* Header */}
-        <div className="p-5 border-b border-gray-200 flex justify-between items-center">
+        <div className="border-b border-gray-200 flex justify-between items-center" style={{ paddingBottom: 'var(--spacing-md)', marginBottom: 'var(--spacing-md)' }}>
           <div className="text-lg font-bold text-gray-800 flex items-center gap-2">
             <FileSpreadsheet size={24} className="text-green-600" />
             {title}
@@ -96,7 +96,7 @@ const ExcelUploadModal: React.FC<ExcelUploadModalProps> = ({
         </div>
 
         {/* Body */}
-        <div className="p-5 overflow-y-auto flex-1">
+        <div className="overflow-y-auto flex-1" style={{ padding: 'var(--spacing-md)' }}>
           {/* Dropzone */}
           <div
             className={`border-2 border-dashed rounded-lg h-24 flex flex-col items-center justify-center cursor-pointer transition-all mb-5 ${
@@ -139,7 +139,8 @@ const ExcelUploadModal: React.FC<ExcelUploadModalProps> = ({
                       {headers.map((header) => (
                         <th
                           key={header}
-                          className="bg-gray-100 px-3 py-2 text-left border-b border-gray-300 text-gray-700 font-bold whitespace-nowrap"
+                          className="bg-gray-100 text-left border-b border-gray-300 text-gray-700 font-bold whitespace-nowrap"
+                          style={{ padding: 'var(--spacing-sm) var(--spacing-md)' }}
                         >
                           {header}
                         </th>
@@ -152,7 +153,8 @@ const ExcelUploadModal: React.FC<ExcelUploadModalProps> = ({
                         {headers.map((header) => (
                           <td
                             key={header}
-                            className="px-3 py-2 border-b border-gray-200 text-gray-800"
+                            className="border-b border-gray-200 text-gray-800"
+                            style={{ padding: 'var(--spacing-sm) var(--spacing-md)' }}
                           >
                             {row[header]}
                           </td>
@@ -161,7 +163,7 @@ const ExcelUploadModal: React.FC<ExcelUploadModalProps> = ({
                     ))}
                   </tbody>
                 </table>
-                <p className="text-xs text-gray-500 mt-2 text-right p-2">
+                <p className="text-xs text-gray-500 mt-2 text-right" style={{ padding: 'var(--spacing-xs) var(--spacing-sm)' }}>
                   * 총 {fullData.length}건
                 </p>
               </div>
@@ -177,7 +179,7 @@ const ExcelUploadModal: React.FC<ExcelUploadModalProps> = ({
               </div> */}
             </>
           ) : (
-            <div className="text-center p-10 text-gray-400">
+            <div className="text-center text-gray-400" style={{ padding: 'var(--padding-card)' }}>
               <AlertCircle size={40} className="mx-auto mb-2 opacity-30" />
               <p>엑셀 파일을 업로드하면 미리보기가 표시됩니다.</p>
             </div>
@@ -185,19 +187,21 @@ const ExcelUploadModal: React.FC<ExcelUploadModalProps> = ({
         </div>
 
         {/* Footer */}
-        <div className="p-5 border-t border-gray-200 flex justify-end gap-2 bg-white">
+        <div className="border-t border-gray-200 flex justify-end gap-2 bg-white" style={{ paddingTop: 'var(--spacing-md)' }}>
           <button
-            className="px-4 py-2 border border-gray-300 bg-white rounded font-bold text-gray-600 hover:bg-gray-100"
+            className="border border-gray-300 bg-white rounded font-bold text-gray-600 hover:bg-gray-100"
+            style={{ padding: 'var(--padding-btn)' }}
             onClick={onClose}
           >
             취소
           </button>
           <button
-            className={`px-4 py-2 rounded font-bold flex items-center gap-2 ${
+            className={`rounded font-bold flex items-center gap-2 ${
               fullData.length === 0
                 ? "bg-blue-500 text-white opacity-50 cursor-not-allowed"
                 : "bg-blue-500 text-white hover:bg-blue-600"
             }`}
+            style={{ padding: 'var(--padding-btn)' }}
             onClick={handleSave}
             disabled={fullData.length === 0}
           >

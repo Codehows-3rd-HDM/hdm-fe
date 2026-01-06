@@ -98,32 +98,32 @@ export const TextSummarySection = () => {
 
   return (
     <div className={`${cardBase}`}>
-      <div className="flex justify-around items-center gap-6 h-full px-4">
+      <div className="flex justify-around items-center gap-6 h-full" style={{ padding: '0 var(--spacing-md)' }}>
         {/* 목표 배출량 */}
-        <div className="text-center flex-1 border-r-2 border-emerald-400/30 py-4">
-          <div className="text-5xl text-emerald-300 font-bold mb-2 tracking-wide uppercase">목표 배출량</div>
-          <div className="text-7xl font-extrabold text-white leading-tight drop-shadow-lg">
+        <div className="text-center flex-1 border-r-2 border-emerald-400/30" style={{ padding: 'var(--spacing-md) 0' }}>
+          <div className="text-emerald-300 font-bold mb-2 tracking-wide uppercase" style={{ fontSize: 'clamp(1.5rem, 3vw, 3rem)' }}>목표 배출량</div>
+          <div className="font-extrabold text-white leading-tight drop-shadow-lg" style={{ fontSize: 'clamp(2rem, 4vw, 4.5rem)' }}>
             {target.toLocaleString()}
           </div>
-          <div className="text-3xl text-emerald-200 mt-2 font-semibold">tCO₂eq</div>
+          <div className="text-emerald-200 mt-2 font-semibold" style={{ fontSize: 'clamp(1rem, 2vw, 1.875rem)' }}>tCO₂eq</div>
         </div>
 
         {/* 올해 총 배출량 */}
-        <div className="text-center flex-1 border-r-2 border-emerald-400/30 py-4">
-          <div className="text-5xl text-gray-300 font-bold mb-2 tracking-wide uppercase">올해 총 배출량</div>
-          <div className={`text-7xl font-extrabold leading-tight drop-shadow-lg transition-all ${isGood ? 'text-emerald-300' : 'text-rose-400'}`}>
+        <div className="text-center flex-1 border-r-2 border-emerald-400/30" style={{ padding: 'var(--spacing-md) 0' }}>
+          <div className="text-gray-300 font-bold mb-2 tracking-wide uppercase" style={{ fontSize: 'clamp(1.5rem, 3vw, 3rem)' }}>올해 총 배출량</div>
+          <div className={`font-extrabold leading-tight drop-shadow-lg transition-all ${isGood ? 'text-emerald-300' : 'text-rose-400'}`} style={{ fontSize: 'clamp(2rem, 4vw, 4.5rem)' }}>
             {Math.floor(total).toLocaleString()}
           </div>
-          <div className="text-3xl text-gray-300 mt-2 font-semibold">tCO₂eq</div>
+          <div className="text-gray-300 mt-2 font-semibold" style={{ fontSize: 'clamp(1rem, 2vw, 1.875rem)' }}>tCO₂eq</div>
         </div>
 
         {/* 목표 달성도 */}
-        <div className="text-center flex-1 py-4">
-          <div className="text-5xl text-gray-300 font-bold mb-2 tracking-wide uppercase">목표 달성도</div>
-          <div className={`text-7xl font-extrabold leading-tight drop-shadow-lg transition-all ${isGood ? 'text-emerald-400' : 'text-rose-400'}`}>
+        <div className="text-center flex-1" style={{ padding: 'var(--spacing-md) 0' }}>
+          <div className="text-gray-300 font-bold mb-2 tracking-wide uppercase" style={{ fontSize: 'clamp(1.5rem, 3vw, 3rem)' }}>목표 달성도</div>
+          <div className={`font-extrabold leading-tight drop-shadow-lg transition-all ${isGood ? 'text-emerald-400' : 'text-rose-400'}`} style={{ fontSize: 'clamp(2rem, 4vw, 4.5rem)' }}>
             {isGood ? '✓' : '✕'} {Math.abs(Number(diffPercent))}%
           </div>
-          <div className={`text-3xl mt-2 font-semibold ${isGood ? 'text-emerald-300' : 'text-rose-300'}`}>
+          <div className={`mt-2 font-semibold ${isGood ? 'text-emerald-300' : 'text-rose-300'}`} style={{ fontSize: 'clamp(1rem, 2vw, 1.875rem)' }}>
             {isGood ? '목표 달성 정도' : '목표 초과'}
           </div>
         </div>
@@ -151,7 +151,7 @@ export const ChartSummarySection = () => {
 
   return (
     <div className={cardBase}>
-      <h3 className="text-4xl font-extrabold text-white text-center mb-0">{currentYear}년 배출량 현황</h3>
+      <h3 className="font-extrabold text-white text-center mb-0" style={{ fontSize: 'clamp(1.5rem, 2.5vw, 2.25rem)' }}>{currentYear}년 배출량 현황</h3>
       <div className="flex-1 min-h-35">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={summaryBarData} barCategoryGap={60} barSize={160} margin={{ top: 8, right: 30, left: 30, bottom:0 }}>

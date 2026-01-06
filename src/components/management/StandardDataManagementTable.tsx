@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import type { ColumnDefinition } from '../../types/data';
+import Breadcrumb, { type BreadcrumbItem } from '../Breadcrumb';
 import { 
   ArrowUp, ArrowDown, ArrowUpDown, Search, Save, Trash2, X, CheckSquare, Edit2, Loader2 
 } from 'lucide-react'; 
@@ -15,6 +16,7 @@ interface StandardDataManagementTableProps<T> {
   apiEndpoint: string; // [변경] initialData 대신 endpoint만 받음
   disableDelete?: boolean; // 차종 모델 페이지에서 삭제 비활성화
   options?: ManagementOptions;
+  breadcrumbItems?: BreadcrumbItem[];
 }
 
 type ManagementOptions = {
@@ -34,7 +36,8 @@ const StandardDataManagementTable = <T extends { id: number; [key: string]: unkn
   columns, 
   apiEndpoint,
   disableDelete = false,
-  options
+  options,
+  breadcrumbItems
 }: StandardDataManagementTableProps<T>) => {
   // options가 없는 페이지에서는 새 객체가 렌더마다 생성되어 useEffect가 반복되지 않도록 메모이제이션
   const normalizedOptions: ManagementOptions = useMemo(() => options ?? EMPTY_OPTIONS, [options]);
@@ -1121,7 +1124,10 @@ const StandardDataManagementTable = <T extends { id: number; [key: string]: unkn
   // ----------------------------------------------------------------------
 
   return (
-    <div className="p-8 bg-gray-50 min-h-screen font-sans">
+    <>
+    <div className="bg-gray-50 min-h-screen font-sans" style={{ padding: 'var(--padding-container)' }}>
+
+      {breadcrumbItems && <Breadcrumb items={breadcrumbItems} />}
       
       {/* 1. 타이틀 */}
       <h2 className="text-2xl font-bold text-gray-800 mb-6">{title}</h2>
@@ -1134,7 +1140,8 @@ const StandardDataManagementTable = <T extends { id: number; [key: string]: unkn
           <select 
             value={String(searchColumn)} 
             onChange={(e) => setSearchColumn(e.target.value as 'all' | keyof T)}
-            className="p-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+            className="border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+            style={{ padding: 'var(--padding-input-sm)' }}
           >
             <option value="all">전체 검색</option>
             {searchableColumns.map(key => (
@@ -1161,7 +1168,8 @@ const StandardDataManagementTable = <T extends { id: number; [key: string]: unkn
                 setSearchInput(finalValue);
                 setSearchQuery(finalValue);
               }}
-              className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+              className="w-full rounded-md text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+              style={{ paddingLeft: 'var(--spacing-2xl)', paddingRight: 'var(--spacing-sm)', paddingTop: 'var(--padding-input-sm)', paddingBottom: 'var(--padding-input-sm)', border: '1px solid rgb(209, 213, 219)' }}
             />
             <Search size={16} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
           </div>
@@ -1202,7 +1210,7 @@ const StandardDataManagementTable = <T extends { id: number; [key: string]: unkn
                     )}
 
                     {/* 번호 헤더 */}
-                    <th className="px-6 py-3 text-center w-16">#</th>
+                    <th className="text-center w-16" style={{ padding: 'var(--spacing-sm) var(--spacing-lg)' }}>#</th>
 
                     {/* 데이터 컬럼 헤더 */}
                     {columns.map(col => (
@@ -1242,7 +1250,7 @@ const StandardDataManagementTable = <T extends { id: number; [key: string]: unkn
                         >
                         {/* 체크박스 */}
                         {isBatchEditing && (
-                            <td className="p-4 text-center">
+                            <td className="text-center" style={{ padding: 'var(--spacing-md)' }}>
                                 <input 
                                     type="checkbox" 
                                     checked={isSelected} 
@@ -1253,27 +1261,29 @@ const StandardDataManagementTable = <T extends { id: number; [key: string]: unkn
                         )}
 
                         {/* 번호 */}
-                        <td className="px-6 py-4 text-center font-medium text-gray-900">
+                        <td className="text-center font-medium text-gray-900" style={{ padding: 'var(--spacing-md) var(--spacing-lg)' }}>
                             {rowNumber}
                         </td>
 
                         {/* 데이터 셀 */}
                         {columns.map(col => (
-                            <td key={String(col.id)} className="px-6 py-4">
+                            <td key={String(col.id)} style={{ padding: 'var(--spacing-md) var(--spacing-lg)' }}>
                             {col.id === 'actions' ? (
                                 <div className="flex gap-2">
                                     {isRowEditing && !isBatchEditing ? (
                                       <>
                                         <button 
                                           onClick={() => handleSingleSave(rowId)} 
-                                          className="p-1.5 bg-green-100 text-green-700 rounded hover:bg-green-200" title="저장"
+                                          className="bg-green-100 text-green-700 rounded hover:bg-green-200" title="저장"
+                                          style={{ padding: 'var(--spacing-xs)' }}
                                         >
                                           <Save size={16} />
                                         </button>
                                         {/* 단일 수정 취소 */}
                                         <button
                                           onClick={() => handleSingleCancel(rowId)}
-                                          className="p-1.5 bg-gray-100 text-gray-700 rounded hover:bg-gray-200" title="취소"
+                                          className="bg-gray-100 text-gray-700 rounded hover:bg-gray-200" title="취소"
+                                          style={{ padding: 'var(--spacing-xs)' }}
                                         >
                                           <X size={16} />
                                         </button>
@@ -1281,7 +1291,8 @@ const StandardDataManagementTable = <T extends { id: number; [key: string]: unkn
                                     ) : !isBatchEditing ? (
                                         <button 
                                             onClick={() => toggleEditMode(rowId)} 
-                                            className="p-1.5 bg-yellow-100 text-yellow-700 rounded hover:bg-yellow-200" title="수정"
+                                            className="bg-yellow-100 text-yellow-700 rounded hover:bg-yellow-200" title="수정"
+                                            style={{ padding: 'var(--spacing-xs)' }}
                                         >
                                             <Edit2 size={16} />
                                         </button>
@@ -1289,7 +1300,8 @@ const StandardDataManagementTable = <T extends { id: number; [key: string]: unkn
                                     {!isRowEditing && !disableDelete && !isBatchEditing && (
                                         <button 
                                             onClick={() => handleSingleDelete(rowId)} 
-                                            className="p-1.5 bg-red-100 text-red-700 rounded hover:bg-red-200" title="삭제"
+                                            className="bg-red-100 text-red-700 rounded hover:bg-red-200" title="삭제"
+                                            style={{ padding: 'var(--spacing-xs)' }}
                                         >
                                             <Trash2 size={16} />
                                         </button>
@@ -1304,7 +1316,7 @@ const StandardDataManagementTable = <T extends { id: number; [key: string]: unkn
                     );
                     }) : (
                         <tr>
-                            <td colSpan={columns.length + (isBatchEditing ? 2 : 1)} className="px-6 py-10 text-center text-gray-500">
+                            <td colSpan={columns.length + (isBatchEditing ? 2 : 1)} className="text-center text-gray-500" style={{ padding: 'var(--spacing-2xl) var(--spacing-lg)' }}>
                                 데이터가 없습니다.
                             </td>
                         </tr>
@@ -1335,7 +1347,7 @@ const StandardDataManagementTable = <T extends { id: number; [key: string]: unkn
               disabled={currentPage === 0}
               className={`${pageBtnBase} ${currentPage === 0 ? pageBtnDisabled : pageBtnDefault}`}
             >
-              ⏮
+              ◀◀
             </button>
             <button
               onClick={() => handlePageChange(Math.max(currentGroupStart - pageGroupSize, 0))}
@@ -1381,7 +1393,7 @@ const StandardDataManagementTable = <T extends { id: number; [key: string]: unkn
               disabled={currentPage === totalPages - 1}
               className={`${pageBtnBase} ${currentPage === totalPages - 1 ? pageBtnDisabled : pageBtnDefault}`}
             >
-              ⏭
+              ▶▶
             </button>
         </div>
 
@@ -1422,6 +1434,7 @@ const StandardDataManagementTable = <T extends { id: number; [key: string]: unkn
       isSuccess={errorTitle.includes('완료')}
     />
     </div>
+    </>
   );
 };
 

@@ -1,6 +1,8 @@
 import React, { useState, useRef } from "react";
 import { Upload, FileSpreadsheet, Save, AlertCircle, X } from "lucide-react";
 import Modal from "../../../components/Modal";
+import Breadcrumb from "../../../components/Breadcrumb";
+import { getBreadcrumbItems } from "../../../utils/breadcrumbHelper";
 import { parseExcelFile } from "./utils/Parsing";
 import { mapToBaseInfoData } from "./utils/Mappers";
 import LoadingSpinner from "../../../components/LoadingSpinner";
@@ -307,12 +309,20 @@ const ExcelUpDownBaseInfoPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 min-w-0 flex flex-col">
-      <div className="w-full h-full px-4 md:px-8 py-6 relative flex-1 flex flex-col">
+      <div
+        className="w-full h-full relative flex-1 flex flex-col"
+        style={{ padding: "var(--padding-container)" }}
+      >
         {/* 로딩 중일 때 화면 전체 덮어버림 */}
         {isLoading && <LoadingSpinner />}
 
+        <Breadcrumb items={getBreadcrumbItems("/admin/excel/manage")} />
+
         {/* 1. Header Area */}
-        <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-6 gap-4">
+        <div
+          className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4"
+          style={{ marginBottom: "var(--spacing-lg)" }}
+        >
           <div>
             <h2 className="mb-2 text-2xl font-bold text-gray-800">
               통합 기준정보 관리
@@ -324,7 +334,8 @@ const ExcelUpDownBaseInfoPage: React.FC = () => {
           </div>
           <button
             onClick={handleExcelDownload}
-            className="flex-shrink-0 flex items-center px-4 py-2 text-sm font-bold text-gray-700 bg-white border rounded-lg shadow-sm hover:bg-gray-50"
+            className="flex-shrink-0 flex items-center text-sm font-bold text-gray-700 bg-white border rounded-lg shadow-sm hover:bg-gray-50"
+            style={{ padding: "var(--padding-btn)" }}
           >
             <FileSpreadsheet size={16} className="mr-2 text-green-600" />
             기준정보 엑셀 다운로드
@@ -332,14 +343,20 @@ const ExcelUpDownBaseInfoPage: React.FC = () => {
         </div>
 
         {/* 2. Upload Area */}
-        <div className="p-6 mb-6 bg-white border border-gray-200 shadow-sm rounded-xl">
+        <div
+          className="bg-white border border-gray-200 shadow-sm rounded-xl"
+          style={{
+            padding: "var(--padding-card)",
+            marginBottom: "var(--spacing-lg)",
+          }}
+        >
           <div
-            className={`border-2 border-dashed rounded-lg h-32 flex flex-col items-center justify-center cursor-pointer transition-all 
-              ${
-                isDragOver
-                  ? "border-blue-500 bg-blue-50 text-blue-500"
-                  : "border-gray-300 bg-gray-50 text-gray-600"
-              }`}
+            className={`border-2 border-dashed rounded-lg flex flex-col items-center justify-center cursor-pointer transition-all ${
+              isDragOver
+                ? "border-blue-500 bg-blue-50 text-blue-500"
+                : "border-gray-300 bg-gray-50 text-gray-600"
+            }`}
+            style={{ height: "8rem" }}
             onDragOver={onDragOver}
             onDragLeave={() => setIsDragOver(false)}
             onDrop={onDrop}
@@ -368,30 +385,38 @@ const ExcelUpDownBaseInfoPage: React.FC = () => {
         {excelData.length > 0 ? (
           // [수정 3] 테이블 영역이 남은 높이를 꽉 채우도록 flex-1 적용 (선택 사항)
           <div className="bg-white border rounded-xl shadow-sm overflow-hidden flex flex-col max-h-[70vh] min-h-0">
-            <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-gray-50 flex-shrink-0">
+            <div
+              className="flex items-center justify-between border-b border-gray-200 bg-gray-50 flex-shrink-0"
+              style={{ padding: "var(--spacing-md)" }}
+            >
               <h3 className="flex items-center font-bold text-gray-700">
                 <span className="px-2 py-1 mr-2 text-xs text-green-800 bg-green-100 rounded-full">
                   {excelData.length}건
                 </span>
                 데이터 검증 및 미리보기
               </h3>
-              <div className="flex gap-2">
+              <div className="flex gap-2" style={{ gap: "var(--spacing-sm)" }}>
                 <button
                   onClick={handleReset}
-                  className="px-3 py-1.5 border border-gray-300 bg-white text-gray-600 rounded text-sm hover:bg-gray-100 flex items-center"
+                  className="border border-gray-300 bg-white text-gray-600 rounded text-sm hover:bg-gray-100 flex items-center"
+                  style={{ padding: "0.375rem 0.75rem" }}
                 >
                   <X size={14} className="mr-1" /> 취소
                 </button>
                 <button
                   onClick={handleServerUpload}
-                  className="px-4 py-1.5 bg-blue-600 text-white rounded text-sm font-bold hover:bg-blue-700 flex items-center shadow-sm"
+                  className="bg-blue-600 text-white rounded text-sm font-bold hover:bg-blue-700 flex items-center shadow-sm"
+                  style={{ padding: "0.375rem 1rem" }}
                 >
                   <Save size={16} className="mr-2" /> 등록
                 </button>
               </div>
             </div>
 
-            <div className="flex gap-4 p-4 text-sm text-gray-600 border-b bg-white flex-shrink-0">
+            <div
+              className="flex text-sm text-gray-600 border-b bg-white flex-shrink-0"
+              style={{ gap: "var(--spacing-md)", padding: "var(--spacing-md)" }}
+            >
               <span className="flex items-center gap-1">
                 <span className="w-4 h-4 bg-green-100 border border-green-200 rounded"></span>{" "}
                 신규
@@ -411,24 +436,34 @@ const ExcelUpDownBaseInfoPage: React.FC = () => {
               <table className="w-full table-auto text-sm border-collapse">
                 <thead className="sticky top-0 z-20 bg-gray-100 border-b shadow-sm">
                   <tr>
-                    <th className="sticky left-0 z-30 bg-gray-100 px-4 py-3 text-center w-20 min-w-[80px] whitespace-nowrap border-r">
+                    <th
+                      className="sticky left-0 z-30 bg-gray-100 text-center w-20 min-w-[80px] whitespace-nowrap border-r"
+                      style={{ padding: "0.75rem 1rem" }}
+                    >
                       상태
                     </th>
 
                     {/* 2. [추가] 기준일 헤더 (수동 추가) */}
-                    <th className="px-4 py-3 text-center min-w-[140px] whitespace-nowrap bg-gray-100 font-bold text-blue-700">
+                    <th
+                      className="text-center min-w-[140px] whitespace-nowrap bg-gray-100 font-bold text-blue-700"
+                      style={{ padding: "0.75rem 1rem" }}
+                    >
                       차량등록일
                     </th>
 
                     {headers.map((header) => (
                       <th
                         key={header}
-                        className="px-4 py-3 text-center min-w-[150px] whitespace-nowrap bg-gray-100"
+                        className="text-center min-w-[150px] whitespace-nowrap bg-gray-100"
+                        style={{ padding: "0.75rem 1rem" }}
                       >
                         {header}
                       </th>
                     ))}
-                    <th className="sticky right-0 z-30 bg-gray-100 px-4 py-3 text-center min-w-[160px] border-l">
+                    <th
+                      className="sticky right-0 z-30 bg-gray-100 text-center min-w-[160px] border-l"
+                      style={{ padding: "0.75rem 1rem" }}
+                    >
                       비고
                     </th>
                   </tr>
@@ -441,7 +476,10 @@ const ExcelUpDownBaseInfoPage: React.FC = () => {
                         row.rowStatus
                       )} hover:bg-gray-50`}
                     >
-                      <td className="sticky left-0 z-10 bg-white px-4 py-3 text-center border-r">
+                      <td
+                        className="sticky left-0 z-10 bg-white text-center border-r"
+                        style={{ padding: "0.75rem 1rem" }}
+                      >
                         <span
                           className={`px-2 py-1 rounded text-xs font-bold border
                           ${
@@ -461,7 +499,10 @@ const ExcelUpDownBaseInfoPage: React.FC = () => {
                       </td>
 
                       {/* 2. [추가] 차량등록일 입력창 (<input type="date">) */}
-                      <td className="px-2 py-3 text-center">
+                      <td
+                        className="text-center"
+                        style={{ padding: "0.75rem 0.5rem" }}
+                      >
                         <input
                           type="date"
                           value={row.calcBaseDate || ""} // 값이 없으면 빈칸
@@ -471,7 +512,7 @@ const ExcelUpDownBaseInfoPage: React.FC = () => {
                             handleDateChange(idx, e.target.value)
                           }
                           className={`
-                            w-full px-2 py-1 text-xs border rounded outline-none transition-all
+                            w-full text-xs border rounded outline-none transition-all
                             focus:border-blue-500 focus:ring-1 focus:ring-blue-500
                             ${
                               // [우선순위 1] 기존 데이터(NEW가 아님) -> 회색 배경 & 잠김 커서
@@ -482,8 +523,7 @@ const ExcelUpDownBaseInfoPage: React.FC = () => {
                                 ? "bg-red-50 border-red-300 text-red-600 font-bold cursor-pointer"
                                 : // [우선순위 3] 신규 데이터이고 값도 있음 -> 흰 배경 (일반)
                                   "bg-white border-gray-300 text-gray-700 cursor-pointer"
-                            }
-                          `}
+                            }                          style={{ padding: 'var(--padding-input-sm)' }}                          `}
                           // 값이 없으면 빨간색으로 "입력해!"라고 티를 냅니다.
                         />
                       </td>
@@ -491,14 +531,15 @@ const ExcelUpDownBaseInfoPage: React.FC = () => {
                       {headers.map((header) => (
                         <td
                           key={header}
-                          className="px-4 py-3 text-center min-w-[150px] break-words"
+                          className="text-center min-w-[150px] break-words"
+                          style={{ padding: "0.75rem 1rem" }}
                         >
                           {row[header]}
                         </td>
                       ))}
 
                       <td
-                        className={`sticky right-0 z-10 px-4 py-3 text-xs text-gray-500 text-center min-w-[160px] border-l whitespace-nowrap
+                        className={`sticky right-0 z-10 text-xs text-gray-500 text-center min-w-[160px] border-l whitespace-nowrap
                         ${
                           // 1. 신규일 때 (보통 연한 초록색 배경)
                           row.rowStatus === "NEW"
@@ -509,6 +550,7 @@ const ExcelUpDownBaseInfoPage: React.FC = () => {
                             : // 3. 그 외 (흰색)
                               "bg-white"
                         }`}
+                        style={{ padding: "0.75rem 1rem" }}
                       >
                         {row.message}
                       </td>
@@ -519,8 +561,15 @@ const ExcelUpDownBaseInfoPage: React.FC = () => {
             </div>
           </div>
         ) : (
-          <div className="p-12 text-center text-gray-400 bg-white border border-gray-200 border-dashed rounded-xl">
-            <AlertCircle size={48} className="mx-auto mb-4 opacity-20" />
+          <div
+            className="text-center text-gray-400 bg-white border border-gray-200 border-dashed rounded-xl"
+            style={{ padding: "3rem" }}
+          >
+            <AlertCircle
+              size={48}
+              className="mx-auto opacity-20"
+              style={{ marginBottom: "var(--spacing-md)" }}
+            />
             <p className="text-lg font-medium text-gray-300">
               업로드된 데이터가 없습니다.
             </p>
