@@ -72,8 +72,9 @@ const RegisterPage: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center bg-white max-w-[500px] mx-auto font-sans" style={{ padding: 'var(--padding-container)' }}>
-      <h2 className="text-2xl font-bold text-gray-800" style={{ marginBottom: 'var(--spacing-2xl)' }}>계정 등록</h2>
+    <div className="flex items-center justify-center min-h-screen bg-white font-sans">
+      <div className="flex flex-col items-center bg-white max-w-[500px] w-full" style={{ padding: 'var(--padding-container)' }}>
+        <h2 className="text-2xl font-bold text-gray-800" style={{ marginBottom: 'var(--spacing-2xl)' }}>계정 등록</h2>
 
       {/* 아이디 입력칸 */}
       <div className="flex items-center w-full border border-gray-300 bg-white rounded-sm" style={{ height: 'var(--height-input)', padding: 'var(--spacing-md)', marginBottom: 'var(--spacing-md)' }}>
@@ -156,6 +157,7 @@ const RegisterPage: React.FC = () => {
         isSuccess={isSuccess}
         title={isSuccess ? "작업 성공" : "작업 실패"}
       />
+      </div>
     </div>
   );
 };
