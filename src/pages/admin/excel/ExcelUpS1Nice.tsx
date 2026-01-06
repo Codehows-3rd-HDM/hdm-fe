@@ -532,7 +532,7 @@ const ExcelUpS1NicePage: React.FC = () => {
       className="min-h-screen bg-gray-50 font-sans"
       style={{ padding: "var(--padding-container)" }}
     >
-      <Breadcrumb items={getBreadcrumbItems("/admin/data-upload")} />
+      <Breadcrumb items={getBreadcrumbItems("/admin/excel/s1-nice")} />
 
       {/*로딩 중일 때 화면 전체 덮어버림 */}
       {isLoading && <LoadingSpinner />}
