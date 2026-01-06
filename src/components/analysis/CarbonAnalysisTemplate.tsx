@@ -668,13 +668,12 @@ const CarbonAnalysisTemplate: React.FC<CarbonAnalysisTemplateProps> = ({
                   <th
                     key={col.id}
                     onClick={() => col.sortable && handleSort(col.id)}
-                    style={{ padding: 'var(--spacing-sm) var(--spacing-md)' }}
+                    style={{ padding: 'var(--spacing-sm) var(--spacing-md)', width: col.width || 'auto' }}
                     className={`${
                       col.align === "left" ? "text-left" : "text-center"
                     } ${
                       col.sortable ? "cursor-pointer hover:bg-gray-100" : ""
                     }`}
-                    style={{ width: col.width }}
                   >
                     <div
                       className={`flex items-center gap-1 ${

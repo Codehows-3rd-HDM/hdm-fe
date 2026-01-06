@@ -23,8 +23,8 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggleSidebar }) => {
 
   // 로그아웃 핸들러
   const handleLogout = () => {
-    // 로컬 스토리지에서 토큰 제거
-    localStorage.removeItem('authToken');
+    // 세션 스토리지에서 토큰 제거
+    sessionStorage.removeItem('authToken');
     // 로그인 페이지로 이동
     navigate('/login');
   };
