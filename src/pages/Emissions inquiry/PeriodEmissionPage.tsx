@@ -12,7 +12,6 @@ import {
   LabelList,
 } from "recharts";
 import {
-  Calendar as CalendarIcon,
   TrendingDown,
   TrendingUp,
   Search,
