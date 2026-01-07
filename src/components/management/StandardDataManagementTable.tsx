@@ -1125,7 +1125,7 @@ const StandardDataManagementTable = <T extends { id: number; [key: string]: unkn
 
   return (
     <>
-    <div className="bg-gray-50 min-h-screen font-sans" style={{ padding: 'var(--padding-container)' }}>
+    <div className="bg-gray-50 min-h-screen font-sans" style={{ padding: 'var(--padding-responsive)' }}>
 
       {breadcrumbItems && <Breadcrumb items={breadcrumbItems} />}
       
@@ -1204,8 +1204,8 @@ const StandardDataManagementTable = <T extends { id: number; [key: string]: unkn
             </div>
         ) : (
             <div className="overflow-x-auto">
-                <table className="w-full text-sm text-left text-gray-600">
-                <thead className="text-xs text-gray-700 uppercase bg-gray-100 border-b border-gray-200">
+                <table className="w-full text-base text-left text-gray-600">
+                <thead className="text-sm text-gray-700 uppercase bg-gray-100 border-b border-gray-200">
                     <tr>
                     {/* 체크박스 (일괄 수정 시) */}
                     {isBatchEditing && (
@@ -1229,7 +1229,7 @@ const StandardDataManagementTable = <T extends { id: number; [key: string]: unkn
                     )}
 
                     {/* 번호 헤더 */}
-                    <th className="text-center w-16" style={{ padding: 'var(--spacing-sm) var(--spacing-lg)' }}>#</th>
+                    <th className="text-center w-16" style={{ padding: 'var(--spacing-xs) var(--spacing-md)' }}>#</th>
 
                     {/* 데이터 컬럼 헤더 */}
                     {columns.map(col => (
@@ -1269,7 +1269,7 @@ const StandardDataManagementTable = <T extends { id: number; [key: string]: unkn
                         >
                         {/* 체크박스 */}
                         {isBatchEditing && (
-                            <td className="text-center" style={{ padding: 'var(--spacing-md)' }}>
+                            <td className="text-center" style={{ padding: 'var(--spacing-sm)' }}>
                                 <input 
                                     type="checkbox" 
                                     checked={isSelected} 
@@ -1280,13 +1280,13 @@ const StandardDataManagementTable = <T extends { id: number; [key: string]: unkn
                         )}
 
                         {/* 번호 */}
-                        <td className="text-center font-medium text-gray-900" style={{ padding: 'var(--spacing-md) var(--spacing-lg)' }}>
+                        <td className="text-center font-medium text-gray-900" style={{ padding: 'var(--spacing-sm) var(--spacing-md)' }}>
                             {rowNumber}
                         </td>
 
                         {/* 데이터 셀 */}
                         {columns.map(col => (
-                            <td key={String(col.id)} style={{ padding: 'var(--spacing-md) var(--spacing-lg)' }}>
+                            <td key={String(col.id)} style={{ padding: 'var(--spacing-sm) var(--spacing-md)' }}>
                             {col.id === 'actions' ? (
                                 <div className="flex gap-2">
                                     {isRowEditing && !isBatchEditing ? (
@@ -1335,7 +1335,7 @@ const StandardDataManagementTable = <T extends { id: number; [key: string]: unkn
                     );
                     }) : (
                         <tr>
-                            <td colSpan={columns.length + (isBatchEditing ? 2 : 1)} className="text-center text-gray-500" style={{ padding: 'var(--spacing-2xl) var(--spacing-lg)' }}>
+                            <td colSpan={columns.length + (isBatchEditing ? 2 : 1)} className="text-center text-gray-500" style={{ padding: 'var(--spacing-xl) var(--spacing-md)' }}>
                                 데이터가 없습니다.
                             </td>
                         </tr>

@@ -316,7 +316,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggleSidebar }) => {
       {/* 로그아웃 버튼 */}
       <div
         className="border-t border-gray-100"
-        style={{ padding: "var(--spacing-md)" }}
+        style={{ padding: "var(--spacing-sm)" }}
       >
         <button
           onClick={handleLogout}
@@ -328,7 +328,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggleSidebar }) => {
           title="로그아웃"
           style={{ gap: "0.75rem", padding: `var(--spacing-md) 0.75rem` }}
         >
-          <LogOut size={18} />
+          <LogOut size={20} />
           {isOpen && <span>로그아웃</span>}
         </button>
       </div>

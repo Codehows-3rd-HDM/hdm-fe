@@ -530,7 +530,7 @@ const ExcelUpS1NicePage: React.FC = () => {
   return (
     <div
       className="min-h-screen bg-gray-50 font-sans"
-      style={{ padding: "var(--padding-container)" }}
+      style={{ padding: "var(--padding-responsive)" }}
     >
       <Breadcrumb items={getBreadcrumbItems("/admin/excel/upload/s1-nice")} />
 
@@ -539,14 +539,14 @@ const ExcelUpS1NicePage: React.FC = () => {
 
       {/* Header */}
       <div className="mb-6">
-        <h2 className="mb-4 text-xl font-bold text-gray-800">
+        <h2 className="mb-4 text-2xl font-bold text-gray-800">
           출입 데이터 업로드
         </h2>
 
         {/* Filters */}
         <div className="flex items-center gap-6 mb-2">
           <div className="flex flex-col">
-            <span className="mb-1 text-xs font-semibold text-gray-600">
+            <span className="mb-1 text-sm font-semibold text-gray-600">
               연도 선택
             </span>
             <select
@@ -567,7 +567,7 @@ const ExcelUpS1NicePage: React.FC = () => {
           </div>
 
           <div className="flex flex-col">
-            <span className="mb-1 text-xs font-semibold text-gray-600">
+            <span className="mb-1 text-sm font-semibold text-gray-600">
               월 선택
             </span>
             <select
@@ -591,8 +591,8 @@ const ExcelUpS1NicePage: React.FC = () => {
             {/* 1. 나이스파크 데이터 중복 경고 (파란색) */}
             {niceParkData.length > 0 && isNiceDataExisting && (
               <div
-                className="flex items-center gap-2 text-sm font-bold text-blue-700 bg-blue-50 border border-blue-200 rounded"
-                style={{ padding: "var(--spacing-md)" }}
+                className="flex items-center gap-2 text-base font-bold text-blue-700 bg-blue-50 border border-blue-200 rounded"
+                style={{ padding: "var(--spacing-sm)" }}
               >
                 <AlertCircle size={20} />
                 <span>
@@ -606,8 +606,8 @@ const ExcelUpS1NicePage: React.FC = () => {
             {/* 2. 에스원 데이터 중복 경고 (주황색) */}
             {s1Data.length > 0 && isS1DataExisting && (
               <div
-                className="flex items-center gap-2 text-sm font-bold text-orange-700 bg-orange-50 border border-orange-200 rounded"
-                style={{ padding: "var(--spacing-md)" }}
+                className="flex items-center gap-2 text-base font-bold text-orange-700 bg-orange-50 border border-orange-200 rounded"
+                style={{ padding: "var(--spacing-sm)" }}
               >
                 <AlertCircle size={20} />
                 <span>
@@ -625,13 +625,13 @@ const ExcelUpS1NicePage: React.FC = () => {
       <div className="flex gap-8 mt-4">
         {/* LEFT - NicePark */}
         <div className="flex flex-col flex-1">
-          <h3 className="mb-3 text-sm font-bold text-gray-600">
+          <h3 className="mb-3 text-base font-bold text-gray-600">
             나이스파크 출입차량 데이터
           </h3>
 
           {/* Drop Zone */}
           <div
-            className={`border-2 border-dashed rounded-lg h-16 flex items-center justify-center cursor-pointer transition-all mb-3 text-gray-600 text-sm
+            className={`border-2 border-dashed rounded-lg h-16 flex items-center justify-center cursor-pointer transition-all mb-3 text-gray-600 text-base
               ${
                 isDragOverNice
                   ? "border-blue-500 bg-blue-50 text-blue-600"
@@ -671,14 +671,14 @@ const ExcelUpS1NicePage: React.FC = () => {
           </div>
 
           {niceParkData.length > 0 && (
-            <div className="mb-2 text-xs font-semibold text-green-600">
+            <div className="mb-2 text-sm font-semibold text-green-600">
               {niceParkData.length}개 데이터 로드됨
             </div>
           )}
 
           {/* 나이스파크 헤더 (제목 + 검색창 + 범례) */}
           <div className="flex items-end justify-between mb-2">
-            <h4 className="text-xs font-bold text-gray-600">
+            <h4 className="text-sm font-bold text-gray-600">
               나이스파크 출입차량 데이터
             </h4>
 
@@ -690,7 +690,7 @@ const ExcelUpS1NicePage: React.FC = () => {
                   placeholder="차량번호 검색"
                   value={niceSearchTerm}
                   onChange={(e) => setNiceSearchTerm(e.target.value)}
-                  className="w-32 py-1 pr-2 text-xs transition-all border border-gray-300 rounded pl-7 focus:outline-none focus:border-blue-500"
+                  className="w-32 py-1 pr-2 text-sm transition-all border border-gray-300 rounded pl-7 focus:outline-none focus:border-blue-500"
                 />
                 <Search
                   className="absolute left-2 top-1.5 text-gray-400"
@@ -738,7 +738,7 @@ const ExcelUpS1NicePage: React.FC = () => {
                 handleFileUpload(e.dataTransfer.files[0], "nice");
             }}
           >
-            <table className="w-full text-sm">
+            <table className="w-full text-base">
               <thead className="bg-gray-100">
                 <tr>
                   <th className="p-2 font-semibold text-left text-gray-700">
@@ -800,12 +800,12 @@ const ExcelUpS1NicePage: React.FC = () => {
 
         {/* RIGHT - S1 */}
         <div className="flex flex-col flex-1">
-          <h3 className="mb-3 text-sm font-bold text-gray-600">
+          <h3 className="mb-3 text-base font-bold text-gray-600">
             에스원 출퇴근 데이터
           </h3>
 
           <div
-            className={`border-2 border-dashed rounded-lg h-16 flex items-center justify-center cursor-pointer transition-all mb-3 text-gray-600 text-sm
+            className={`border-2 border-dashed rounded-lg h-16 flex items-center justify-center cursor-pointer transition-all mb-3 text-gray-600 text-base
               ${
                 isDragOverS1
                   ? "border-blue-500 bg-blue-50 text-blue-600"
@@ -843,14 +843,14 @@ const ExcelUpS1NicePage: React.FC = () => {
           </div>
 
           {s1Data.length > 0 && (
-            <div className="mb-2 text-xs font-semibold text-green-600">
+            <div className="mb-2 text-sm font-semibold text-green-600">
               {s1Data.length}개 데이터 로드됨
             </div>
           )}
 
           {/* 에스원 헤더 (제목 + 검색창 + 범례) */}
           <div className="flex items-end justify-between mb-2">
-            <h4 className="text-xs font-bold text-gray-600">
+            <h4 className="text-sm font-bold text-gray-600">
               에스원 출퇴근 데이터
             </h4>
 
@@ -862,7 +862,7 @@ const ExcelUpS1NicePage: React.FC = () => {
                   placeholder="이름/사번 검색"
                   value={s1SearchTerm}
                   onChange={(e) => setS1SearchTerm(e.target.value)}
-                  className="w-32 py-1 pr-2 text-xs transition-all border border-gray-300 rounded pl-7 focus:outline-none focus:border-blue-500"
+                  className="w-32 py-1 pr-2 text-sm transition-all border border-gray-300 rounded pl-7 focus:outline-none focus:border-blue-500"
                 />
                 <Search
                   className="absolute left-2 top-1.5 text-gray-400"
@@ -910,7 +910,7 @@ const ExcelUpS1NicePage: React.FC = () => {
                 handleFileUpload(e.dataTransfer.files[0], "s1");
             }}
           >
-            <table className="w-full text-sm">
+            <table className="w-full text-base">
               <thead className="bg-gray-100">
                 <tr>
                   <th className="p-2 font-semibold text-left text-gray-700">

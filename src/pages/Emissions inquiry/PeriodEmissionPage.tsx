@@ -159,29 +159,29 @@ const PeriodEmissionPage: React.FC = () => {
   const isDecreased = diff < 0;
 
   return (
-    <div className="min-h-full font-sans bg-gray-50" style={{ padding: 'var(--padding-container)' }}>
+    <div className="min-h-full font-sans bg-gray-50" style={{ padding: 'var(--padding-responsive)' }}>
       {/* 브레드크럼 */}
       <Breadcrumb items={getBreadcrumbItems('/view/period')} />
       
       {/* 헤더 */}
       <div className="flex items-center justify-between" style={{ marginBottom: 'var(--spacing-lg)' }}>
-        <h2 className="font-bold text-gray-800" style={{ fontSize: 'clamp(1.25rem, 2vw, 1.5rem)' }}>
+        <h2 className="font-bold text-gray-800" style={{ fontSize: 'clamp(1.5rem, 2vw, 1.75rem)' }}>
           기간별 탄소 총 배출량
         </h2>
       </div>
 
       {/* 필터 영역 - 기간 선택 */}
-      <div className="bg-white border border-gray-100 shadow-sm rounded-xl" style={{ padding: 'var(--spacing-lg)', marginBottom: 'var(--spacing-lg)' }}>
+      <div className="bg-white border border-gray-100 shadow-sm rounded-xl" style={{ padding: 'var(--spacing-md)', marginBottom: 'var(--spacing-lg)' }}>
         <div className="flex flex-wrap items-end" style={{ gap: 'var(--spacing-lg)' }}>
           {/* Start Date */}
           <div className="flex flex-col" style={{ gap: 'var(--spacing-xs)' }}>
-            <label className="font-bold text-gray-500" style={{ fontSize: 'var(--text-xs)' }}>▼ 시작일</label>
+            <label className="font-bold text-gray-500" style={{ fontSize: 'var(--text-sm)' }}>▼ 시작일</label>
             <input
               type="date"
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
               className="bg-white border border-gray-300 rounded-md outline-none cursor-pointer focus:ring-2 focus:ring-blue-500"
-              style={{ width: 'clamp(9rem, 15vw, 10rem)', padding: 'var(--spacing-sm)', fontSize: 'var(--text-sm)' }}
+              style={{ width: 'clamp(9rem, 15vw, 10rem)', padding: 'var(--spacing-sm)', fontSize: 'var(--text-base)' }}
             />
           </div>
 
@@ -189,13 +189,13 @@ const PeriodEmissionPage: React.FC = () => {
 
           {/* End Date */}
           <div className="flex flex-col" style={{ gap: 'var(--spacing-xs)' }}>
-            <label className="font-bold text-gray-500" style={{ fontSize: 'var(--text-xs)' }}>▼ 종료일</label>
+            <label className="font-bold text-gray-500" style={{ fontSize: 'var(--text-sm)' }}>▼ 종료일</label>
             <input
               type="date"
               value={endDate}
               onChange={(e) => setEndDate(e.target.value)}
               className="bg-white border border-gray-300 rounded-md outline-none cursor-pointer focus:ring-2 focus:ring-blue-500"
-              style={{ width: 'clamp(9rem, 15vw, 10rem)', padding: 'var(--spacing-sm)', fontSize: 'var(--text-sm)' }}
+              style={{ width: 'clamp(9rem, 15vw, 10rem)', padding: 'var(--spacing-sm)', fontSize: 'var(--text-base)' }}
             />
           </div>
 
@@ -215,7 +215,7 @@ const PeriodEmissionPage: React.FC = () => {
       {/* 차트 및 통계 영역 */}
       <div className="flex flex-col lg:flex-row" style={{ gap: 'var(--spacing-lg)' }}>
         {/* 차트 */}
-        <div className="flex-1 bg-white rounded-xl shadow-sm border border-gray-100 flex flex-col" style={{ padding: 'var(--spacing-lg)', minHeight: 'clamp(20rem, 40vh, 25rem)' }}>
+        <div className="flex-1 bg-white rounded-xl shadow-sm border border-gray-100 flex flex-col" style={{ padding: 'var(--spacing-md)', minHeight: 'clamp(20rem, 40vh, 25rem)' }}>
           {loading ? (
             <div className="flex-1 flex items-center justify-center">
               <LoadingSpinner />
@@ -223,13 +223,13 @@ const PeriodEmissionPage: React.FC = () => {
           ) : hasSearched && chartData.length === 0 ? (
             <div className="flex-1 flex items-center justify-center">
               <div className="text-center">
-                <p className="text-xl font-semibold text-gray-600">조회된 데이터가 없습니다</p>
+                <p className="text-2xl font-semibold text-gray-600">조회된 데이터가 없습니다</p>
               </div>
             </div>
           ) : hasSearched && chartData[0]?.total === 0 ? (
             <div className="flex-1 flex items-center justify-center">
               <div className="text-center">
-                <p className="text-xl font-semibold text-gray-600">선택기간의 조회된 데이터가 없습니다</p>
+                <p className="text-2xl font-semibold text-gray-600">선택기간의 조회된 데이터가 없습니다</p>
               </div>
             </div>
           ) : (
@@ -301,7 +301,7 @@ const PeriodEmissionPage: React.FC = () => {
         {/* 정보 카드 */}
         <div className="flex flex-col" style={{ width: 'clamp(18rem, 25vw, 26rem)', gap: 'var(--spacing-lg)' }}>
           {/* 카드 1 - 배출량 비교 */}
-          <div className="bg-white shadow-sm border border-gray-100 rounded-xl" style={{ padding: 'var(--spacing-lg)' }}>
+          <div className="bg-white shadow-sm border border-gray-100 rounded-xl" style={{ padding: 'var(--spacing-md)' }}>
             <div style={{ marginBottom: 'var(--spacing-xl)' }}>
               <div className="text-gray-600 font-semibold" style={{ marginBottom: 'var(--spacing-sm)', fontSize: 'var(--text-base)' }}>
                 전년도 동기간 배출량
@@ -342,7 +342,7 @@ const PeriodEmissionPage: React.FC = () => {
           </div>
 
           {/* 카드 2 - 운행거리 */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 flex flex-col justify-center" style={{ padding: 'var(--spacing-lg)' }}>
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 flex flex-col justify-center" style={{ padding: 'var(--spacing-md)' }}>
             <div className="text-gray-600 font-semibold" style={{ marginBottom: 'var(--spacing-sm)', fontSize: 'var(--text-base)' }}>
               선택기간 총 운행거리
             </div>

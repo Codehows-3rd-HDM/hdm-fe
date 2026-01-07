@@ -73,33 +73,33 @@ const RegisterPage: React.FC = () => {
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-white font-sans">
-      <div className="flex flex-col items-center bg-white max-w-[500px] w-full" style={{ padding: 'var(--padding-container)' }}>
-        <h2 className="text-2xl font-bold text-gray-800" style={{ marginBottom: 'var(--spacing-2xl)' }}>계정 등록</h2>
+      <div className="flex flex-col items-center bg-white max-w-[500px] w-full" style={{ padding: 'var(--padding-responsive)' }}>
+        <h2 className="text-3xl font-bold text-gray-800" style={{ marginBottom: 'var(--spacing-xl)' }}>계정 등록</h2>
 
       {/* 아이디 입력칸 */}
-      <div className="flex items-center w-full border border-gray-300 bg-white rounded-sm" style={{ height: 'var(--height-input)', padding: 'var(--spacing-md)', marginBottom: 'var(--spacing-md)' }}>
+      <div className="flex items-center w-full border border-gray-300 bg-white rounded-sm" style={{ height: 'var(--height-input)', padding: 'var(--spacing-sm)', marginBottom: 'var(--spacing-sm)' }}>
         <User size={20} className="text-gray-400" />
         <input
           type="text"
           placeholder="Username (예: 양현진)"
-          className="border-none outline-none flex-1 h-full text-[15px] ml-3 text-gray-600 bg-transparent"
+          className="border-none outline-none flex-1 h-full text-base ml-3 text-gray-600 bg-transparent"
           value={userName}
           onChange={(e) => setUserName(e.target.value)}
         />
       </div>
 
       {/* 비밀번호 입력칸 */}
-      <div className="flex items-center w-full border border-gray-300 bg-white rounded-sm" style={{ height: 'var(--height-input)', padding: 'var(--spacing-md)', marginBottom: 'var(--spacing-md)' }}>
+      <div className="flex items-center w-full border border-gray-300 bg-white rounded-sm" style={{ height: 'var(--height-input)', padding: 'var(--spacing-sm)', marginBottom: 'var(--spacing-sm)' }}>
         <Lock size={20} className="text-gray-400" />
         <input
           type={showPassword ? "text" : "password"}
           placeholder="Password"
-          className="border-none outline-none flex-1 h-full text-[15px] ml-3 text-gray-600 bg-transparent"
+          className="border-none outline-none flex-1 h-full text-base ml-3 text-gray-600 bg-transparent"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
         />
         <button
-          className="bg-none border-none cursor-pointer text-gray-400 text-xs font-bold"
+          className="bg-none border-none cursor-pointer text-gray-400 text-sm font-bold"
           onClick={() => setShowPassword(!showPassword)}
         >
           {showPassword ? "HIDE" : "SHOW"}
@@ -133,7 +133,7 @@ const RegisterPage: React.FC = () => {
         </label>
       </div>
 
-      <p className="text-red-500 text-[13px] w-full text-center" style={{ marginBottom: 'var(--spacing-lg)' }}>
+      <p className="text-red-500 text-sm w-full text-center" style={{ marginBottom: 'var(--spacing-md)' }}>
         *계정생성 시 권한설정 체크 후 생성해주세요.
       </p>
       {/* *계정생성은 SUPERADMIN 권한으로만 가능합니다. */}
@@ -142,7 +142,7 @@ const RegisterPage: React.FC = () => {
       <button
         onClick={handleRegister}
         disabled={isLoading}
-        className={`w-full text-white border-none text-base font-bold cursor-pointer rounded-sm transition-colors hover:bg-[#3b8686] ${
+        className={`w-full text-white border-none text-lg font-bold cursor-pointer rounded-sm transition-colors hover:bg-[#3b8686] ${
           isLoading ? "opacity-70 cursor-not-allowed" : ""
         }`}
         style={{ height: 'var(--height-input)', backgroundColor: '#4a9d9c' }}

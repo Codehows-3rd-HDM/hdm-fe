@@ -270,7 +270,7 @@ const ActivityListTemplate: React.FC<ActivityListTemplateProps> = ({
   };
 
   return (
-    <div style={{ padding: 'var(--spacing-lg) var(--padding-container)' }}>
+    <div style={{ padding: 'var(--spacing-md) var(--padding-responsive)' }}>
       {/* 브레드크럼 */}
       {breadcrumbItems && <Breadcrumb items={breadcrumbItems} />}
       
@@ -307,7 +307,7 @@ const ActivityListTemplate: React.FC<ActivityListTemplateProps> = ({
       </div>
 
       {/* 기간 필터 */}
-      <div className="bg-white shadow-sm rounded-lg flex flex-wrap items-center gap-3 mb-6" style={{ padding: 'var(--spacing-md)' }}>
+      <div className="bg-white shadow-sm rounded-lg flex flex-wrap items-center gap-3 mb-6" style={{ padding: 'var(--spacing-sm)' }}>
         <div className="flex items-center gap-2 text-sm font-semibold text-gray-700">
           <Calendar size={18} className="text-gray-500" />
           <span>활동 기간 :</span>
@@ -318,23 +318,23 @@ const ActivityListTemplate: React.FC<ActivityListTemplateProps> = ({
             type="date"
             value={filterPeriodStart}
             onChange={(e) => setFilterPeriodStart(e.target.value)}
-            className="border rounded-md text-sm"
-            style={{ padding: 'var(--spacing-sm) var(--spacing-md)' }}
+            className="border rounded-md text-base"
+            style={{ padding: 'var(--spacing-xs) var(--spacing-sm)' }}
           />
           <span className="text-gray-400">~</span>
           <input
             type="date"
             value={filterPeriodEnd}
             onChange={(e) => setFilterPeriodEnd(e.target.value)}
-            className="border rounded-md text-sm"
-            style={{ padding: 'var(--spacing-sm) var(--spacing-md)' }}
+            className="border rounded-md text-base"
+            style={{ padding: 'var(--spacing-xs) var(--spacing-sm)' }}
           />
         </div>
 
         <div className="flex items-center gap-2 ml-auto">
           <button
             onClick={handleSearch}
-            className="h-10 px-4 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors font-semibold text-sm whitespace-nowrap flex items-center gap-2"
+            className="h-10 px-4 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors font-semibold text-base whitespace-nowrap flex items-center gap-2"
             title="조회"
           >
             <Search size={16} />
@@ -342,7 +342,7 @@ const ActivityListTemplate: React.FC<ActivityListTemplateProps> = ({
           </button>
           <button
             onClick={handleResetFilter}
-            className="h-10 px-4 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition-colors font-semibold text-sm whitespace-nowrap flex items-center gap-2"
+            className="h-10 px-4 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition-colors font-semibold text-base whitespace-nowrap flex items-center gap-2"
             title="초기화"
           >
             <RotateCcw size={16} />
@@ -360,7 +360,7 @@ const ActivityListTemplate: React.FC<ActivityListTemplateProps> = ({
             isAdmin
               ? "md:grid-cols-[1.2fr_1.2fr_2fr_0.9fr_1fr]"
               : "md:grid-cols-[1.2fr_1.2fr_2fr_1fr]"
-          } gap-3 px-4 py-3 text-xs font-semibold text-gray-500 border-b`}
+          } gap-3 px-4 py-3 text-sm font-semibold text-gray-500 border-b`}
         >
           <div>기간</div>
           <div>제목</div>
@@ -392,7 +392,7 @@ const ActivityListTemplate: React.FC<ActivityListTemplateProps> = ({
                   : "md:grid-cols-[1.2fr_1.2fr_2fr_1fr]"
               } gap-3 px-4 py-4 border-b last:border-b-0 hover:bg-gray-50 cursor-pointer transition-colors`}
             >
-              <div className="flex items-center gap-2 text-sm text-gray-600">
+              <div className="flex items-center gap-2 text-base text-gray-600">
                 <Calendar size={14} className="text-gray-500" />
                 <span>
                   {activity.periodStart} ~ {activity.periodEnd}
@@ -406,7 +406,7 @@ const ActivityListTemplate: React.FC<ActivityListTemplateProps> = ({
                 <span className="truncate">{activity.activityName}</span>
               </div>
 
-              <div className="text-sm text-gray-600 line-clamp-2 md:line-clamp-1">
+              <div className="text-base text-gray-600 line-clamp-2 md:line-clamp-1">
                 {activity.activityDetails}
               </div>
 
@@ -415,18 +415,18 @@ const ActivityListTemplate: React.FC<ActivityListTemplateProps> = ({
               </div>
 
               {isAdmin && (
-                <div className="flex md:justify-end gap-2 text-sm">
+                <div className="flex md:justify-end gap-2 text-base">
                   <button
                     onClick={(e) => handleEditClick(e, activity)}
                     className="border rounded-md text-blue-600 border-blue-100 hover:bg-blue-50"
-                    style={{ padding: 'var(--spacing-sm) var(--spacing-md)' }}
+                    style={{ padding: 'var(--spacing-xs) var(--spacing-sm)' }}
                   >
                     <Edit2 size={14} />
                   </button>
                   <button
                     onClick={(e) => handleDeleteClick(e, activity.id)}
                     className="border rounded-md text-red-600 border-red-100 hover:bg-red-50"
-                    style={{ padding: 'var(--spacing-sm) var(--spacing-md)' }}
+                    style={{ padding: 'var(--spacing-xs) var(--spacing-sm)' }}
                   >
                     <Trash2 size={14} />
                   </button>

@@ -323,7 +323,7 @@ const CarbonAnalysisTemplate: React.FC<CarbonAnalysisTemplateProps> = ({
             onClick={handleDownloadExcel}
             className="flex items-center font-bold text-white transition-colors bg-green-600 rounded-md shadow-sm hover:bg-green-700"
             style={{
-              padding: "var(--spacing-xs) var(--spacing-sm)",
+              padding: "var(--spacing-sm) var(--spacing-md)",
               fontSize: "var(--text-base)",
             }}
           >
@@ -675,8 +675,8 @@ const CarbonAnalysisTemplate: React.FC<CarbonAnalysisTemplateProps> = ({
       <div
         className="flex flex-wrap items-center border border-blue-100 bg-blue-50 rounded-xl"
         style={{
-          gap: "var(--spacing-xs)",
-          padding: "var(--spacing-sm)",
+          gap: "var(--spacing-sm)",
+          padding: "var(--spacing-md)",
           marginBottom: "var(--spacing-md)",
         }}
       >
@@ -693,8 +693,8 @@ const CarbonAnalysisTemplate: React.FC<CarbonAnalysisTemplateProps> = ({
             onChange={(e) => setSearchColumn(e.target.value)}
             className="bg-white border border-blue-200 rounded-md outline-none appearance-none cursor-pointer focus:ring-2 focus:ring-blue-500"
             style={{
-              padding: "var(--spacing-xs)",
-              paddingRight: "var(--spacing-lg)",
+              padding: "var(--spacing-sm)",
+              paddingRight: "var(--spacing-xl)",
               fontSize: "var(--text-base)",
             }}
           >
@@ -721,8 +721,8 @@ const CarbonAnalysisTemplate: React.FC<CarbonAnalysisTemplateProps> = ({
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full border border-blue-200 rounded-md outline-none focus:ring-2 focus:ring-blue-500"
             style={{
-              padding: "var(--spacing-xs)",
-              paddingLeft: "var(--spacing-xs)",
+              padding: "var(--spacing-sm)",
+              paddingLeft: "var(--spacing-sm)",
               paddingRight: "2.25rem",
               fontSize: "var(--text-base)",
             }}

@@ -44,28 +44,6 @@ const KoreaMapChart: React.FC<KoreaMapChartProps> = ({
   theme = "light",
   showNoDecimals = false,
 }) => {
-  //const [localData, setLocalData] = useState<{ region: string; value: number }[]>(propData ?? []);
-
-  // api 전 더미데이터 반환
-  // useEffect(() => {
-  //   let mounted = true;
-  //   const load = async () => {
-  //     if (propData && propData.length > 0) {
-  //       setLocalData(propData);
-  //       return;
-  //     }
-  //     try {
-  //       const d = await fetchRegionalEmissionData();
-  //       if (mounted) setLocalData(d);
-  //     } catch (e) {
-  //       console.error('Failed to fetch regional data', e);
-  //     } finally {
-  //       // finished
-  //     }
-  //   };
-  //   load();
-  //   return () => { mounted = false; };
-  // }, [propData]);
 
   const data = useMemo(() => propData || [], [propData]);
 
@@ -144,7 +122,7 @@ const KoreaMapChart: React.FC<KoreaMapChartProps> = ({
         }`}
       >
         <h4
-          className={`text-4xl font-extrabold mb-5 ${
+          className={`text-3xl font-extrabold mb-5 ${
             theme === "dark" ? "text-white" : "text-gray-800"
           }`}
         >
@@ -267,19 +245,6 @@ const KoreaMapChart: React.FC<KoreaMapChartProps> = ({
           </div>
         </div>
       </div>
-
-      {/* 우측 지역 리스트 */}
-      {/* <div className="w-48 border-l border-gray-200 p-4 overflow-y-auto">
-        <h4 className="text-sm font-bold text-gray-700 mb-3 invisible">지역별 배출량</h4>
-        <div className="space-y-2">
-          {rightRegions.map(({ regionName, value }) => (
-            <div key={regionName} className="flex justify-between items-center text-xs">
-              <span className="font-medium text-gray-600">{regionName}</span>
-              <span className="text-gray-800 font-semibold">{value.toLocaleString()}</span>
-            </div>
-          ))}
-        </div>
-      </div> */}
     </div>
   );
 };
