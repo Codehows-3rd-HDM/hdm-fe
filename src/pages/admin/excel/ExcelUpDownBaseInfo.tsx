@@ -98,6 +98,61 @@ const ExcelUpDownBaseInfoPage: React.FC = () => {
     }
   };
 
+  // [검증 로직] 엑셀 파일 내부 데이터 일관성 검사
+  // 목적: 파일 안에서 동일한 '협력사명'을 가진 행끼리 공급유형/고객이 다른지 체크
+  // =================================================================
+  const validateCompanyConsistency = (data: any[]) => {
+    // 1. 기억장소 생성 (Key: 협력사명, Value: 그 협력사의 유형/고객 정보)
+    const companyMap = new Map<
+      string,
+      { type: string; customer: string; rowIdx: number }
+    >();
+    const errorList: string[] = [];
+
+    // 2. 엑셀 데이터 한 줄씩 스캔
+    data.forEach((row, index) => {
+      // 공백 제거 후 비교 (필수)
+      const name = row["협력사명"]?.toString().trim();
+      const type = row["공급유형"]?.toString().trim() || "";
+      const customer = row["공급고객"]?.toString().trim() || "";
+
+      // 협력사명이 없으면 패스 (다른 필수값 체크 로직에서 잡음)
+      if (!name) return;
+
+      // 3. 이 협력사가 앞에서 등장한 적이 있는가?
+      if (companyMap.has(name)) {
+        // 등장한 적 있음 -> 앞서 등장했던 정보와 "똑같은지" 확인
+        const existing = companyMap.get(name)!;
+
+        // 유형이나 고객 둘 중 하나라도 다르면 에러
+        if (existing.type !== type) {
+          const currentRowNum = index + 2; // 현재 줄 번호 (엑셀 헤더 고려)
+          const originalRowNum = existing.rowIdx + 2; // 최초 등장 줄 번호
+
+          errorList.push(
+            `협력사 "${name}" : ${originalRowNum}, ${currentRowNum}행의 공급유형이 다릅니다.\n` +
+              `   - [${existing.type}],` +
+              `    [${type}]`
+          );
+        } else if (existing.customer !== customer) {
+          const currentRowNum = index + 2; // 현재 줄 번호 (엑셀 헤더 고려)
+          const originalRowNum = existing.rowIdx + 2; // 최초 등장 줄 번호
+
+          errorList.push(
+            `협력사 "${name}" : ${originalRowNum}, ${currentRowNum}행의 공급고객이 다릅니다.\n` +
+              `   - [${existing.customer}],` +
+              `    [${customer}]`
+          );
+        }
+      } else {
+        // 처음 등장함 -> 이 정보를 "기준"으로 등록
+        companyMap.set(name, { type, customer, rowIdx: index });
+      }
+    });
+
+    return errorList;
+  };
+
   // --- [1. 엑셀 파일 읽기 로직 (모달에서 가져옴)] ---
   const handleFileRead = async (file: File) => {
     try {
@@ -147,7 +202,7 @@ const ExcelUpDownBaseInfoPage: React.FC = () => {
           return;
         }
 
-        //데이터를 필수 헤더만 남기고 필터링
+        // 데이터를 필수 헤더만 남기고 필터링
         const filteredData = normalizedData.map((row) => {
           const newRow: any = {};
           // REQUIRED_HEADERS에 있는 키값만 쏙쏙 뽑아서 새 객체 생성
@@ -156,6 +211,29 @@ const ExcelUpDownBaseInfoPage: React.FC = () => {
           });
           return newRow;
         });
+
+        // 3. 파일 내부 일관성(중복 업체명 충돌) 검사
+        const consistencyErrors = validateCompanyConsistency(filteredData);
+
+        if (consistencyErrors.length > 0) {
+          // 에러 발견 시 모달 띄우고 즉시 중단 (서버로 안 보냄, 미리보기 안 띄움)
+
+          let msg =
+            "엑셀 파일 내에 '하나의 업체명 - 다른 공급정보'가 존재합니다.\n(하나의 업체는 하나의 유형/고객만 가져야 합니다)\n\n";
+          msg += consistencyErrors.join("\n\n");
+
+          setAlertState({
+            title: "데이터 무결성 오류 (업로드 불가)",
+            message: msg,
+            isSuccess: false,
+          });
+          setAlertModalOpen(true);
+
+          // 초기화
+          if (fileInputRef.current) fileInputRef.current.value = "";
+          setIsLoading(false);
+          return; // 여기서 함수 종료!
+        }
 
         // 3. 필터링된 데이터로 진행
         // 헤더 상태도 필수 헤더 순서대로 강제 설정 (화면 컬럼 순서 고정 효과)
