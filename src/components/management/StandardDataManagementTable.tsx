@@ -1,7 +1,8 @@
 import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import type { ColumnDefinition } from '../../types/data';
+import Breadcrumb, { type BreadcrumbItem } from '../Breadcrumb';
 import { 
-  ArrowUp, ArrowDown, ArrowUpDown, Search, Save, Trash2, X, CheckSquare, Edit2, Loader2 
+  ArrowUp, ArrowDown, ArrowUpDown, Search, Save, Trash2, X, CheckSquare, Edit2, Loader2, RotateCcw 
 } from 'lucide-react'; 
 // import ExcelUploadModal from '../common/ExcelUploadModal';
 import Modal from '../Modal';
@@ -15,6 +16,7 @@ interface StandardDataManagementTableProps<T> {
   apiEndpoint: string; // [변경] initialData 대신 endpoint만 받음
   disableDelete?: boolean; // 차종 모델 페이지에서 삭제 비활성화
   options?: ManagementOptions;
+  breadcrumbItems?: BreadcrumbItem[];
 }
 
 type ManagementOptions = {
@@ -34,7 +36,8 @@ const StandardDataManagementTable = <T extends { id: number; [key: string]: unkn
   columns, 
   apiEndpoint,
   disableDelete = false,
-  options
+  options,
+  breadcrumbItems
 }: StandardDataManagementTableProps<T>) => {
   // options가 없는 페이지에서는 새 객체가 렌더마다 생성되어 useEffect가 반복되지 않도록 메모이제이션
   const normalizedOptions: ManagementOptions = useMemo(() => options ?? EMPTY_OPTIONS, [options]);
@@ -64,7 +67,7 @@ const StandardDataManagementTable = <T extends { id: number; [key: string]: unkn
   const [currentPage, setCurrentPage] = useState(0); // Spring Boot Page는 0부터 시작
   const [totalPages, setTotalPages] = useState(0);
   const [totalElements, setTotalElements] = useState(0);
-  const [pageSize] = useState(15); // 추후 페이지 크기 변경 기능 추가 시 사용
+  const [pageSize] = useState(10); // 추후 페이지 크기 변경 기능 추가 시 사용
 
   // 대분류 선택 상태 추적 (차량 관리에서 소분류 필터링용)
   const [selectedParentCategories, setSelectedParentCategories] = useState<Record<number, string>>({});
@@ -1121,7 +1124,10 @@ const StandardDataManagementTable = <T extends { id: number; [key: string]: unkn
   // ----------------------------------------------------------------------
 
   return (
-    <div className="p-8 bg-gray-50 min-h-screen font-sans">
+    <>
+    <div className="bg-gray-50 min-h-screen font-sans" style={{ padding: 'var(--padding-responsive)' }}>
+
+      {breadcrumbItems && <Breadcrumb items={breadcrumbItems} />}
       
       {/* 1. 타이틀 */}
       <h2 className="text-2xl font-bold text-gray-800 mb-6">{title}</h2>
@@ -1134,7 +1140,7 @@ const StandardDataManagementTable = <T extends { id: number; [key: string]: unkn
           <select 
             value={String(searchColumn)} 
             onChange={(e) => setSearchColumn(e.target.value as 'all' | keyof T)}
-            className="p-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+            className="h-10 px-3 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-white"
           >
             <option value="all">전체 검색</option>
             {searchableColumns.map(key => (
@@ -1148,23 +1154,44 @@ const StandardDataManagementTable = <T extends { id: number; [key: string]: unkn
               placeholder="검색어를 입력하세요"
               value={searchInput}
               onChange={(e) => {
-                const next = e.target.value;
-                setSearchInput(next);
-                if (!isComposing) {
-                  setSearchQuery(next);
-                }
+                setSearchInput(e.target.value);
               }}
               onCompositionStart={() => setIsComposing(true)}
               onCompositionEnd={(e) => {
                 setIsComposing(false);
-                const finalValue = e.currentTarget.value;
-                setSearchInput(finalValue);
-                setSearchQuery(finalValue);
+                setSearchInput(e.currentTarget.value);
               }}
-              className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !isComposing) {
+                  setSearchQuery(searchInput);
+                }
+              }}
+              className="w-full h-10 pl-10 pr-3 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 outline-none"
             />
-            <Search size={16} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+            <Search size={16} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none" />
           </div>
+
+          <button
+            onClick={() => setSearchQuery(searchInput)}
+            className="h-10 px-4 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors font-semibold text-sm whitespace-nowrap flex items-center gap-2"
+            title="검색"
+          >
+            <Search size={16} />
+            검색
+          </button>
+
+          <button
+            onClick={() => {
+              setSearchInput('');
+              setSearchQuery('');
+              setCurrentPage(0);
+            }}
+            className="h-10 px-4 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition-colors font-semibold text-sm whitespace-nowrap flex items-center gap-2"
+            title="초기화"
+          >
+            <RotateCcw size={16} />
+            초기화
+          </button>
         </div>
       </div>
       
@@ -1177,8 +1204,8 @@ const StandardDataManagementTable = <T extends { id: number; [key: string]: unkn
             </div>
         ) : (
             <div className="overflow-x-auto">
-                <table className="w-full text-sm text-left text-gray-600">
-                <thead className="text-xs text-gray-700 uppercase bg-gray-100 border-b border-gray-200">
+                <table className="w-full text-base text-left text-gray-600">
+                <thead className="text-sm text-gray-700 uppercase bg-gray-100 border-b border-gray-200">
                     <tr>
                     {/* 체크박스 (일괄 수정 시) */}
                     {isBatchEditing && (
@@ -1202,7 +1229,7 @@ const StandardDataManagementTable = <T extends { id: number; [key: string]: unkn
                     )}
 
                     {/* 번호 헤더 */}
-                    <th className="px-6 py-3 text-center w-16">#</th>
+                    <th className="text-center w-16" style={{ padding: 'var(--spacing-xs) var(--spacing-md)' }}>#</th>
 
                     {/* 데이터 컬럼 헤더 */}
                     {columns.map(col => (
@@ -1242,7 +1269,7 @@ const StandardDataManagementTable = <T extends { id: number; [key: string]: unkn
                         >
                         {/* 체크박스 */}
                         {isBatchEditing && (
-                            <td className="p-4 text-center">
+                            <td className="text-center" style={{ padding: 'var(--spacing-sm)' }}>
                                 <input 
                                     type="checkbox" 
                                     checked={isSelected} 
@@ -1253,27 +1280,29 @@ const StandardDataManagementTable = <T extends { id: number; [key: string]: unkn
                         )}
 
                         {/* 번호 */}
-                        <td className="px-6 py-4 text-center font-medium text-gray-900">
+                        <td className="text-center font-medium text-gray-900" style={{ padding: 'var(--spacing-sm) var(--spacing-md)' }}>
                             {rowNumber}
                         </td>
 
                         {/* 데이터 셀 */}
                         {columns.map(col => (
-                            <td key={String(col.id)} className="px-6 py-4">
+                            <td key={String(col.id)} style={{ padding: 'var(--spacing-sm) var(--spacing-md)' }}>
                             {col.id === 'actions' ? (
                                 <div className="flex gap-2">
                                     {isRowEditing && !isBatchEditing ? (
                                       <>
                                         <button 
                                           onClick={() => handleSingleSave(rowId)} 
-                                          className="p-1.5 bg-green-100 text-green-700 rounded hover:bg-green-200" title="저장"
+                                          className="bg-green-100 text-green-700 rounded hover:bg-green-200" title="저장"
+                                          style={{ padding: 'var(--spacing-xs)' }}
                                         >
                                           <Save size={16} />
                                         </button>
                                         {/* 단일 수정 취소 */}
                                         <button
                                           onClick={() => handleSingleCancel(rowId)}
-                                          className="p-1.5 bg-gray-100 text-gray-700 rounded hover:bg-gray-200" title="취소"
+                                          className="bg-gray-100 text-gray-700 rounded hover:bg-gray-200" title="취소"
+                                          style={{ padding: 'var(--spacing-xs)' }}
                                         >
                                           <X size={16} />
                                         </button>
@@ -1281,7 +1310,8 @@ const StandardDataManagementTable = <T extends { id: number; [key: string]: unkn
                                     ) : !isBatchEditing ? (
                                         <button 
                                             onClick={() => toggleEditMode(rowId)} 
-                                            className="p-1.5 bg-yellow-100 text-yellow-700 rounded hover:bg-yellow-200" title="수정"
+                                            className="bg-yellow-100 text-yellow-700 rounded hover:bg-yellow-200" title="수정"
+                                            style={{ padding: 'var(--spacing-xs)' }}
                                         >
                                             <Edit2 size={16} />
                                         </button>
@@ -1289,7 +1319,8 @@ const StandardDataManagementTable = <T extends { id: number; [key: string]: unkn
                                     {!isRowEditing && !disableDelete && !isBatchEditing && (
                                         <button 
                                             onClick={() => handleSingleDelete(rowId)} 
-                                            className="p-1.5 bg-red-100 text-red-700 rounded hover:bg-red-200" title="삭제"
+                                            className="bg-red-100 text-red-700 rounded hover:bg-red-200" title="삭제"
+                                            style={{ padding: 'var(--spacing-xs)' }}
                                         >
                                             <Trash2 size={16} />
                                         </button>
@@ -1304,7 +1335,7 @@ const StandardDataManagementTable = <T extends { id: number; [key: string]: unkn
                     );
                     }) : (
                         <tr>
-                            <td colSpan={columns.length + (isBatchEditing ? 2 : 1)} className="px-6 py-10 text-center text-gray-500">
+                            <td colSpan={columns.length + (isBatchEditing ? 2 : 1)} className="text-center text-gray-500" style={{ padding: 'var(--spacing-xl) var(--spacing-md)' }}>
                                 데이터가 없습니다.
                             </td>
                         </tr>
@@ -1335,7 +1366,7 @@ const StandardDataManagementTable = <T extends { id: number; [key: string]: unkn
               disabled={currentPage === 0}
               className={`${pageBtnBase} ${currentPage === 0 ? pageBtnDisabled : pageBtnDefault}`}
             >
-              ⏮
+              ◀◀
             </button>
             <button
               onClick={() => handlePageChange(Math.max(currentGroupStart - pageGroupSize, 0))}
@@ -1381,7 +1412,7 @@ const StandardDataManagementTable = <T extends { id: number; [key: string]: unkn
               disabled={currentPage === totalPages - 1}
               className={`${pageBtnBase} ${currentPage === totalPages - 1 ? pageBtnDisabled : pageBtnDefault}`}
             >
-              ⏭
+              ▶▶
             </button>
         </div>
 
@@ -1422,6 +1453,7 @@ const StandardDataManagementTable = <T extends { id: number; [key: string]: unkn
       isSuccess={errorTitle.includes('완료')}
     />
     </div>
+    </>
   );
 };
 

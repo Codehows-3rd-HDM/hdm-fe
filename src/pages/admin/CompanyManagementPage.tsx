@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import StandardDataManagementTable from '../../components/management/StandardDataManagementTable';
+import { getBreadcrumbItems } from '../../utils/breadcrumbHelper';
 import { type CompanyData, COMPANY_COLUMNS } from '../../types/data';
 import { fetchRegistrationOptions, type OptionsData } from '../../apis/registerApi';
 
@@ -59,6 +60,7 @@ const CompanyManagementPage: React.FC = () => {
       columns={COMPANY_COLUMNS}
       apiEndpoint="/admin/company"
       options={options}
+      breadcrumbItems={getBreadcrumbItems('/admin/company/manage')}
     />
   );
 };

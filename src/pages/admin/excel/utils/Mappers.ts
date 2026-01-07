@@ -18,6 +18,16 @@ export const mapToNiceParkData = (data: any[]) => {
 export const mapToS1Data = (data: any[]) => {
   let idx = 1;
   return data
+    .filter((row) => {
+      // 1. 유효한 '출근판정' 값인지 확인
+      const workStatus = row["출근판정"];
+      // 2. 허용할 목록 (팀원과 협의한 대로)
+      const validStatuses = ["정상출근", "지각", "휴일출근"];
+
+      // 3. 목록에 포함되어 있으면 통과 (true), 아니면 제거 (false)
+      // (혹시 모를 공백이나 undefined 방지를 위해 안전하게 체크)
+      return workStatus && validStatuses.includes(workStatus.trim());
+    })
     .map((row) => ({
       idx: idx++,
       memberId: row["사원번호"],

@@ -35,9 +35,9 @@ const Modal: React.FC<ModalProps> = ({
     // 배경 오버레이
     <div className="fixed inset-0 z-[9999] flex items-center justify-center">
       {/* 모달 본체 */}
-      <div className="bg-white rounded-lg shadow-xl p-6 w-11/12 max-w-sm transform transition-all duration-300 scale-100">
+      <div className="bg-white rounded-lg shadow-xl w-11/12 max-w-sm transform transition-all duration-300 scale-100" style={{ padding: 'var(--padding-card)' }}>
         {/* 헤더 및 닫기 버튼 */}
-        <div className="flex justify-between items-start border-b pb-3 mb-4">
+        <div className="flex justify-between items-start border-b mb-4" style={{ paddingBottom: 'var(--spacing-md)' }}>
           <h3 className="text-xl font-bold text-gray-800">{title}</h3>
           <button
             onClick={onClose}
@@ -62,12 +62,13 @@ const Modal: React.FC<ModalProps> = ({
         <div className="flex justify-center">
           <button
             onClick={onClose}
-            className={`w-full py-2 px-4 font-bold text-white rounded-lg transition-colors 
+            className={`w-full font-bold text-white rounded-lg transition-colors 
               ${
                 isSuccess
                   ? "bg-green-600 hover:bg-green-700"
                   : "bg-red-600 hover:bg-red-700"
               }`}
+            style={{ padding: 'var(--padding-btn)' }}
           >
             확인
           </button>

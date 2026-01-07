@@ -12,30 +12,8 @@ import {
 } from "recharts";
 import { Download, ChevronDown, Search } from "lucide-react";
 import KoreaMapChart from "../../components/analysis/KoreaMapChart";
-
-// --- Mock Data ---
-// Note: Map data is now fetched from mapApi automatically
-
-// 2. 협력사 데이터 (전체 데이터)
-// const MOCK_COMPANY_DATA = Array.from({ length: 30 }, (_, i) => ({
-//   id: i + 1,
-//   name: `협력사 ${String.fromCharCode(65 + (i % 26))}${i}`,
-//   value: Math.floor(Math.random() * 5000) + 500,
-//   address: i % 2 === 0 ? "경기도 성남시" : "울산광역시 북구",
-//   ratio: 0,
-// })).sort((a, b) => b.value - a.value);
-
-// 3. 그래프용 Top5 데이터
-//const TOP5_COMPANY_DATA = MOCK_COMPANY_DATA.slice(0, 5);
-
-// 총합 → 비율 계산
-// const totalEmission = MOCK_COMPANY_DATA.reduce(
-//   (acc, curr) => acc + curr.value,
-//   0
-// );
-// MOCK_COMPANY_DATA.forEach(
-//   (d) => (d.ratio = parseFloat(((d.value / totalEmission) * 100).toFixed(1)))
-// );
+import Breadcrumb from "../../components/Breadcrumb";
+import { getBreadcrumbItems } from "../../utils/breadcrumbHelper";
 
 //==================================================================
 // 타입 정의 (DTO와 프론트 맞춤)
@@ -296,27 +274,31 @@ const CompanyEmissionPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen p-8 font-sans bg-gray-50">
+    <div className="min-h-screen font-sans bg-gray-50" style={{ padding: 'var(--padding-responsive)' }}>
+      {/* 브레드크럼 */}
+      <Breadcrumb items={getBreadcrumbItems('/view/company')} />
+      
       {/* 헤더 */}
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-bold text-gray-800">
+      <div className="flex items-center justify-between" style={{ marginBottom: 'var(--spacing-lg)' }}>
+        <h2 className="font-bold text-gray-800" style={{ fontSize: 'clamp(1.5rem, 2vw, 1.75rem)' }}>
           협력사별 탄소 배출량
         </h2>
-        <div className="flex gap-3">
+        <div className="flex" style={{ gap: 'var(--spacing-md)' }}>
           <button
             onClick={handleDownloadExcel}
-            className="flex items-center px-4 py-2 font-bold text-white transition-colors bg-green-600 rounded-md shadow-sm hover:bg-green-700"
+            className="flex items-center font-bold text-white transition-colors bg-green-600 rounded-md shadow-sm hover:bg-green-700"
+            style={{ padding: 'var(--spacing-sm) var(--spacing-md)', fontSize: 'var(--text-base)' }}
           >
-            <Download size={16} className="mr-2" /> Excel
+            <Download size={16} style={{ marginRight: 'var(--spacing-xs)' }} /> Excel
           </button>
         </div>
       </div>
 
       {/* 필터 영역 */}
-      <div className="flex gap-6 p-5 mb-6 bg-white border border-gray-100 shadow-sm rounded-xl">
+      <div className="flex bg-white border border-gray-100 shadow-sm rounded-xl" style={{ gap: 'var(--spacing-md)', padding: 'var(--spacing-md)', marginBottom: 'var(--spacing-lg)' }}>
         {/* 연도 선택 */}
-        <div className="flex flex-col gap-1.5">
-          <label className="text-xs font-bold text-gray-500">▼ 연도 선택</label>
+        <div className="flex flex-col" style={{ gap: 'var(--spacing-xs)' }}>
+          <label className="font-bold text-gray-500" style={{ fontSize: 'var(--text-sm)' }}>▼ 연도 선택</label>
           <div className="relative">
             <select
               value={selectedYear}
@@ -324,9 +306,9 @@ const CompanyEmissionPage: React.FC = () => {
                 setSelectedYear(e.target.value);
                 if (e.target.value === "all") setSelectedMonth("all");
               }}
-              className="w-32 p-2 pr-8 text-sm bg-white border border-gray-300 rounded-md outline-none cursor-pointer"
+              className="bg-white border border-gray-300 rounded-md outline-none cursor-pointer"
+              style={{ width: 'clamp(7rem, 10vw, 8rem)', padding: 'var(--spacing-sm) 2rem var(--spacing-sm) var(--spacing-sm)', fontSize: 'var(--text-base)' }}
             >
-              <option value="all">전체</option>
               {years.map((y) => (
                 <option key={y} value={y}>
                   {y}년
@@ -342,13 +324,14 @@ const CompanyEmissionPage: React.FC = () => {
 
         {/* 월 선택 */}
         {selectedYear !== "all" && (
-          <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-bold text-gray-500">▼ 월 선택</label>
+          <div className="flex flex-col" style={{ gap: 'var(--spacing-xs)' }}>
+            <label className="font-bold text-gray-500" style={{ fontSize: 'var(--text-sm)' }}>▼ 월 선택</label>
             <div className="relative">
               <select
                 value={selectedMonth}
                 onChange={(e) => setSelectedMonth(e.target.value)}
-                className="w-32 p-2 pr-8 text-sm bg-white border border-gray-300 rounded-md outline-none cursor-pointer"
+                className="bg-white border border-gray-300 rounded-md outline-none cursor-pointer"
+                style={{ width: 'clamp(7rem, 10vw, 8rem)', padding: 'var(--spacing-sm) 2rem var(--spacing-sm) var(--spacing-sm)', fontSize: 'var(--text-base)' }}
               >
                 <option value="all">전체</option>
                 {Array.from({ length: 12 }, (_, i) => i + 1).map((m) => (
@@ -357,10 +340,6 @@ const CompanyEmissionPage: React.FC = () => {
                   </option>
                 ))}
               </select>
-              {/* <ChevronDown
-                size={16}
-                className="absolute text-gray-400 -translate-y-1/2 pointer-events-none right-2 top-1/2"
-              /> */}
             </div>
           </div>
         )}
@@ -369,20 +348,20 @@ const CompanyEmissionPage: React.FC = () => {
       {/* ========================== */}
       {/* 좌우 배치: 왼쪽 지도, 오른쪽 Top5 차트 */}
       {/* ========================== */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-10">
+      <div className="grid grid-cols-1 lg:grid-cols-2 h-150" style={{ gap: 'var(--spacing-lg)', marginBottom: '2.5rem' }}>
         {/* 왼쪽: 지역별 탄소 배출량 지도 */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 h-150">
-          <h3 className="mb-2 text-lg font-bold text-gray-800">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 h-150" style={{ padding: 'var(--spacing-md)' }}>
+          {/* <h3 className="text-base font-bold text-gray-800" style={{ marginBottom: 'var(--spacing-sm)' }}>
             지역별 탄소 배출량
-          </h3>
+          </h3> */}
           <div className="h-150">
             <KoreaMapChart data={regionData} />
           </div>
         </div>
 
         {/* 오른쪽: 협력사별 탄소 배출량 Top5 */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 h-150">
-          <h3 className="mb-15 text-lg font-bold text-gray-800">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 h-150" style={{ padding: 'var(--spacing-md)' }}>
+          <h3 className="text-3xl font-bold text-gray-800" style={{ marginBottom: 'var(--spacing-lg)' }}>
             협력사별 탄소 배출량 Top5
           </h3>
           <div className="h-125">
@@ -397,11 +376,11 @@ const CompanyEmissionPage: React.FC = () => {
                   horizontal={true}
                   vertical={false}
                 />
-                <XAxis type="number" />
+                <XAxis type="number" tick={{ fontSize: 16 }} />
                 <YAxis
                   dataKey="name"
                   type="category"
-                  tick={{ fontSize: 12 }}
+                  tick={{ fontSize: 16 }}
                   width={80}
                 />
                 <Tooltip
@@ -433,7 +412,7 @@ const CompanyEmissionPage: React.FC = () => {
       {/* ========================== */}
 
       {/* 검색바 */}
-      <div className="flex items-center gap-3 p-4 mb-6 border border-blue-100 bg-blue-50 rounded-xl">
+      <div className="flex items-center border border-blue-100 bg-blue-50 rounded-xl" style={{ gap: 'var(--spacing-sm)', padding: 'var(--spacing-md)', marginBottom: 'var(--spacing-lg)' }}>
         <span className="font-bold text-blue-700 whitespace-nowrap">
           협력사명 검색
         </span>
@@ -442,7 +421,8 @@ const CompanyEmissionPage: React.FC = () => {
           <select
             value={searchColumn}
             onChange={(e) => setSearchColumn(e.target.value)}
-            className="p-2 pr-8 text-sm bg-white border border-blue-200 rounded-md outline-none appearance-none cursor-pointer focus:ring-2 focus:ring-blue-500"
+            className="bg-white border border-blue-200 rounded-md outline-none appearance-none cursor-pointer focus:ring-2 focus:ring-blue-500"
+            style={{ padding: 'var(--spacing-sm) 2rem var(--spacing-sm) var(--spacing-sm)', fontSize: 'var(--text-base)' }}
           >
             <option value="all">전체 검색</option>
             <option value="name">협력사명</option>
@@ -460,7 +440,8 @@ const CompanyEmissionPage: React.FC = () => {
             placeholder="검색어 입력"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full py-2 pl-3 text-sm border border-blue-200 rounded-md outline-none pr-9 focus:ring-2 focus:ring-blue-500"
+            className="w-full border border-blue-200 rounded-md outline-none focus:ring-2 focus:ring-blue-500"
+            style={{ padding: 'var(--spacing-sm) 2.25rem var(--spacing-sm) 0.75rem', fontSize: 'var(--text-base)' }}
           />
           <Search
             size={18}
@@ -472,15 +453,16 @@ const CompanyEmissionPage: React.FC = () => {
       {/* 데이터 테이블 */}
       <div className="overflow-hidden bg-white border border-gray-200 shadow-sm rounded-xl">
         <div className="overflow-x-auto">
-          <table className="w-full text-sm text-gray-600">
-            <thead className="text-xs font-bold text-gray-700 uppercase border-b border-gray-200 bg-gray-50">
+          <table className="w-full text-gray-600" style={{ fontSize: 'var(--text-base)' }}>
+            <thead className="font-bold text-gray-700 uppercase border-b border-gray-200 bg-gray-50" style={{ fontSize: 'var(--text-sm)' }}>
               <tr>
-                <th className="w-16 px-4 py-3 text-center">No.</th>
+                <th className="w-16 text-center" style={{ padding: 'var(--spacing-xs) var(--spacing-sm)' }}>No.</th>
                 <th
                   onClick={() => handleSort("name")}
-                  className="px-4 py-3 text-left transition-colors cursor-pointer hover:bg-gray-100"
+                  className="text-left transition-colors cursor-pointer hover:bg-gray-100"
+                  style={{ padding: 'var(--spacing-xs) var(--spacing-sm)' }}
                 >
-                  <div className="flex items-center gap-1">
+                  <div className="flex items-center" style={{ gap: 'var(--spacing-xs)' }}>
                     협력사명
                     {sortConfig?.key === "name" && (
                       <span>{sortConfig.direction === "asc" ? "▲" : "▼"}</span>
@@ -489,9 +471,10 @@ const CompanyEmissionPage: React.FC = () => {
                 </th>
                 <th
                   onClick={() => handleSort("value")}
-                  className="px-4 py-3 text-center transition-colors cursor-pointer hover:bg-gray-100"
+                  className="text-center transition-colors cursor-pointer hover:bg-gray-100"
+                  style={{ padding: 'var(--spacing-xs) var(--spacing-sm)' }}
                 >
-                  <div className="flex items-center justify-center gap-1">
+                  <div className="flex items-center justify-center" style={{ gap: 'var(--spacing-xs)' }}>
                     탄소배출량 (tCO2eq)
                     {sortConfig?.key === "value" && (
                       <span>{sortConfig.direction === "asc" ? "▲" : "▼"}</span>
@@ -500,9 +483,10 @@ const CompanyEmissionPage: React.FC = () => {
                 </th>
                 <th
                   onClick={() => handleSort("ratio")}
-                  className="px-4 py-3 text-center transition-colors cursor-pointer hover:bg-gray-100"
+                  className="text-center transition-colors cursor-pointer hover:bg-gray-100"
+                  style={{ padding: 'var(--spacing-xs) var(--spacing-sm)' }}
                 >
-                  <div className="flex items-center justify-center gap-1">
+                  <div className="flex items-center justify-center" style={{ gap: 'var(--spacing-xs)' }}>
                     비율 (%)
                     {sortConfig?.key === "ratio" && (
                       <span>{sortConfig.direction === "asc" ? "▲" : "▼"}</span>
@@ -511,9 +495,10 @@ const CompanyEmissionPage: React.FC = () => {
                 </th>
                 <th
                   onClick={() => handleSort("address")}
-                  className="px-4 py-3 text-left transition-colors cursor-pointer hover:bg-gray-100"
+                  className="text-left transition-colors cursor-pointer hover:bg-gray-100"
+                  style={{ padding: 'var(--spacing-xs) var(--spacing-sm)' }}
                 >
-                  <div className="flex items-center gap-1">
+                  <div className="flex items-center" style={{ gap: 'var(--spacing-xs)' }}>
                     주소
                     {sortConfig?.key === "address" && (
                       <span>{sortConfig.direction === "asc" ? "▲" : "▼"}</span>
@@ -525,7 +510,7 @@ const CompanyEmissionPage: React.FC = () => {
             <tbody className="divide-y divide-gray-100">
               {loading ? (
                 <tr>
-                  <td colSpan={5} className="px-6 py-10 text-center">
+                  <td colSpan={5} className="text-center" style={{ padding: 'var(--spacing-xl) var(--spacing-lg)' }}>
                     데이터를 불러오는 중입니다...
                   </td>
                 </tr>
@@ -535,13 +520,13 @@ const CompanyEmissionPage: React.FC = () => {
                     key={row.id}
                     className="transition-colors hover:bg-gray-50"
                   >
-                    <td className="px-4 py-3 text-center text-gray-500">
+                    <td className="text-center text-gray-500" style={{ padding: 'var(--spacing-xs) var(--spacing-sm)' }}>
                       {idx + 1}
                     </td>
-                    <td className="px-4 py-3 font-medium text-left text-gray-800">
+                    <td className="font-medium text-left text-gray-800" style={{ padding: 'var(--spacing-xs) var(--spacing-sm)' }}>
                       {row.name}
                     </td>
-                    <td className="px-4 py-3 text-center text-gray-800">
+                    <td className="text-center text-gray-800" style={{ padding: 'var(--spacing-xs) var(--spacing-sm)' }}>
                       {parseFloat(
                         roundEmission(row.value).toFixed(2)
                       ).toLocaleString(undefined, {
@@ -549,10 +534,10 @@ const CompanyEmissionPage: React.FC = () => {
                         maximumFractionDigits: 2,
                       })}
                     </td>
-                    <td className="px-4 py-3 text-center text-gray-800">
+                    <td className="text-center text-gray-800" style={{ padding: 'var(--spacing-xs) var(--spacing-sm)' }}>
                       {row.ratio}%
                     </td>
-                    <td className="px-4 py-3 text-left text-gray-600">
+                    <td className="text-left text-gray-600" style={{ padding: 'var(--spacing-xs) var(--spacing-sm)' }}>
                       {row.address}
                     </td>
                   </tr>
@@ -561,7 +546,8 @@ const CompanyEmissionPage: React.FC = () => {
                 <tr>
                   <td
                     colSpan={5}
-                    className="px-6 py-10 text-center text-gray-500"
+                    className="text-center text-gray-500"
+                    style={{ padding: 'var(--spacing-xl) var(--spacing-lg)' }}
                   >
                     데이터가 없습니다.
                   </td>

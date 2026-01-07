@@ -1,5 +1,6 @@
 import React from 'react';
 import StandardDataManagementTable from '../../components/management/StandardDataManagementTable';
+import { getBreadcrumbItems } from '../../utils/breadcrumbHelper';
 import { type ProcessData, PROCESS_COLUMNS } from '../../types/data';
 
 const SupplyTypeManagementPage: React.FC = () => {
@@ -10,6 +11,7 @@ const SupplyTypeManagementPage: React.FC = () => {
       // initialData={MOCK_PROCESS_DATA}
       apiEndpoint="/admin/supply-type"
       disableDelete={false}
+      breadcrumbItems={getBreadcrumbItems('/admin/supply-type/manage')}
     />
   );
 };

@@ -45,35 +45,35 @@ const LoginPage: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-white p-5 font-sans">
-      <h2 className="text-3xl font-bold mb-12 text-gray-800">로그인</h2>
+    <div className="flex flex-col items-center justify-center min-h-screen bg-white font-sans" style={{ padding: 'var(--padding-responsive)' }}>
+      <h2 className="text-4xl font-bold text-gray-800" style={{ marginBottom: 'var(--spacing-2xl)' }}>로그인</h2>
 
       <form onSubmit={handleLogin} className="w-full flex flex-col items-center">
         {/* 아이디 입력 */}
-        <div className="flex items-center w-full max-w-[400px] h-[55px] border border-gray-300 px-4 mb-4 bg-white box-border rounded-sm">
+        <div className="flex items-center w-full max-w-[400px] border border-gray-300 bg-white box-border rounded-sm" style={{ height: 'var(--height-input)', padding: 'var(--spacing-sm)', marginBottom: 'var(--spacing-sm)' }}>
           <User size={20} className="text-gray-400" />
           <input
             type="text"
-            placeholder="Username"
-            className="border-none outline-none flex-1 h-full text-[15px] ml-3 text-gray-800 bg-transparent"
+            placeholder="아이디"
+            className="border-none outline-none flex-1 h-full text-base ml-3 text-gray-800 bg-transparent"
             value={userName}
             onChange={(e) => setUserName(e.target.value)}
           />
         </div>
 
         {/* 비밀번호 입력 */}
-        <div className="flex items-center w-full max-w-[400px] h-[55px] border border-gray-300 px-4 mb-4 bg-white box-border rounded-sm">
+        <div className="flex items-center w-full max-w-[400px] border border-gray-300 bg-white box-border rounded-sm" style={{ height: 'var(--height-input)', padding: 'var(--spacing-sm)', marginBottom: 'var(--spacing-sm)' }}>
           <Lock size={20} className="text-gray-400" />
           <input
             type={showPassword ? "text" : "password"}
-            placeholder="Password"
-            className="border-none outline-none flex-1 h-full text-[15px] ml-3 text-gray-800 bg-transparent"
+            placeholder="비밀번호"
+            className="border-none outline-none flex-1 h-full text-base ml-3 text-gray-800 bg-transparent"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
           />
           <button 
             type="button"
-            className="bg-none border-none cursor-pointer text-gray-400 text-[11px] font-bold ml-2"
+            className="bg-none border-none cursor-pointer text-gray-400 text-xs font-bold ml-2"
             onClick={() => setShowPassword(!showPassword)}
           >
             SHOW
@@ -84,7 +84,8 @@ const LoginPage: React.FC = () => {
         <button 
           type="submit"
           disabled={isLoading}
-          className={`w-full max-w-[400px] h-[60px] bg-[#1f253b] text-white border-none text-base font-bold cursor-pointer flex items-center justify-between px-6 mt-2 box-border rounded-sm transition-opacity hover:opacity-90 ${isLoading ? 'opacity-70 cursor-not-allowed' : ''}`}
+          className={`w-full max-w-[400px] bg-[#1f253b] text-white border-none text-lg font-bold cursor-pointer flex items-center justify-between box-border rounded-sm transition-opacity hover:opacity-90 ${isLoading ? 'opacity-70 cursor-not-allowed' : ''}`}
+          style={{ height: 'var(--height-input)', padding: '0 var(--spacing-xl)', marginTop: 'var(--spacing-sm)' }}
         >
           <span className="flex-1 text-center ml-6">
             {isLoading ? '로그인 중...' : '로그인'}

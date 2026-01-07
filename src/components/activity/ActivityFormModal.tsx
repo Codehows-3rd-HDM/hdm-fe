@@ -219,9 +219,9 @@ const ActivityFormModal: React.FC<ActivityFormModalProps> = ({
 
   return (
     <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-1000">
-      <div className="bg-white rounded-lg w-150 max-h-[90vh] overflow-y-auto p-8 relative">
+      <div className="bg-white rounded-lg max-h-[90vh] overflow-y-auto relative" style={{ width: '37.5rem', padding: 'var(--padding-card)' }}>
         {/* 헤더 */}
-        <div className="mb-5 border-b border-gray-200 pb-4 relative">
+        <div className="border-b border-gray-200 relative" style={{ marginBottom: 'var(--spacing-lg)', paddingBottom: 'var(--spacing-md)' }}>
           <h2 className="text-xl font-bold">
             {mode === "create"
               ? "활동 등록"
@@ -243,22 +243,23 @@ const ActivityFormModal: React.FC<ActivityFormModalProps> = ({
         </div>
 
         {/* 폼 영역 */}
-        <div className="flex flex-col gap-5">
+        <div className="flex flex-col" style={{ gap: 'var(--spacing-lg)' }}>
           {/* 활동 기간 */}
           <div>
-            <label className="block text-sm font-bold mb-2 text-gray-800">
+            <label className="block text-sm font-bold text-gray-800" style={{ marginBottom: 'var(--spacing-sm)' }}>
               활동기간
             </label>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center" style={{ gap: 'var(--spacing-sm)' }}>
               <input
                 type="date"
                 name="periodStart"
                 value={formData.periodStart}
                 onChange={handleChange}
                 disabled={isReadOnly}
-                className={`flex-1 px-3 py-2 rounded border text-sm ${
+                className={`flex-1 rounded border text-sm ${
                   isReadOnly ? "bg-gray-100" : "bg-white"
                 }`}
+                style={{ padding: 'var(--padding-input-sm)' }}
               />
               <span>~</span>
               <input
@@ -267,25 +268,26 @@ const ActivityFormModal: React.FC<ActivityFormModalProps> = ({
                 value={formData.periodEnd}
                 onChange={handleChange}
                 disabled={isReadOnly}
-                className={`flex-1 px-3 py-2 rounded border text-sm ${
+                className={`flex-1 rounded border text-sm ${
                   isReadOnly ? "bg-gray-100" : "bg-white"
                 }`}
+                style={{ padding: 'var(--padding-input-sm)' }}
               />
             </div>
             {errors.periodStart && (
-              <p className="text-red-500 text-xs mt-1">{errors.periodStart}</p>
+              <p className="text-red-500 text-xs" style={{ marginTop: 'var(--spacing-xs)' }}>{errors.periodStart}</p>
             )}
             {errors.periodEnd && (
-              <p className="text-red-500 text-xs mt-1">{errors.periodEnd}</p>
+              <p className="text-red-500 text-xs" style={{ marginTop: 'var(--spacing-xs)' }}>{errors.periodEnd}</p>
             )}
             {errors.dateRange && (
-              <p className="text-red-500 text-xs mt-1">{errors.dateRange}</p>
+              <p className="text-red-500 text-xs" style={{ marginTop: 'var(--spacing-xs)' }}>{errors.dateRange}</p>
             )}
           </div>
 
           {/* 활동명 */}
           <div>
-            <label className="block text-sm font-bold mb-2 text-gray-800">
+            <label className="block text-sm font-bold text-gray-800" style={{ marginBottom: 'var(--spacing-sm)' }}>
               활동명
             </label>
             <input
@@ -295,18 +297,19 @@ const ActivityFormModal: React.FC<ActivityFormModalProps> = ({
               onChange={handleChange}
               disabled={isReadOnly}
               placeholder="활동명을 입력하세요"
-              className={`w-full px-3 py-2 rounded border text-sm ${
+              className={`w-full rounded border text-sm ${
                 isReadOnly ? "bg-gray-100" : "bg-white"
               }`}
+              style={{ padding: 'var(--padding-input-sm)' }}
             />
             {errors.activityName && (
-              <p className="text-red-500 text-xs mt-1">{errors.activityName}</p>
+              <p className="text-red-500 text-xs" style={{ marginTop: 'var(--spacing-xs)' }}>{errors.activityName}</p>
             )}
           </div>
 
           {/* 활동내역 */}
           <div>
-            <label className="block text-sm font-bold mb-2 text-gray-800">
+            <label className="block text-sm font-bold text-gray-800" style={{ marginBottom: 'var(--spacing-sm)' }}>
               활동내역
             </label>
             <textarea
@@ -315,12 +318,13 @@ const ActivityFormModal: React.FC<ActivityFormModalProps> = ({
               onChange={handleChange}
               disabled={isReadOnly}
               placeholder="활동 내역을 상세히 입력하세요"
-              className={`w-full px-3 py-2 rounded border text-sm h-24 resize-none ${
+              className={`w-full rounded border text-sm resize-none ${
                 isReadOnly ? "bg-gray-100" : "bg-white"
               }`}
+              style={{ padding: 'var(--padding-input-sm)', height: '6rem' }}
             />
             {errors.activityDetails && (
-              <p className="text-red-500 text-xs mt-1">
+              <p className="text-red-500 text-xs" style={{ marginTop: 'var(--spacing-xs)' }}>
                 {errors.activityDetails}
               </p>
             )}
@@ -328,7 +332,7 @@ const ActivityFormModal: React.FC<ActivityFormModalProps> = ({
 
           {/* 소요금액 */}
           <div>
-            <label className="block text-sm font-bold mb-2 text-gray-800">
+            <label className="block text-sm font-bold text-gray-800" style={{ marginBottom: 'var(--spacing-sm)' }}>
               소요금액 (원)
             </label>
             <input
@@ -338,18 +342,19 @@ const ActivityFormModal: React.FC<ActivityFormModalProps> = ({
               onChange={handleChange}
               disabled={isReadOnly}
               placeholder="소요된 금액을 입력하세요"
-              className={`w-full px-3 py-2 rounded border text-sm ${
+              className={`w-full rounded border text-sm ${
                 isReadOnly ? "bg-gray-100" : "bg-white"
               }`}
+              style={{ padding: 'var(--padding-input-sm)' }}
             />
             {errors.costAmount && (
-              <p className="text-red-500 text-xs mt-1">{errors.costAmount}</p>
+              <p className="text-red-500 text-xs" style={{ marginTop: 'var(--spacing-xs)' }}>{errors.costAmount}</p>
             )}
           </div>
 
           {/* 기대효과 */}
           <div>
-            <label className="block text-sm font-bold mb-2 text-gray-800">
+            <label className="block text-sm font-bold text-gray-800" style={{ marginBottom: 'var(--spacing-sm)' }}>
               기대효과
             </label>
             <input
@@ -359,12 +364,13 @@ const ActivityFormModal: React.FC<ActivityFormModalProps> = ({
               onChange={handleChange}
               disabled={isReadOnly}
               placeholder="기대되는 효과를 입력하세요"
-              className={`w-full px-3 py-2 rounded border text-sm ${
+              className={`w-full rounded border text-sm ${
                 isReadOnly ? "bg-gray-100" : "bg-white"
               }`}
+              style={{ padding: 'var(--padding-input-sm)' }}
             />
             {errors.expectedEffect && (
-              <p className="text-red-500 text-xs mt-1">
+              <p className="text-red-500 text-xs" style={{ marginTop: 'var(--spacing-xs)' }}>
                 {errors.expectedEffect}
               </p>
             )}
@@ -372,10 +378,10 @@ const ActivityFormModal: React.FC<ActivityFormModalProps> = ({
 
           {/* 사진 업로드 */}
           <div>
-            <label className="block text-sm font-bold mb-2 text-gray-800">
+            <label className="block text-sm font-bold text-gray-800" style={{ marginBottom: 'var(--spacing-sm)' }}>
               사진 업로드
             </label>
-            <div className="flex gap-2 items-center">
+            <div className="flex items-center" style={{ gap: 'var(--spacing-sm)' }}>
               {!isReadOnly && (
                 <input
                   type="file"
@@ -389,7 +395,8 @@ const ActivityFormModal: React.FC<ActivityFormModalProps> = ({
               {!isReadOnly && (
                 <label
                   htmlFor="fileInput"
-                  className="px-4 py-2 border rounded bg-white cursor-pointer flex items-center gap-2 font-bold text-sm hover:bg-gray-50"
+                  className="border rounded bg-white cursor-pointer flex items-center font-bold text-sm hover:bg-gray-50"
+                  style={{ padding: 'var(--padding-btn)', gap: 'var(--spacing-sm)' }}
                 >
                   <Upload size={16} /> 선택
                 </label>
@@ -404,11 +411,11 @@ const ActivityFormModal: React.FC<ActivityFormModalProps> = ({
               )}
             </div>
             {imageFiles.length > 0 && (
-              <ul className="mt-2 text-sm text-gray-700 list-disc list-inside">
+              <ul className="text-sm text-gray-700 list-disc list-inside" style={{ marginTop: 'var(--spacing-md)' }}>
                 {imageFiles.map((file, idx) => (
                   <li key={`${file.name}-${idx}`}>
                     {file.name}
-                    <span className="ml-2 text-gray-400">
+                    <span className="text-gray-400" style={{ marginLeft: 'var(--spacing-sm)' }}>
                       ({Math.round(file.size / 1024)} KB)
                     </span>
                   </li>
@@ -416,16 +423,17 @@ const ActivityFormModal: React.FC<ActivityFormModalProps> = ({
               </ul>
             )}
             {preview.length > 0 && (
-              <div className="mt-3">
-                <p className="text-xs text-gray-500 mb-2">업로드 미리보기</p>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div style={{ marginTop: 'var(--spacing-md)' }}>
+                <p className="text-xs text-gray-500" style={{ marginBottom: 'var(--spacing-sm)' }}>업로드 미리보기</p>
+                <div className="grid grid-cols-1 sm:grid-cols-2" style={{ gap: 'var(--spacing-md)' }}>
                   {preview.map((url, idx) => (
                     <img
                       key={`preview-${idx}`}
                       src={url}
                       alt={`preview-${idx}`}
                       onClick={() => handleImageClick(idx)}
-                      className="w-full h-40 object-contain rounded border bg-white cursor-pointer transition-transform hover:scale-[1.02]"
+                      className="w-full object-contain rounded border bg-white cursor-pointer transition-transform hover:scale-[1.02]"
+                      style={{ height: '10rem' }}
                     />
                   ))}
                 </div>
@@ -435,12 +443,13 @@ const ActivityFormModal: React.FC<ActivityFormModalProps> = ({
         </div>
 
         {/* 하단 버튼 */}
-        <div className="flex gap-2 mt-8">
+        <div className="flex" style={{ gap: 'var(--spacing-sm)', marginTop: '2rem' }}>
           {!isReadOnly && (
             <button
               onClick={handleSubmit}
               disabled={isSubmitting}
-              className="cursor-pointer flex-1 py-3 bg-green-600 text-white rounded font-bold text-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="cursor-pointer flex-1 bg-green-600 text-white rounded font-bold text-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              style={{ padding: '0.75rem' }}
             >
               {isSubmitting
                 ? "저장 중..."
@@ -451,7 +460,8 @@ const ActivityFormModal: React.FC<ActivityFormModalProps> = ({
           )}
           <button
             onClick={onClose}
-            className="cursor-pointer flex-1 py-3 bg-white text-gray-800 border rounded font-bold text-lg hover:bg-gray-100"
+            className="cursor-pointer flex-1 bg-white text-gray-800 border rounded font-bold text-lg hover:bg-gray-100"
+            style={{ padding: '0.75rem' }}
           >
             {isReadOnly ? "닫기" : "취소"}
           </button>
