@@ -133,7 +133,7 @@ const ExcelUpDownBaseInfoPage: React.FC = () => {
         );
 
         if (missing.length > 0) {
-          // 필수 항목이 하나라도 없으면 입구 컷!
+          // 필수 항목이 하나라도 없으면 업로드 불가
           setAlertState({
             title: "필수 항목 누락",
             message: `엑셀 양식에 필수 항목 [${missing.join(
@@ -147,11 +147,22 @@ const ExcelUpDownBaseInfoPage: React.FC = () => {
           return;
         }
 
-        // 3. 검증 통과!
-        // 이제 'headers' 상태값에는 화면에 보여줄 항목만 설정하거나, 전체를 설정
-        // 우리는 Mapper에서 지정한 것만 가져갈 것이므로 excelHeaders 전체를 넘겨도 안전
-        setHeaders(excelHeaders);
-        await checkPreviewStatus(normalizedData);
+        //데이터를 필수 헤더만 남기고 필터링
+        const filteredData = normalizedData.map((row) => {
+          const newRow: any = {};
+          // REQUIRED_HEADERS에 있는 키값만 쏙쏙 뽑아서 새 객체 생성
+          REQUIRED_HEADERS.forEach((header) => {
+            newRow[header] = row[header];
+          });
+          return newRow;
+        });
+
+        // 3. 필터링된 데이터로 진행
+        // 헤더 상태도 필수 헤더 순서대로 강제 설정 (화면 컬럼 순서 고정 효과)
+        setHeaders(REQUIRED_HEADERS);
+
+        // 전체 데이터가 아닌 '필터링된 데이터'를 검증 로직에 전달
+        await checkPreviewStatus(filteredData);
       }
     } catch (e: any) {
       alert(e.message);
