@@ -105,7 +105,7 @@ const ExcelUpDownBaseInfoPage: React.FC = () => {
     // 1. 기억장소 생성 (Key: 협력사명, Value: 그 협력사의 유형/고객 정보)
     const companyMap = new Map<
       string,
-      { type: string; customer: string; rowIdx: number }
+      { type: string; customer: string; address: string; rowIdx: number }
     >();
     const errorList: string[] = [];
 
@@ -115,6 +115,7 @@ const ExcelUpDownBaseInfoPage: React.FC = () => {
       const name = row["협력사명"]?.toString().trim();
       const type = row["공급유형"]?.toString().trim() || "";
       const customer = row["공급고객"]?.toString().trim() || "";
+      const address = row["주소"]?.toString().trim() || "";
 
       // 협력사명이 없으면 패스 (다른 필수값 체크 로직에서 잡음)
       if (!name) return;
@@ -124,7 +125,7 @@ const ExcelUpDownBaseInfoPage: React.FC = () => {
         // 등장한 적 있음 -> 앞서 등장했던 정보와 "똑같은지" 확인
         const existing = companyMap.get(name)!;
 
-        // 유형이나 고객 둘 중 하나라도 다르면 에러
+        // 유형, 고객, 주소 중 하나라도 다르면 에러
         if (existing.type !== type) {
           const currentRowNum = index + 2; // 현재 줄 번호 (엑셀 헤더 고려)
           const originalRowNum = existing.rowIdx + 2; // 최초 등장 줄 번호
@@ -143,10 +144,19 @@ const ExcelUpDownBaseInfoPage: React.FC = () => {
               `   - [${existing.customer}],` +
               `    [${customer}]`
           );
+        } else if (existing.address !== address) {
+          const currentRowNum = index + 2; // 현재 줄 번호 (엑셀 헤더 고려)
+          const originalRowNum = existing.rowIdx + 2; // 최초 등장 줄 번호
+
+          errorList.push(
+            `협력사 "${name}" : ${originalRowNum}, ${currentRowNum}행의 주소가 다릅니다.\n` +
+              `   - [${existing.address}],` +
+              `    [${address}]`
+          );
         }
       } else {
         // 처음 등장함 -> 이 정보를 "기준"으로 등록
-        companyMap.set(name, { type, customer, rowIdx: index });
+        companyMap.set(name, { type, customer, address, rowIdx: index });
       }
     });
 
@@ -219,7 +229,7 @@ const ExcelUpDownBaseInfoPage: React.FC = () => {
           // 에러 발견 시 모달 띄우고 즉시 중단 (서버로 안 보냄, 미리보기 안 띄움)
 
           let msg =
-            "엑셀 파일 내에 '하나의 업체명 - 다른 공급정보'가 존재합니다.\n(하나의 업체는 하나의 유형/고객만 가져야 합니다)\n\n";
+            "엑셀 파일 내에 '하나의 업체명-다른 공급유형, 공급고객, 주소'가 존재합니다.\n(하나의 업체는 하나의 공급유형, 공급고객, 주소만 가져야 합니다)\n\n";
           msg += consistencyErrors.join("\n\n");
 
           setAlertState({
