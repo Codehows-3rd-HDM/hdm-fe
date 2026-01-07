@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   BrowserRouter,
   Routes,
@@ -10,7 +10,6 @@ import {
 import Sidebar from "./components/Sidebar";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/admin/RegisterPage";
-import DataUploadPage from "./pages/admin/excel/ExcelUpS1Nice";
 import VehicleRegisterPage from "./pages/admin/VehicleRegisterPage";
 import DashboardPage from "./pages/dashboard/DashboardPage";
 import VehicleManagementPage from "./pages/admin/VehicleManagementPage";
@@ -31,7 +30,8 @@ import "./App.css";
 import SupplyTypeEmissionPage from "./pages/Emissions inquiry/SupplyTypeEmissionPage";
 import SupplyCustomerEmissionPage from "./pages/Emissions inquiry/SupplyCustomerEmissionPage";
 import MainPage from "./pages/MainPage";
-import ExcelManagementPage from "./pages/admin/excel/ExcelUpDownBaseInfo";
+import ExcelUpDownBaseInfoPage from "./pages/admin/excel/ExcelUpDownBaseInfo";
+import ExcelUpS1NicePage from "./pages/admin/excel/ExcelUpS1Nice";
 import EmissionFactorPage from "./pages/admin/EmissionFactorPage";
 import CarbonTargetApp from "./pages/admin/CarbonTargetManagement";
 
@@ -73,7 +73,7 @@ const MainLayout = () => {
   };
 
   return (
-    <div className="flex min-h-screen overflow-hidden">
+    <div className="flex min-h-screen w-full overflow-hidden">
       {/* 대시보드 아닐 때만 사이드바 표시 */}
       {!isDashboard && (
         <div className={`print:hidden transition-all duration-300`}>
@@ -83,11 +83,18 @@ const MainLayout = () => {
 
       {/* 메인 콘텐츠 영역: 사이드바 너비만큼 margin-left 조정 */}
       <main
-        className={`min-w-0 flex-1 transition-all duration-300 ease-in-out ${
-          isDashboard ? "ml-0" : isSidebarOpen ? "ml-65" : "ml-20"
-        }`}
+        style={{
+          marginLeft: isDashboard
+            ? "0"
+            : isSidebarOpen
+            ? "var(--sidebar-expanded)"
+            : "var(--sidebar-collapsed)",
+          transition: "margin-left 300ms ease-in-out",
+          minWidth: 0,
+          flex: 1,
+        }}
       >
-        <div className={`${!isDashboard ? '' : ''}`}>
+        <div className="w-full h-full">
           <Outlet />
         </div>
       </main>
@@ -96,6 +103,24 @@ const MainLayout = () => {
 };
 
 const App: React.FC = () => {
+  // [추가] 페이지 전체에 드래그 앤 드롭 방어
+  useEffect(() => {
+    // 방어 함수: 브라우저가 파일을 열거나 다운로드하는 걸 막음
+    const preventGlobalDrag = (e: DragEvent) => {
+      e.preventDefault();
+    };
+
+    // 1. 창 전체에 이벤트 리스너 등록
+    window.addEventListener("dragover", preventGlobalDrag);
+    window.addEventListener("drop", preventGlobalDrag);
+
+    // 2. 컴포넌트가 사라질 때 리스너 청소 (메모리 누수 방지)
+    return () => {
+      window.removeEventListener("dragover", preventGlobalDrag);
+      window.removeEventListener("drop", preventGlobalDrag);
+    };
+  }, []);
+
   return (
     <BrowserRouter>
       <Routes>
@@ -155,7 +180,6 @@ const App: React.FC = () => {
                 <Route path="register" element={<VehicleRegisterPage />} />
                 <Route path="manage" element={<VehicleManagementPage />} />
               </Route>
-
               {/* 4-2. 기준 정보 관리 (업체, 공정, 목적, 품목 등) */}
               <Route
                 path="company/manage"
@@ -177,8 +201,10 @@ const App: React.FC = () => {
                 path="supply-customer/manage"
                 element={<ProductManagementPage />}
               />
-              <Route path="excel/manage" element={<ExcelManagementPage />} />
-
+              <Route
+                path="excel/upload/base-info"
+                element={<ExcelUpDownBaseInfoPage />}
+              />
               {/* 4-3. 배출 관련 설정 */}
               <Route path="emission-factor" element={<EmissionFactorPage />} />
               <Route
@@ -187,14 +213,8 @@ const App: React.FC = () => {
                   <PagePlaceholder title="탄소 배출량 계산 설정 (HDM-028)" />
                 }
               />
-              //  목표 관리
-              <Route
-                path="target-view"
-                element={
-                  <CarbonTargetApp />
-                }
-              />
-
+              // 목표 관리
+              <Route path="target-view" element={<CarbonTargetApp />} />
               {/* 4-4. 기타 관리 */}
               <Route
                 path="dashboard-setting"
@@ -204,7 +224,10 @@ const App: React.FC = () => {
                 path="activity-manage"
                 element={<ActivityManagementPage />}
               />
-              <Route path="data-upload" element={<DataUploadPage />} />
+              <Route
+                path="excel/upload/s1-nice"
+                element={<ExcelUpS1NicePage />}
+              />
             </Route>
           </Route>
 

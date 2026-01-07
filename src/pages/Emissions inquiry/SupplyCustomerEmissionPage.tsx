@@ -1,6 +1,7 @@
 import React from 'react';
 import CarbonAnalysisTemplate from '../../components/analysis/CarbonAnalysisTemplate';
 import type { AnalysisColumn } from '../../types/analysis';
+import { getBreadcrumbItems } from '../../utils/breadcrumbHelper';
 
 const COLUMNS: AnalysisColumn[] = [
   { id: 'name', header: '공급 고객', align: 'left' },
@@ -18,6 +19,7 @@ const SupplyCustomerEmissionPage: React.FC = () => {
       hasScopeTabs={false}
       columns={COLUMNS}
       dataType='supplycustomer'
+      breadcrumbItems={getBreadcrumbItems('/view/supply-customer')}
     />
   );
 };

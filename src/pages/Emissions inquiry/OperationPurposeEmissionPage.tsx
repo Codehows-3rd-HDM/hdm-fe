@@ -1,6 +1,7 @@
 import React from 'react';
 import CarbonAnalysisTemplate from '../../components/analysis/CarbonAnalysisTemplate';
 import type { AnalysisColumn } from '../../types/analysis';
+import { getBreadcrumbItems } from '../../utils/breadcrumbHelper';
 
 const COLUMNS: AnalysisColumn[] = [
   { id: 'name', header: '운행 목적', align: 'left' },
@@ -18,6 +19,7 @@ const OperationPurposeEmissionPage: React.FC = () => {
       hasScopeTabs={true}
       columns={COLUMNS}
       dataType='operationpurpose'
+      breadcrumbItems={getBreadcrumbItems('/view/purpose')}
     />
   );
 };

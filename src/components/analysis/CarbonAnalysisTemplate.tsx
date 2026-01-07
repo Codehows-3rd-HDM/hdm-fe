@@ -20,6 +20,7 @@ import {
   Loader2,
   ChevronDown,
 } from "lucide-react";
+import Breadcrumb, { type BreadcrumbItem } from "../Breadcrumb";
 import type {
   AnalysisColumn,
   AnalysisData,
@@ -65,6 +66,7 @@ interface CarbonAnalysisTemplateProps {
   hasScopeTabs?: boolean;
   columns: AnalysisColumn[];
   dataType: AnalysisDataType;
+  breadcrumbItems?: BreadcrumbItem[];
 }
 
 const CarbonAnalysisTemplate: React.FC<CarbonAnalysisTemplateProps> = ({
@@ -72,17 +74,17 @@ const CarbonAnalysisTemplate: React.FC<CarbonAnalysisTemplateProps> = ({
   hasScopeTabs = false,
   columns,
   dataType,
+  breadcrumbItems,
 }) => {
   // --- 상태 관리 ---
   const [data, setData] = useState<AnalysisData[]>([]);
   const [loading, setLoading] = useState(false);
   const [yearOptions, setYearOptions] = useState<string[]>([]);
+  const [isYearsLoaded, setIsYearsLoaded] = useState(false); // 연도 로드 완료 플래그
 
   // 현재 연도를 기본값으로 설정
   const currentYear = new Date().getFullYear();
-  const [selectedYear, setSelectedYear] = useState<string>(
-    currentYear.toString()
-  );
+  const [selectedYear, setSelectedYear] = useState<string | null>(null); // 초기값을 null로 설정
 
   const [selectedScope, setSelectedScope] = useState<ScopeType>("total");
   const [selectedMonth, setSelectedMonth] = useState<string>("all");
@@ -99,7 +101,7 @@ const CarbonAnalysisTemplate: React.FC<CarbonAnalysisTemplateProps> = ({
 
   const componentRef = useRef<HTMLDivElement>(null);
 
-  // --- [API] 연도 목록 로딩 ---
+  // --- [API] 연도 목록 로딩 (초기 로드만) ---
   useEffect(() => {
     const loadYears = async () => {
       try {
@@ -108,26 +110,31 @@ const CarbonAnalysisTemplate: React.FC<CarbonAnalysisTemplateProps> = ({
           .sort((a, b) => b - a)
           .map((y) => y.toString());
         setYearOptions(yearStrings);
-
-        // 현재 연도가 목록에 있으면 그대로, 없으면 첫 번째 연도로 설정
+        // 첫 번째(최신) 연도로 selectedYear 초기화
         if (yearStrings.length > 0) {
-          //  현재 선택된 연도(기본값 2026)가 목록에 없으면
-          if (!yearStrings.includes(selectedYear)) {
-            // 목록 중 가장 최신 연도(index 0)로 강제 설정
-            setSelectedYear(yearStrings[0]);
-          }
+          setSelectedYear(yearStrings[0]);
+        } else {
+          setSelectedYear(currentYear.toString());
         }
       } catch (error) {
         console.error("Failed to load available years:", error);
         // 실패 시 현재 연도만 표시
         setYearOptions([currentYear.toString()]);
+        setSelectedYear(currentYear.toString());
+      } finally {
+        setIsYearsLoaded(true); // 연도 로드 완료 표시
       }
     };
     loadYears();
-  }, [currentYear, selectedYear]);
+  }, []); // 마운트 시 한 번만 실행
 
   // --- [API] 데이터 로딩 ---
   useEffect(() => {
+    // selectedYear이 설정될 때까지 대기
+    if (!selectedYear || !isYearsLoaded) {
+      return;
+    }
+
     const loadData = async () => {
       setLoading(true);
       try {
@@ -159,7 +166,7 @@ const CarbonAnalysisTemplate: React.FC<CarbonAnalysisTemplateProps> = ({
       }
     };
     loadData();
-  }, [dataType, selectedYear, selectedMonth, selectedScope]); // 필터 변경 시 재호출
+  }, [dataType, selectedYear, selectedMonth, selectedScope, isYearsLoaded]); // 필터 변경 시 재호출
 
   // --- 데이터 필터링 (클라이언트 측 검색/정렬) ---
   const processedData = useMemo(() => {
@@ -292,35 +299,62 @@ const CarbonAnalysisTemplate: React.FC<CarbonAnalysisTemplateProps> = ({
 
   // --- 렌더링 ---
   return (
-    <div ref={componentRef} className="min-h-full p-8 font-sans bg-gray-50">
+    <div
+      ref={componentRef}
+      className="min-h-full font-sans bg-gray-50"
+      style={{ padding: "var(--padding-responsive)" }}
+    >
+      {/* 브레드크럼 */}
+      {breadcrumbItems && <Breadcrumb items={breadcrumbItems} />}
+
       {/* 헤더 */}
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-bold text-gray-800">{title}</h2>
-        <div className="flex gap-3">
+      <div
+        className="flex items-center justify-between"
+        style={{ marginBottom: "var(--spacing-lg)" }}
+      >
+        <h2
+          className="font-bold text-gray-800"
+          style={{ fontSize: "clamp(1.5rem, 2vw, 1.75rem)" }}
+        >
+          {title}
+        </h2>
+        <div className="flex" style={{ gap: "var(--spacing-sm)" }}>
           <button
             onClick={handleDownloadExcel}
-            className="flex items-center px-4 py-2 font-bold text-white transition-colors bg-green-600 rounded-md shadow-sm hover:bg-green-700"
+            className="flex items-center font-bold text-white transition-colors bg-green-600 rounded-md shadow-sm hover:bg-green-700"
+            style={{
+              padding: "var(--spacing-sm) var(--spacing-md)",
+              fontSize: "var(--text-base)",
+            }}
           >
-            <Download size={16} className="mr-2" /> Excel
+            <Download size={16} style={{ marginRight: "var(--spacing-xs)" }} />{" "}
+            Excel
           </button>
         </div>
       </div>
 
       {/* Scope 탭 */}
       {hasScopeTabs && (
-        <div className="flex mb-6 border-b border-gray-200">
+        <div
+          className="flex border-b border-gray-200"
+          style={{ marginBottom: "var(--spacing-lg)" }}
+        >
           {SCOPE_TABS.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setSelectedScope(tab.id)}
               className={`
-                px-6 py-3 border-b-2 text-[15px] font-medium transition-colors
+                border-b-2 font-medium transition-colors
                 ${
                   selectedScope === tab.id
                     ? "border-blue-600 text-blue-600 font-bold"
                     : "border-transparent text-gray-500 hover:text-gray-700"
                 }
               `}
+              style={{
+                padding: "var(--spacing-xs) var(--spacing-md)",
+                fontSize: "var(--text-base)",
+              }}
             >
               {tab.label}
             </button>
@@ -329,20 +363,37 @@ const CarbonAnalysisTemplate: React.FC<CarbonAnalysisTemplateProps> = ({
       )}
 
       {/* 필터 영역 */}
-      <div className="flex gap-6 p-5 mb-6 bg-white border border-gray-100 shadow-sm rounded-xl ">
+      <div
+        className="flex flex-wrap bg-white border border-gray-100 shadow-sm rounded-xl"
+        style={{
+          gap: "var(--spacing-md)",
+          padding: "var(--spacing-md)",
+          marginBottom: "var(--spacing-md)",
+        }}
+      >
         {/* 연도 선택 */}
-        <div className="flex flex-col gap-1.5">
-          <label className="text-xs font-bold text-gray-500">▼ 연도 선택</label>
+        <div className="flex flex-col" style={{ gap: "var(--spacing-xs)" }}>
+          <label
+            className="font-bold text-gray-500"
+            style={{ fontSize: "var(--text-sm)" }}
+          >
+            ▼ 연도 선택
+          </label>
           <div className="relative">
             <select
-              value={selectedYear}
+              value={selectedYear || ""}
               onChange={(e) => {
                 setSelectedYear(e.target.value);
-                if (e.target.value === "all") setSelectedMonth("all");
               }}
-              className="w-32 p-2 pr-8 text-sm bg-white border border-gray-300 rounded-md outline-none appearance-none cursor-pointer focus:ring-2 focus:ring-blue-500"
+              className="bg-white border border-gray-300 rounded-md outline-none appearance-none cursor-pointer focus:ring-2 focus:ring-blue-500"
+              style={{
+                width: "clamp(7rem, 10vw, 8rem)",
+                padding: "var(--spacing-xs)",
+                paddingRight: "var(--spacing-lg)",
+                fontSize: "var(--text-base)",
+              }}
             >
-              <option value="all">전체</option>
+              {/* <option value="">선택 중...</option> */}
               {yearOptions.map((y) => (
                 <option key={y} value={y}>
                   {y}년
@@ -357,14 +408,25 @@ const CarbonAnalysisTemplate: React.FC<CarbonAnalysisTemplateProps> = ({
         </div>
 
         {/* 월 선택 */}
-        {selectedYear !== "all" && (
-          <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-bold text-gray-500">▼ 월 선택</label>
+        {selectedYear && (
+          <div className="flex flex-col" style={{ gap: "var(--spacing-xs)" }}>
+            <label
+              className="font-bold text-gray-500"
+              style={{ fontSize: "var(--text-sm)" }}
+            >
+              ▼ 월 선택
+            </label>
             <div className="relative">
               <select
                 value={selectedMonth}
                 onChange={(e) => setSelectedMonth(e.target.value)}
-                className="w-32 p-2 pr-8 text-sm bg-white border border-gray-300 rounded-md outline-none appearance-none cursor-pointer focus:ring-2 focus:ring-blue-500"
+                className="bg-white border border-gray-300 rounded-md outline-none appearance-none cursor-pointer focus:ring-2 focus:ring-blue-500"
+                style={{
+                  width: "clamp(7rem, 10vw, 8rem)",
+                  padding: "var(--spacing-xs)",
+                  paddingRight: "var(--spacing-lg)",
+                  fontSize: "var(--text-base)",
+                }}
               >
                 <option value="all">전체</option>
                 {Array.from({ length: 12 }, (_, i) => i + 1).map((m) => (
@@ -391,13 +453,23 @@ const CarbonAnalysisTemplate: React.FC<CarbonAnalysisTemplateProps> = ({
 
       {/* 차트 영역 */}
       {!loading && processedData.length > 0 && (
-        <div className="flex flex-col lg:flex-row gap-6 mb-8 h-125">
+        <div
+          className="flex flex-col lg:flex-row items-stretch"
+          style={{
+            gap: "var(--spacing-lg)",
+            marginBottom: "var(--spacing-xl)",
+            height: "32rem",
+            maxHeight: "32rem",
+            minHeight: "32rem",
+          }}
+        >
           {/* 파이 차트 */}
           <div
             className={`
                 ${selectedMonth === "all" ? "lg:flex-1" : "w-full"} 
-                bg-white rounded-xl p-6 shadow-sm border border-gray-100 flex flex-col items-center justify-center relative
+                bg-white rounded-xl shadow-sm border border-gray-100 flex flex-col items-center justify-center relative h-full
             `}
+            style={{ padding: "var(--spacing-lg)" }}
           >
             <h4 className="absolute text-lg font-bold text-gray-800 top-5 left-5">
               {selectedYear === "all" ? "전체" : selectedYear}년{" "}
@@ -458,7 +530,7 @@ const CarbonAnalysisTemplate: React.FC<CarbonAnalysisTemplateProps> = ({
 
           {/* 라인 차트 */}
           {selectedMonth === "all" && (
-            <div className="lg:flex-2 bg-white rounded-xl p-6 shadow-sm border border-gray-100 flex flex-col">
+            <div className="flex-1 bg-white rounded-xl p-6 shadow-sm border border-gray-100 flex flex-col h-full">
               <h4 className="mb-6 text-lg font-bold text-gray-800">
                 {selectedYear}년 월별 추이
               </h4>
@@ -600,8 +672,18 @@ const CarbonAnalysisTemplate: React.FC<CarbonAnalysisTemplateProps> = ({
       )}
 
       {/* 메인 검색바 */}
-      <div className="flex items-center gap-3 p-4 mb-6 border border-blue-100 bg-blue-50 rounded-xl">
-        <span className="font-bold text-blue-700 whitespace-nowrap">
+      <div
+        className="flex flex-wrap items-center border border-blue-100 bg-blue-50 rounded-xl"
+        style={{
+          gap: "var(--spacing-sm)",
+          padding: "var(--spacing-md)",
+          marginBottom: "var(--spacing-md)",
+        }}
+      >
+        <span
+          className="font-bold text-blue-700 whitespace-nowrap"
+          style={{ fontSize: "var(--text-lg)" }}
+        >
           {title.split(" ")[0]} {title.split(" ")[1]}
         </span>
 
@@ -609,7 +691,12 @@ const CarbonAnalysisTemplate: React.FC<CarbonAnalysisTemplateProps> = ({
           <select
             value={searchColumn}
             onChange={(e) => setSearchColumn(e.target.value)}
-            className="p-2 pr-8 text-sm bg-white border border-blue-200 rounded-md outline-none appearance-none cursor-pointer focus:ring-2 focus:ring-blue-500"
+            className="bg-white border border-blue-200 rounded-md outline-none appearance-none cursor-pointer focus:ring-2 focus:ring-blue-500"
+            style={{
+              padding: "var(--spacing-sm)",
+              paddingRight: "var(--spacing-xl)",
+              fontSize: "var(--text-base)",
+            }}
           >
             <option value="all">전체 검색</option>
             {columns
@@ -626,13 +713,19 @@ const CarbonAnalysisTemplate: React.FC<CarbonAnalysisTemplateProps> = ({
           />
         </div>
 
-        <div className="relative flex-1 max-w-md">
+        <div className="relative flex-1" style={{ maxWidth: "28rem" }}>
           <input
             type="text"
             placeholder="검색어 입력"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full py-2 pl-3 text-sm border border-blue-200 rounded-md outline-none pr-9 focus:ring-2 focus:ring-blue-500"
+            className="w-full border border-blue-200 rounded-md outline-none focus:ring-2 focus:ring-blue-500"
+            style={{
+              padding: "var(--spacing-sm)",
+              paddingLeft: "var(--spacing-sm)",
+              paddingRight: "2.25rem",
+              fontSize: "var(--text-base)",
+            }}
           />
           <Search
             size={18}
@@ -644,20 +737,37 @@ const CarbonAnalysisTemplate: React.FC<CarbonAnalysisTemplateProps> = ({
       {/* 데이터 테이블 */}
       <div className="overflow-hidden bg-white border border-gray-200 shadow-sm rounded-xl">
         <div className="overflow-x-auto">
-          <table className="w-full text-sm text-gray-600">
-            <thead className="text-xs font-bold text-gray-700 uppercase border-b border-gray-200 bg-gray-50">
+          <table
+            className="w-full text-gray-600"
+            style={{ fontSize: "var(--text-base)" }}
+          >
+            <thead
+              className="font-bold text-gray-700 uppercase border-b border-gray-200 bg-gray-50"
+              style={{ fontSize: "var(--text-sm)" }}
+            >
               <tr>
-                <th className="w-16 px-4 py-3 text-center">No.</th>
+                <th
+                  className="text-center"
+                  style={{
+                    width: "4rem",
+                    padding: "var(--spacing-xs) var(--spacing-sm)",
+                  }}
+                >
+                  No.
+                </th>
                 {columns.map((col) => (
                   <th
                     key={col.id}
                     onClick={() => col.sortable && handleSort(col.id)}
-                    className={`px-4 py-3 ${
+                    style={{
+                      padding: "var(--spacing-xs) var(--spacing-sm)",
+                      width: col.width,
+                    }}
+                    className={`${
                       col.align === "left" ? "text-left" : "text-center"
                     } ${
                       col.sortable ? "cursor-pointer hover:bg-gray-100" : ""
                     }`}
-                    style={{ width: col.width }}
                   >
                     <div
                       className={`flex items-center gap-1 ${
@@ -684,7 +794,10 @@ const CarbonAnalysisTemplate: React.FC<CarbonAnalysisTemplateProps> = ({
                     key={row.id}
                     className="transition-colors hover:bg-gray-50"
                   >
-                    <td className="px-4 py-3 text-center text-gray-500">
+                    <td
+                      className="text-center text-gray-500"
+                      style={{ padding: "var(--spacing-xs) var(--spacing-sm)" }}
+                    >
                       {idx + 1}
                     </td>
                     {columns.map((col) => {
@@ -712,9 +825,12 @@ const CarbonAnalysisTemplate: React.FC<CarbonAnalysisTemplateProps> = ({
                       return (
                         <td
                           key={col.id}
-                          className={`px-4 py-3 ${
+                          className={`${
                             col.align === "left" ? "text-left" : "text-center"
                           } text-gray-800`}
+                          style={{
+                            padding: "var(--spacing-xs) var(--spacing-sm)",
+                          }}
                         >
                           {displayVal}
                         </td>

@@ -72,33 +72,34 @@ const RegisterPage: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center p-10 bg-white max-w-[500px] mx-auto font-sans">
-      <h2 className="text-2xl font-bold mb-10 text-gray-800">계정 등록</h2>
+    <div className="flex items-center justify-center min-h-screen bg-white font-sans">
+      <div className="flex flex-col items-center bg-white max-w-[500px] w-full" style={{ padding: 'var(--padding-responsive)' }}>
+        <h2 className="text-3xl font-bold text-gray-800" style={{ marginBottom: 'var(--spacing-xl)' }}>계정 등록</h2>
 
       {/* 아이디 입력칸 */}
-      <div className="flex items-center w-full h-[50px] border border-gray-300 px-4 mb-4 bg-white rounded-sm">
+      <div className="flex items-center w-full border border-gray-300 bg-white rounded-sm" style={{ height: 'var(--height-input)', padding: 'var(--spacing-sm)', marginBottom: 'var(--spacing-sm)' }}>
         <User size={20} className="text-gray-400" />
         <input
           type="text"
           placeholder="Username (예: 양현진)"
-          className="border-none outline-none flex-1 h-full text-[15px] ml-3 text-gray-600 bg-transparent"
+          className="border-none outline-none flex-1 h-full text-base ml-3 text-gray-600 bg-transparent"
           value={userName}
           onChange={(e) => setUserName(e.target.value)}
         />
       </div>
 
       {/* 비밀번호 입력칸 */}
-      <div className="flex items-center w-full h-[50px] border border-gray-300 px-4 mb-4 bg-white rounded-sm">
+      <div className="flex items-center w-full border border-gray-300 bg-white rounded-sm" style={{ height: 'var(--height-input)', padding: 'var(--spacing-sm)', marginBottom: 'var(--spacing-sm)' }}>
         <Lock size={20} className="text-gray-400" />
         <input
           type={showPassword ? "text" : "password"}
           placeholder="Password"
-          className="border-none outline-none flex-1 h-full text-[15px] ml-3 text-gray-600 bg-transparent"
+          className="border-none outline-none flex-1 h-full text-base ml-3 text-gray-600 bg-transparent"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
         />
         <button
-          className="bg-none border-none cursor-pointer text-gray-400 text-xs font-bold"
+          className="bg-none border-none cursor-pointer text-gray-400 text-sm font-bold"
           onClick={() => setShowPassword(!showPassword)}
         >
           {showPassword ? "HIDE" : "SHOW"}
@@ -106,7 +107,7 @@ const RegisterPage: React.FC = () => {
       </div>
 
       {/* 권한 선택 (라디오 버튼) */}
-      <div className="flex items-center justify-center w-full h-[50px] border border-gray-300 mb-2.5 rounded-sm text-gray-800 font-bold bg-white">
+      <div className="flex items-center justify-center w-full border border-gray-300 rounded-sm text-gray-800 font-bold bg-white" style={{ height: 'var(--height-input)', marginBottom: 'var(--spacing-sm)' }}>
         <label className="flex items-center cursor-pointer mx-5">
           <input
             type="radio"
@@ -132,7 +133,7 @@ const RegisterPage: React.FC = () => {
         </label>
       </div>
 
-      <p className="text-red-500 text-[13px] mb-5 w-full text-center">
+      <p className="text-red-500 text-sm w-full text-center" style={{ marginBottom: 'var(--spacing-md)' }}>
         *계정생성 시 권한설정 체크 후 생성해주세요.
       </p>
       {/* *계정생성은 SUPERADMIN 권한으로만 가능합니다. */}
@@ -141,9 +142,10 @@ const RegisterPage: React.FC = () => {
       <button
         onClick={handleRegister}
         disabled={isLoading}
-        className={`w-full h-[50px] bg-[#4a9d9c] text-white border-none text-base font-bold cursor-pointer rounded-sm transition-colors hover:bg-[#3b8686] ${
+        className={`w-full text-white border-none text-lg font-bold cursor-pointer rounded-sm transition-colors hover:bg-[#3b8686] ${
           isLoading ? "opacity-70 cursor-not-allowed" : ""
         }`}
+        style={{ height: 'var(--height-input)', backgroundColor: '#4a9d9c' }}
       >
         {isLoading ? "생성 중..." : "계정생성"}
       </button>
@@ -155,6 +157,7 @@ const RegisterPage: React.FC = () => {
         isSuccess={isSuccess}
         title={isSuccess ? "작업 성공" : "작업 실패"}
       />
+      </div>
     </div>
   );
 };

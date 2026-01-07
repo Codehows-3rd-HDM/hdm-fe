@@ -5,6 +5,8 @@ import {
   Database, Target
 } from 'lucide-react';
 import carbonTargetApi, { type EmissionCategory, type FullTargetState, type MonthlyData } from '../../apis/carbonTargetApi';
+import Breadcrumb from '../../components/Breadcrumb';
+import { getBreadcrumbItems } from '../../utils/breadcrumbHelper';
 
 // =============================================================================
 // [2] Local Type Definitions
@@ -34,7 +36,8 @@ const YearSelect = ({ value, onChange, options, displayText, buttonClassName }: 
         type="button"
         onClick={() => setOpen((v) => !v)}
         onBlur={() => setOpen(false)}
-        className={buttonClassName ?? 'w-full bg-white border-2 border-slate-200 rounded-2xl px-6 py-4 font-black text-xl text-slate-700 outline-none focus:border-sky-500 focus:ring-4 focus:ring-sky-100 transition-all flex items-center justify-between'}
+        className={buttonClassName ?? 'w-full bg-white border-2 border-slate-200 rounded-2xl font-black text-slate-700 outline-none focus:border-sky-500 focus:ring-4 focus:ring-sky-100 transition-all flex items-center justify-between'}
+        style={{ padding: 'var(--padding-input)', fontSize: 'var(--text-xl)' }}
       >
         <span>{renderText(value)}</span>
         <span className="text-slate-400 text-sm">▼</span>
@@ -47,7 +50,8 @@ const YearSelect = ({ value, onChange, options, displayText, buttonClassName }: 
               type="button"
               onMouseDown={(e) => e.preventDefault()}
               onClick={() => { onChange(y); setOpen(false); }}
-              className={`w-full text-left px-5 py-3 text-slate-700 hover:bg-sky-50 hover:text-sky-700 transition-colors ${y === value ? 'bg-sky-50 text-sky-700 font-bold' : ''}`}
+              className={`w-full text-left text-slate-700 hover:bg-sky-50 hover:text-sky-700 transition-colors ${y === value ? 'bg-sky-50 text-sky-700 font-bold' : ''}`}
+              style={{ padding: 'var(--spacing-sm) var(--spacing-md)' }}
             >
               {renderText(y)}
             </button>
@@ -88,6 +92,11 @@ export default function App() {
   const [regType, setRegType] = useState<RegistrationType>('ratio');
   const [reductionRatio, setReductionRatio] = useState<number>(95);
   const [distType, setDistType] = useState<DistributionType>('actual');
+
+  // 뷰 전환 시 Total 탭은 리스트 전용, 등록에서는 Scope1로 강제 전환
+  useEffect(() => {
+    if (view === 'register' && activeTab === 'Total') setActiveTab('Scope1');
+  }, [view, activeTab]);
 
   // =============================================================================
   // [5] Effects
@@ -211,12 +220,24 @@ export default function App() {
     return `${(val / max) * 100}%`;
   };
 
+  // Total 값을 Scope1 + Scope3 합으로만 유지
+  const updateTotalFromScopes = (next: FullTargetState) => {
+    const scope1Monthly = next.Scope1.monthly;
+    const scope3Monthly = next.Scope3.monthly;
+    next.Total.monthly = scope1Monthly.map((s1, i) => ({
+      month: s1.month,
+      value: s1.value + (scope3Monthly[i]?.value ?? 0)
+    }));
+    next.Total.total = next.Total.monthly.reduce((sum, m) => sum + m.value, 0);
+  };
+
   // =============================================================================
   // [7] Handlers
   // =============================================================================
 
   const handleValueChange = (index: number, val: string) => {
     if (!targetState) return;
+    if (activeTab === 'Total') return; // Total은 직접 편집 불가
     const nVal = val === '' ? 0 : parseInt(val);
     const next = { ...targetState };
     const updatedMonthly = next[activeTab].monthly.map((mm, idx) => (
@@ -225,33 +246,8 @@ export default function App() {
     next[activeTab] = { ...next[activeTab], monthly: updatedMonthly };
     
     // 자동 계산: Total = Scope1 + Scope3
-    if (activeTab === 'Scope1') {
-      // Scope1 변경 → Total 갱신
-      const scope1Monthly = updatedMonthly;
-      const scope3Monthly = next.Scope3.monthly;
-      next.Total.monthly = scope1Monthly.map((s1, i) => ({
-        month: s1.month,
-        value: s1.value + scope3Monthly[i].value
-      }));
-      next.Total.total = next.Total.monthly.reduce((sum, m) => sum + m.value, 0);
-    } else if (activeTab === 'Scope3') {
-      // Scope3 변경 → Total 갱신
-      const scope1Monthly = next.Scope1.monthly;
-      const scope3Monthly = updatedMonthly;
-      next.Total.monthly = scope1Monthly.map((s1, i) => ({
-        month: s1.month,
-        value: s1.value + scope3Monthly[i].value
-      }));
-      next.Total.total = next.Total.monthly.reduce((sum, m) => sum + m.value, 0);
-    } else if (activeTab === 'Total') {
-      // Total 변경 → Scope1은 비율 유지, Scope3 조정
-      const totalMonthly = updatedMonthly;
-      const scope1Monthly = next.Scope1.monthly;
-      next.Scope3.monthly = totalMonthly.map((t, i) => ({
-        month: t.month,
-        value: Math.max(0, t.value - scope1Monthly[i].value)
-      }));
-      next.Scope3.total = next.Scope3.monthly.reduce((sum, m) => sum + m.value, 0);
+    if (activeTab === 'Scope1' || activeTab === 'Scope3') {
+      updateTotalFromScopes(next);
     }
     
     setTargetState(next);
@@ -259,27 +255,22 @@ export default function App() {
 
   const handleTotalChange = (val: string) => {
     if (!targetState) return;
+    if (activeTab === 'Total') return; // Total은 직접 편집 불가
     const nVal = val === '' ? 0 : parseInt(val);
     const next = { ...targetState };
     next[activeTab] = { ...next[activeTab], total: nVal };
-    
-    // 자동 계산: Total = Scope1 + Scope3
-    if (activeTab === 'Scope1') {
-      // Scope1 연간합 변경 → Total 갱신
-      next.Total.total = nVal + next.Scope3.total;
-    } else if (activeTab === 'Scope3') {
-      // Scope3 연간합 변경 → Total 갱신
-      next.Total.total = next.Scope1.total + nVal;
-    } else if (activeTab === 'Total') {
-      // Total 연간합 변경 → Scope3 조정
-      next.Scope3.total = Math.max(0, nVal - next.Scope1.total);
+
+    // Scope1/Scope3 변경 시 Total 재계산
+    if (activeTab === 'Scope1' || activeTab === 'Scope3') {
+      updateTotalFromScopes(next);
     }
-    
+
     setTargetState(next);
   };
 
   const applyRatioDistribution = () => {
     if (!targetState || baseActuals.length === 0) return;
+    if (activeTab === 'Total') return; // Total은 직접 편집 불가
     const factor = reductionRatio / 100;
     const newTotal = Math.round(baseActualTotal * factor);
     let tempSum = 0;
@@ -295,24 +286,8 @@ export default function App() {
     next[activeTab] = { total: newTotal, monthly: newMonthly };
     
     // Total = Scope1 + Scope3 자동 계산
-    if (activeTab === 'Scope1') {
-      next.Total.monthly = newMonthly.map((s1, i) => ({
-        month: s1.month,
-        value: s1.value + next.Scope3.monthly[i].value
-      }));
-      next.Total.total = next.Total.monthly.reduce((sum, m) => sum + m.value, 0);
-    } else if (activeTab === 'Scope3') {
-      next.Total.monthly = next.Scope1.monthly.map((s1, i) => ({
-        month: s1.month,
-        value: s1.value + newMonthly[i].value
-      }));
-      next.Total.total = next.Total.monthly.reduce((sum, m) => sum + m.value, 0);
-    } else if (activeTab === 'Total') {
-      next.Scope3.monthly = newMonthly.map((t, i) => ({
-        month: t.month,
-        value: Math.max(0, t.value - next.Scope1.monthly[i].value)
-      }));
-      next.Scope3.total = next.Scope3.monthly.reduce((sum, m) => sum + m.value, 0);
+    if (activeTab === 'Scope1' || activeTab === 'Scope3') {
+      updateTotalFromScopes(next);
     }
     
     setTargetState(next);
@@ -320,6 +295,7 @@ export default function App() {
 
   const applyEqualDistribution = () => {
     if (!targetState) return;
+    if (activeTab === 'Total') return; // Total은 직접 편집 불가
     const currentTotal = targetState[activeTab].total || 0;
     const monthlyAvg = Math.floor(currentTotal / 12);
     const remainder = currentTotal - (monthlyAvg * 12);
@@ -333,24 +309,8 @@ export default function App() {
     next[activeTab] = { ...next[activeTab], monthly: newMonthly };
     
     // Total = Scope1 + Scope3 자동 계산
-    if (activeTab === 'Scope1') {
-      next.Total.monthly = newMonthly.map((s1, i) => ({
-        month: s1.month,
-        value: s1.value + next.Scope3.monthly[i].value
-      }));
-      next.Total.total = next.Total.monthly.reduce((sum, m) => sum + m.value, 0);
-    } else if (activeTab === 'Scope3') {
-      next.Total.monthly = next.Scope1.monthly.map((s1, i) => ({
-        month: s1.month,
-        value: s1.value + newMonthly[i].value
-      }));
-      next.Total.total = next.Total.monthly.reduce((sum, m) => sum + m.value, 0);
-    } else if (activeTab === 'Total') {
-      next.Scope3.monthly = newMonthly.map((t, i) => ({
-        month: t.month,
-        value: Math.max(0, t.value - next.Scope1.monthly[i].value)
-      }));
-      next.Scope3.total = next.Scope3.monthly.reduce((sum, m) => sum + m.value, 0);
+    if (activeTab === 'Scope1' || activeTab === 'Scope3') {
+      updateTotalFromScopes(next);
     }
     
     setTargetState(next);
@@ -389,9 +349,14 @@ export default function App() {
 
   if (!targetState || !currentData) return <div className="p-20 text-center font-bold text-slate-400">데이터를 불러오는 중입니다...</div>;
 
+  const navTabs: EmissionCategory[] = view === 'register' ? ['Scope1', 'Scope3'] : ['Total', 'Scope1', 'Scope3'];
+
   return (
     <div className="min-h-screen bg-[#f8fafc] text-slate-800 font-sans">
-      <div className="w-full max-w-425 mx-auto p-6 md:p-10 space-y-8">
+      <div className="w-full max-w-425 mx-auto space-y-8" style={{ padding: 'clamp(1.5rem, 3vw, 2.5rem)' }}>
+        
+        {/* 브레드크럼 */}
+        <Breadcrumb items={getBreadcrumbItems('/admin/target-view')} />
         
         {/* Header */}
         <header className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
@@ -406,7 +371,12 @@ export default function App() {
           </div>
           
           <button 
-            onClick={() => { setView(view === 'list' ? 'register' : 'list'); setIsEditMode(false); }}
+            onClick={() => { 
+              const nextView = view === 'list' ? 'register' : 'list';
+              setView(nextView);
+              setIsEditMode(false);
+              setActiveTab(nextView === 'register' ? 'Scope1' : 'Total');
+            }}
             className={`flex items-center gap-3 px-8 py-4 rounded-2xl font-black transition-all shadow-xl hover:-translate-y-1 active:translate-y-0 ${
               view === 'list' 
               ? 'bg-slate-900 text-white shadow-slate-200' 
@@ -422,7 +392,7 @@ export default function App() {
           
           {/* Tabs */}
           <nav className="flex bg-slate-50/50 border-b border-slate-100 p-2">
-            {(['Total', 'Scope1', 'Scope3'] as EmissionCategory[]).map((tab) => (
+            {navTabs.map((tab) => (
               <button
                 key={tab}
                 onClick={() => { setActiveTab(tab); setIsEditMode(false); }}
@@ -437,13 +407,13 @@ export default function App() {
             ))}
           </nav>
 
-          <div className="p-8 md:p-14">
+          <div style={{ padding: 'clamp(1.5rem, 3vw, 2.5rem)' }}>
             {view === 'list' ? (
               /* ================================================================= LIST VIEW */
               <div className="space-y-12">
                 <section className="flex flex-col lg:flex-row gap-8">
                   {/* Summary Card */}
-                  <div className="flex-1 bg-slate-900 rounded-[2.5rem] p-10 text-white flex flex-col md:flex-row items-center justify-between gap-10">
+                  <div className="flex-1 bg-slate-900 rounded-[2.5rem] text-white flex flex-col md:flex-row items-center justify-between" style={{ padding: 'var(--padding-card)', gap: 'var(--spacing-2xl)' }}>
                     <div className="space-y-6 w-full md:w-auto text-center md:text-left">
                       <div className="space-y-1">
                         <p className="text-slate-500 font-black text-xs uppercase tracking-widest">Target Year Selection</p>
@@ -459,14 +429,18 @@ export default function App() {
                       <div className="space-y-1">
                         <p className="text-slate-500 font-black text-xs uppercase tracking-widest">Total Annual Target</p>
                         {isEditMode ? (
-                          <div className="flex items-center gap-2 border-b-2 border-sky-500 pb-1 max-w-75 mx-auto md:mx-0">
-                            <input 
-                              type="number"
-                              value={currentData.total}
-                              onChange={(e) => handleTotalChange(e.target.value)}
-                              className="bg-transparent text-5xl font-black text-white outline-none w-full"
-                            />
-                            <span className="text-xl font-bold text-slate-500">t</span>
+                          <div className="flex flex-col gap-1 max-w-75 mx-auto md:mx-0">
+                            <div className="flex items-center gap-2 border-b-2 border-sky-500 pb-1">
+                              <input 
+                                type="number"
+                                value={currentData.total}
+                                onChange={(e) => handleTotalChange(e.target.value)}
+                                readOnly={activeTab === 'Total'}
+                                className={`bg-transparent text-5xl font-black text-white outline-none w-full ${activeTab === 'Total' ? 'cursor-not-allowed opacity-70' : ''}`}
+                              />
+                              <span className="text-xl font-bold text-slate-500">t</span>
+                            </div>
+                            {activeTab === 'Total' && <span className="text-xs font-bold text-slate-400">Total은 Scope1+Scope3 합계로 자동 계산됩니다.</span>}
                           </div>
                         ) : (
                           <div className="text-5xl font-black tracking-tighter">
@@ -477,7 +451,9 @@ export default function App() {
                     </div>
 
                     <div className="flex flex-col gap-3 w-full md:w-64">
-                      {isEditMode ? (
+                      {activeTab === 'Total' ? (
+                        <div className="w-full py-5 rounded-2xl font-black bg-slate-200 text-slate-500 text-center">Total은 합계 전용</div>
+                      ) : isEditMode ? (
                         <>
                           <button onClick={() => setIsEditMode(false)} className="w-full py-4 rounded-2xl font-black bg-slate-800 hover:bg-slate-700 transition-all">수정 취소</button>
                           <button 
@@ -497,7 +473,7 @@ export default function App() {
                   </div>
 
                   {/* Diff Status */}
-                  <div className={`lg:w-80 rounded-[2.5rem] p-10 border-2 flex flex-col justify-center items-center text-center transition-all ${diffAmount === 0 ? 'bg-emerald-50 border-emerald-100' : 'bg-amber-50 border-amber-100'}`}>
+                  <div className={`lg:w-80 rounded-[2.5rem] border-2 flex flex-col justify-center items-center text-center transition-all ${diffAmount === 0 ? 'bg-emerald-50 border-emerald-100' : 'bg-amber-50 border-amber-100'}`} style={{ padding: 'var(--padding-card)' }}>
                     <div className={`p-4 rounded-full mb-4 ${diffAmount === 0 ? 'bg-emerald-100 text-emerald-600' : 'bg-amber-100 text-amber-600'}`}>
                       {diffAmount === 0 ? <CheckCircle size={32} /> : <AlertCircle size={32} />}
                     </div>
@@ -514,7 +490,7 @@ export default function App() {
                     <h3 className="text-xl font-black flex items-center gap-2 text-slate-400">
                       <div className="w-1.5 h-6 bg-sky-500 rounded-full" /> 월별 분포 그래프
                     </h3>
-                    <div className="h-112.5 flex gap-4 bg-slate-50/50 rounded-[2.5rem] p-10 relative border border-slate-100">
+                    <div className="h-112.5 flex gap-4 bg-slate-50/50 rounded-[2.5rem] relative border border-slate-100" style={{ padding: 'var(--padding-card)' }}>
                       {/* Y-Axis Markers */}
                       <div className="flex flex-col justify-between h-[calc(100%-40px)] text-[10px] font-black text-slate-400 w-12 pt-1 pb-1">
                         {yAxisMarkers.map(m => <div key={m}>{m >= 1000 ? (m/1000).toFixed(1)+'k' : m}</div>)}
@@ -551,19 +527,19 @@ export default function App() {
                     </div>
                     <div className="grid grid-cols-2 gap-3">
                       {currentData.monthly.map((m, i) => (
-                        <div key={i} className={`p-4 rounded-3xl border-2 transition-all ${isEditMode ? 'bg-white border-sky-400 shadow-lg shadow-sky-50 ring-4 ring-sky-50' : 'bg-slate-50 border-transparent'}`}>
+                        <div key={i} className={`rounded-3xl border-2 transition-all ${isEditMode ? 'bg-white border-sky-400 shadow-lg shadow-sky-50 ring-4 ring-sky-50' : 'bg-slate-50 border-transparent'}`} style={{ padding: 'var(--spacing-md)' }}>
                           <label className="text-[10px] font-black text-slate-400 uppercase block mb-1">{m.month}월</label>
                           <input
                             type="number"
                             value={m.value}
-                            readOnly={!isEditMode}
+                            readOnly={!isEditMode || activeTab === 'Total'}
                             onChange={(e) => handleValueChange(i, e.target.value)}
-                            className="w-full bg-transparent text-xl font-black outline-none text-slate-700"
+                            className={`w-full bg-transparent text-xl font-black outline-none text-slate-700 ${activeTab === 'Total' ? 'cursor-not-allowed opacity-70' : ''}`}
                           />
                         </div>
                       ))}
                     </div>
-                    <div className="p-8 bg-slate-900 rounded-4xl flex justify-between items-center text-white shadow-xl shadow-slate-200">
+                    <div className="bg-slate-900 rounded-4xl flex justify-between items-center text-white shadow-xl shadow-slate-200" style={{ padding: 'var(--padding-card)' }}>
                       <span className="font-bold text-slate-500 uppercase tracking-tighter text-sm">Monthly Sum</span>
                       <span className="text-3xl font-black">{monthlySum.toLocaleString()}</span>
                     </div>
@@ -576,7 +552,7 @@ export default function App() {
                 
                 {/* Registration Controls */}
                 <aside className="xl:col-span-4 space-y-8">
-                  <div className="bg-slate-50/80 rounded-[3rem] p-10 border border-slate-200 space-y-10 sticky top-10">
+                  <div className="bg-slate-50/80 rounded-[3rem] border border-slate-200 space-y-10 sticky top-10" style={{ padding: 'var(--padding-card)' }}>
                     <div className="space-y-6">
                       <h4 className="text-lg font-black flex items-center gap-2 text-slate-700">
                         <Target size={22} className="text-sky-600" /> 신규 목표 설정
@@ -596,14 +572,16 @@ export default function App() {
                         <div className="flex flex-col gap-3">
                           <button 
                             onClick={() => setRegType('ratio')}
-                            className={`flex items-center justify-between p-6 rounded-2xl border-2 transition-all ${regType === 'ratio' ? 'bg-white border-sky-500 shadow-xl shadow-sky-100' : 'border-slate-200 text-slate-400 hover:border-slate-300'}`}
+                            className={`flex items-center justify-between rounded-2xl border-2 transition-all ${regType === 'ratio' ? 'bg-white border-sky-500 shadow-xl shadow-sky-100' : 'border-slate-200 text-slate-400 hover:border-slate-300'}`}
+                            style={{ padding: 'var(--spacing-lg)' }}
                           >
                             <span className="font-bold">기준실적 대비 설정</span>
                             <div className={`w-6 h-6 rounded-full border-[6px] ${regType === 'ratio' ? 'border-sky-500' : 'border-slate-200'}`} />
                           </button>
                           <button 
                             onClick={() => setRegType('manual')}
-                            className={`flex items-center justify-between p-6 rounded-2xl border-2 transition-all ${regType === 'manual' ? 'bg-white border-sky-500 shadow-xl shadow-sky-100' : 'border-slate-200 text-slate-400 hover:border-slate-300'}`}
+                            className={`flex items-center justify-between rounded-2xl border-2 transition-all ${regType === 'manual' ? 'bg-white border-sky-500 shadow-xl shadow-sky-100' : 'border-slate-200 text-slate-400 hover:border-slate-300'}`}
+                            style={{ padding: 'var(--spacing-lg)' }}
                           >
                             <span className="font-bold">직접 수동 입력</span>
                             <div className={`w-6 h-6 rounded-full border-[6px] ${regType === 'manual' ? 'border-sky-500' : 'border-slate-200'}`} />
@@ -665,7 +643,7 @@ export default function App() {
                       </div>
                     </div>
 
-                    <div className="h-112.5 w-full bg-slate-50/50 rounded-[3rem] p-12 border border-slate-200 flex items-end justify-between gap-5 relative overflow-hidden shadow-inner">
+                    <div className="h-112.5 w-full bg-slate-50/50 rounded-[3rem] border border-slate-200 flex items-end justify-between gap-5 relative overflow-hidden shadow-inner" style={{ padding: 'clamp(1.5rem, 3vw, 3rem)' }}>
                       {/* Y-Axis Labeling */}
                       <div className="flex flex-col justify-between h-[calc(100%-40px)] text-[10px] font-black text-slate-400 absolute left-4 top-12 bottom-12 pointer-events-none">
                         {yAxisMarkers.map(m => <div key={m}>{m >= 1000 ? (m/1000).toFixed(1)+'k' : m}</div>)}
@@ -703,7 +681,7 @@ export default function App() {
                   </section>
 
                   <section className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="bg-white p-10 rounded-[2.5rem] border-2 border-slate-100 flex justify-between items-center shadow-sm">
+                    <div className="bg-white rounded-[2.5rem] border-2 border-slate-100 flex justify-between items-center shadow-sm" style={{ padding: 'var(--padding-card)' }}>
                       <div className="space-y-2">
                         <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest">연간 총 목표 설정</p>
                         <div className="flex items-baseline gap-2">
@@ -711,14 +689,16 @@ export default function App() {
                             type="number"
                             value={currentData.total}
                             onChange={(e) => handleTotalChange(e.target.value)}
-                            className="text-4xl font-black text-sky-600 outline-none w-48 bg-sky-50 rounded-2xl px-4 py-1"
+                            readOnly={activeTab === 'Total'}
+                            className={`text-4xl font-black text-sky-600 outline-none w-48 bg-sky-50 rounded-2xl px-4 py-1 ${activeTab === 'Total' ? 'cursor-not-allowed opacity-70' : ''}`}
                           />
                           <span className="text-xl font-bold text-slate-400">t</span>
                         </div>
+                        {activeTab === 'Total' && <p className="text-[11px] font-bold text-slate-400">Total은 Scope1과 Scope3 합계로 자동 계산됩니다.</p>}
                       </div>
                     </div>
 
-                    <div className={`p-10 rounded-[2.5rem] flex justify-between items-center transition-all shadow-xl ${diffAmount === 0 ? 'bg-slate-900 shadow-slate-200' : 'bg-amber-500 shadow-amber-200'}`}>
+                    <div className={`rounded-[2.5rem] flex justify-between items-center transition-all shadow-xl ${diffAmount === 0 ? 'bg-slate-900 shadow-slate-200' : 'bg-amber-500 shadow-amber-200'}`} style={{ padding: 'var(--padding-card)' }}>
                       <div className="text-white space-y-1">
                         <p className="text-[11px] font-black opacity-50 uppercase tracking-widest">Monthly Diff</p>
                         <p className="text-3xl font-black">{diffAmount === 0 ? '정합성 일치' : `${diffAmount.toLocaleString()} t`}</p>
@@ -731,19 +711,20 @@ export default function App() {
                   <div className="bg-white border-2 border-slate-100 rounded-[3rem] overflow-hidden">
                     <div className="grid grid-cols-3 md:grid-cols-6 gap-0">
                       {currentData.monthly.map((m, i) => (
-                        <div key={i} className="p-6 border-b border-r border-slate-100 hover:bg-slate-50 transition-colors">
+                        <div key={i} className="border-b border-r border-slate-100 hover:bg-slate-50 transition-colors" style={{ padding: 'var(--spacing-lg)' }}>
                           <label className="text-[10px] font-black text-slate-400 uppercase mb-2 block">{m.month}월 목표</label>
                           <input 
                             type="number"
                             value={m.value}
+                            readOnly={activeTab === 'Total'}
                             onChange={(e) => handleValueChange(i, e.target.value)}
-                            className="w-full bg-transparent text-xl font-black text-slate-700 outline-none"
+                            className={`w-full bg-transparent text-xl font-black text-slate-700 outline-none ${activeTab === 'Total' ? 'cursor-not-allowed opacity-70' : ''}`}
                           />
                           <div className="mt-2 text-[10px] font-bold text-slate-300">Prev: {baseActuals[i]?.value.toLocaleString()}</div>
                         </div>
                       ))}
                     </div>
-                    <div className="p-10 bg-slate-900 flex justify-between items-center text-white">
+                    <div className="bg-slate-900 flex justify-between items-center text-white" style={{ padding: 'var(--padding-card)' }}>
                       <div className="flex items-center gap-4">
                         <Database className="text-sky-500" />
                         <span className="font-black text-lg">전체 등록 연도: {regYear}년</span>
