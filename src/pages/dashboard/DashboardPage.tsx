@@ -55,12 +55,18 @@ const DashboardPage: React.FC = () => {
 
       const totalRows = Math.max(...layout.map(item => item.y + item.h));
       const headerHeight = headerRef.current?.offsetHeight ?? 120;
-      const marginY = 10;
-
+      const margin = 10;
+      const padding = 16; // var(--padding-responsive) 추정값
+      
+      // 전체 사용 가능한 높이 계산
+      // window.innerHeight - 헤더높이 - 헤더하단마진(2) - 패딩(위아래) - 마진(y축)
+      const totalMarginY = margin * (totalRows + 1); // 행 사이 + 위아래
       const available =
         window.innerHeight -
         headerHeight -
-        marginY * (totalRows - 1);
+        8 - // 헤더 mb-2
+        padding * 2 - // 그리드 패딩
+        totalMarginY;
 
       const computed = Math.max(24, Math.floor(available / totalRows));
       setRowHeight(computed);

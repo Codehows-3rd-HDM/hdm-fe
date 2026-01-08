@@ -2,7 +2,7 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
   Line, ComposedChart, PieChart, Pie, Cell, LabelList, type LabelProps
 } from 'recharts';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { getBusinessYear } from '../../utils/dateUtils';
 import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
@@ -127,32 +127,32 @@ export const TextSummarySection = () => {
 
   return (
     <div className={`${cardBase}`}>
-      <div className="flex justify-around items-center gap-6 h-full" style={{ padding: '0 var(--spacing-md)' }}>
+      <div className="flex justify-around items-center gap-4 h-full" style={{ padding: '0 var(--spacing-md)' }}>
         {/* 목표 배출량 */}
-        <div className="text-center flex-1 border-r-2 border-emerald-400/30" style={{ padding: 'var(--spacing-md) 0' }}>
-          <div className="text-emerald-300 font-bold mb-0 tracking-wide uppercase" style={{ fontSize: 'clamp(1.5rem, 3vw, 3rem)' }}>목표 배출량</div>
-          <div className="font-extrabold text-white leading-tight drop-shadow-lg" style={{ fontSize: 'clamp(2rem, 4vw, 4.5rem)' }}>
+        <div className="text-center flex-1 border-r-2 border-emerald-400/30" style={{ padding: 'var(--spacing-sm) 0' }}>
+          <div className="text-emerald-300 font-bold mb-0 tracking-wide uppercase" style={{ fontSize: 'clamp(1.5rem, 3vw, 2.75rem)' }}>목표 배출량</div>
+          <div className="font-extrabold text-white leading-tight drop-shadow-lg" style={{ fontSize: 'clamp(2rem, 4.2vw, 4rem)' }}>
             {target.toLocaleString()}
           </div>
-          <div className="text-emerald-200 mt-2 font-semibold" style={{ fontSize: 'clamp(1rem, 2vw, 1.875rem)' }}>tCO₂eq</div>
+          <div className="text-emerald-200 font-semibold" style={{ fontSize: 'clamp(1.125rem, 1.9vw, 1.75rem)' }}>tCO₂eq</div>
         </div>
 
         {/* 올해 총 배출량 */}
-        <div className="text-center flex-1 border-r-2 border-emerald-400/30" style={{ padding: 'var(--spacing-md) 0' }}>
-          <div className="text-gray-300 font-bold mb-0 tracking-wide uppercase" style={{ fontSize: 'clamp(1.5rem, 3vw, 3rem)' }}>올해 총 배출량</div>
-          <div className={`font-extrabold leading-tight drop-shadow-lg transition-all ${isGood ? 'text-emerald-300' : 'text-rose-400'}`} style={{ fontSize: 'clamp(2rem, 4vw, 4.5rem)' }}>
+        <div className="text-center flex-1 border-r-2 border-emerald-400/30" style={{ padding: 'var(--spacing-sm) 0' }}>
+          <div className="text-gray-300 font-bold mb-0 tracking-wide uppercase" style={{ fontSize: 'clamp(1.5rem, 3vw, 2.75rem)' }}>올해 총 배출량</div>
+          <div className={`font-extrabold leading-tight drop-shadow-lg transition-all ${isGood ? 'text-emerald-300' : 'text-rose-400'}`} style={{ fontSize: 'clamp(2rem, 4.2vw, 4rem)' }}>
             {Math.floor(total).toLocaleString()}
           </div>
-          <div className="text-gray-300 mt-2 font-semibold" style={{ fontSize: 'clamp(1rem, 2vw, 1.875rem)' }}>tCO₂eq</div>
+          <div className="text-gray-300 font-semibold" style={{ fontSize: 'clamp(1.125rem, 1.9vw, 1.75rem)' }}>tCO₂eq</div>
         </div>
 
         {/* 목표 달성도 */}
-        <div className="text-center flex-1" style={{ padding: 'var(--spacing-md) 0' }}>
-          <div className="text-gray-300 font-bold mb-0 tracking-wide uppercase" style={{ fontSize: 'clamp(1.5rem, 3vw, 3rem)' }}>목표 달성도</div>
-          <div className={`font-extrabold leading-tight drop-shadow-lg transition-all ${isGood ? 'text-emerald-400' : 'text-rose-400'}`} style={{ fontSize: 'clamp(2rem, 4vw, 4.5rem)' }}>
+        <div className="text-center flex-1" style={{ padding: 'var(--spacing-sm) 0' }}>
+          <div className="text-gray-300 font-bold mb-0 tracking-wide uppercase" style={{ fontSize: 'clamp(1.5rem, 3vw, 2.75rem)' }}>목표 달성도</div>
+          <div className={`font-extrabold leading-tight drop-shadow-lg transition-all ${isGood ? 'text-emerald-400' : 'text-rose-400'}`} style={{ fontSize: 'clamp(2rem, 4.2vw, 4rem)' }}>
             {isGood ? '↑' : '↓'}{Math.abs(Number(diffPercent))}%
           </div>
-          <div className={`mt-2 font-semibold ${isGood ? 'text-emerald-300' : 'text-rose-300'}`} style={{ fontSize: 'clamp(1rem, 2vw, 1.875rem)' }}>
+          <div className={`font-semibold ${isGood ? 'text-emerald-300' : 'text-rose-300'}`} style={{ fontSize: 'clamp(1.125rem, 1.9vw, 1.75rem)' }}>
             {isGood ? '목표 달성' : '미달성'}
           </div>
         </div>
@@ -180,10 +180,10 @@ export const ChartSummarySection = () => {
 
   return (
     <div className={cardBase}>
-      <h3 className="font-extrabold text-white text-center mb-0" style={{ fontSize: 'clamp(1.5rem, 2.5vw, 2.25rem)' }}>{currentYear}년 배출량 현황</h3>
-      <div className="flex-1 min-h-35">
+      <h3 className="font-extrabold text-white text-center mb-2" style={{ fontSize: 'clamp(1.5rem, 2.5vw, 2.25rem)' }}>{currentYear}년 배출량 현황</h3>
+      <div className="flex-1 w-full">
         <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={summaryBarData} layout="vertical" barCategoryGap={40} barSize={60} margin={{ top: 8, right: 30, left: 30, bottom:0 }}>
+          <BarChart data={summaryBarData} layout="vertical" barCategoryGap={40} barSize={60} margin={{ top: 0, right: 15, left: 30, bottom: 0 }}>
             <CartesianGrid strokeDasharray="5 5" stroke="#ffffff22" strokeWidth={2} />
             <XAxis type="number" tick={{ fill: '#fff', fontSize: getChartAxisFontSize(), fontWeight: 800 }} axisLine={axisStyle} tickLine={axisStyle} tickFormatter={formatNumber} />
             <YAxis type="category" dataKey="name" tick={{ fill: '#fff', fontSize: getChartAxisFontSize(), fontWeight: 800 }} axisLine={axisStyle} tickLine={axisStyle} width={120} />
@@ -231,10 +231,10 @@ export const MonthlyScopeSection = () => {
 
   return (
     <div className={cardBase}>
-      <h3 className="font-extrabold mb-5 text-white text-center" style={{ fontSize: 'clamp(1.5rem, 2.5vw, 2.25rem)' }}>올해 월별 배출량 (Scope)</h3>
-      <div className="flex-1 min-h-75">
+      <h3 className="font-extrabold mb-2 text-white text-center" style={{ fontSize: 'clamp(1.5rem, 2.5vw, 2.25rem)' }}>올해 월별 배출량 (Scope)</h3>
+      <div className="flex-1 w-full">
         <ResponsiveContainer width="100%" height="100%">
-          <ComposedChart data={monthlyChartData} margin={{ top: 15, right: 15, left: 10, bottom: 10 }}>
+          <ComposedChart data={monthlyChartData} margin={{ top: 10, right: 10, left: 10, bottom: 5 }}>
             <CartesianGrid strokeDasharray="5 5" stroke="#ffffff22" strokeWidth={2} />
             <XAxis dataKey="name" tick={{ fill: '#fff', fontSize: getChartAxisFontSize(), fontWeight: 800 }} axisLine={axisStyle} tickLine={axisStyle} />
             <YAxis tick={{ fill: '#fff', fontSize: getChartAxisFontSize(), fontWeight: 800 }} axisLine={axisStyle} tickLine={axisStyle} width={70} tickFormatter={formatNumber} />
@@ -267,7 +267,27 @@ export const MonthlyScopeSection = () => {
 // -----------------------------------------------------------------------
 export const PartnerMapSection = ({ theme }: { theme?: 'dark' | 'light' }) => {
   const [mapData, setMapData] = useState<{ region: string; value: number }[]>([]);
+  const [mapHeight, setMapHeight] = useState(0);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const titleRef = useRef<HTMLHeadingElement>(null);
   const businessYear = getBusinessYear();
+
+  useEffect(() => {
+    const calculateMapHeight = () => {
+      if (containerRef.current && titleRef.current) {
+        const containerHeight = containerRef.current.clientHeight;
+        const titleHeight = titleRef.current.clientHeight;
+        const titleMargin = 8; // 제목의 mb-2 (8px)
+        const bottomGap = 44; // 위젯 내부 아래 여백 추가
+        const calculatedHeight = containerHeight - titleHeight - titleMargin - bottomGap;
+        setMapHeight(Math.max(calculatedHeight, 300)); // 최소 높이 300px
+      }
+    };
+
+    calculateMapHeight();
+    window.addEventListener('resize', calculateMapHeight);
+    return () => window.removeEventListener('resize', calculateMapHeight);
+  }, []);
 
   useEffect(() => {
     const loadCompanyData = async () => {
@@ -312,10 +332,10 @@ export const PartnerMapSection = ({ theme }: { theme?: 'dark' | 'light' }) => {
   }, [businessYear]);
 
   return (
-    <div className={`${cardBase} max-h-full`}>
-      <h3 className="font-extrabold mb-5 text-white text-center" style={{ fontSize: 'clamp(1.5rem, 2.5vw, 2.25rem)' }}>협력사 지역별 배출량 현황</h3>
-      <div className="flex-1 h-full">
-        <KoreaMapChart data={mapData} large defaultFitAll theme={theme} showNoDecimals />
+    <div ref={containerRef} className={cardBase}>
+      <h3 ref={titleRef} className="font-extrabold mb-2 text-white text-center" style={{ fontSize: 'clamp(1.5rem, 2.5vw, 2.25rem)' }}>협력사 지역별 배출량 현황</h3>
+      <div className="flex-1 w-full">
+        <KoreaMapChart data={mapData} large defaultFitAll theme={theme} showNoDecimals mapHeight={mapHeight} />
       </div>
     </div>
   );
@@ -335,10 +355,10 @@ export const YearlyHistorySection = () => {
 
   return (
     <div className={cardBase}>
-      <h4 className="font-extrabold text-white text-center mb-5" style={{ fontSize: 'clamp(1.5rem, 2.5vw, 2.25rem)' }}>연간 탄소 배출량 (최근 5년)</h4>
-      <div className="flex-1 min-h-60">
+      <h4 className="font-extrabold text-white text-center mb-2" style={{ fontSize: 'clamp(1.5rem, 2.5vw, 2.25rem)' }}>연간 탄소 배출량 (최근 5년)</h4>
+      <div className="flex-1 w-full">
         <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={data} margin={{ top: 15, right: 15, left: 10, bottom: 0 }}>
+          <BarChart data={data} margin={{ top: 10, right: 10, left: 10, bottom: 0 }}>
             <CartesianGrid strokeDasharray="5 5" stroke="#ffffff22" strokeWidth={2} />
             <XAxis dataKey="year" tick={{ fill: '#fff', fontSize: getChartAxisFontSize(), fontWeight: 800 }} axisLine={axisStyle} tickLine={axisStyle} />
             <YAxis tick={{ fill: '#fff', fontSize: getChartAxisFontSize(), fontWeight: 800 }} axisLine={axisStyle} tickLine={axisStyle} width={100} tickFormatter={formatNumber} />
@@ -415,8 +435,8 @@ export const PurposePieSection = () => {
 
   return (
     <div className={cardBase}>
-      <h3 className="font-extrabold mb-5 text-white text-center" style={{ fontSize: 'clamp(1.5rem, 2.5vw, 2.25rem)' }}>{currentYear}년 운행 목적별 배출량</h3>
-      <div className="flex-1 relative w-full" style={{ minHeight: 260 }}>
+      <h3 className="font-extrabold mb-2 text-white text-center" style={{ fontSize: 'clamp(1.5rem, 2.5vw, 2.25rem)' }}>{currentYear}년 운행 목적별 배출량</h3>
+      <div className="flex-1 relative w-full">
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
             <Pie
@@ -471,8 +491,8 @@ export const ReductionListSection = () => {
 
   return (
     <div className={cardBase}>
-      <h3 className="font-extrabold mb-10 text-white text-center" style={{ fontSize: 'clamp(1.5rem, 2.5vw, 2.25rem)' }}>최근 저감 활동 {activities.length}건</h3>
-      <ul className="space-y-0 text-white h-full flex flex-col justify-start">
+      <h3 className="font-extrabold mb-2 text-white text-center" style={{ fontSize: 'clamp(1.5rem, 2.5vw, 2.25rem)' }}>최근 저감 활동 {activities.length}건</h3>
+      <ul className="flex-1 space-y-0 text-white flex flex-col justify-start">
         {activities.map((item) => (
           <li key={item.id} className="flex items-start gap-3 py-8 px-4 border-b border-white/10 hover:bg-white/5 transition-colors rounded">
             <span className="mt-1 block w-4 h-4 rounded-full bg-linear-to-br from-emerald-400 to-teal-500 shrink-0 shadow-lg" />

@@ -14,6 +14,7 @@ interface KoreaMapChartProps {
   defaultFitAll?: boolean; // Show full country on load
   theme?: "dark" | "light"; // Dark theme for dashboard, light for other pages
   showNoDecimals?: boolean; // Remove decimals from value display (for dashboard)
+  mapHeight?: number; // Dynamic height from parent container
 }
 
 // TopoJSON 영문명 → 실제 지역 한글명 매핑
@@ -43,6 +44,7 @@ const KoreaMapChart: React.FC<KoreaMapChartProps> = ({
   defaultFitAll = false,
   theme = "light",
   showNoDecimals = false,
+  mapHeight,
 }) => {
 
   const data = useMemo(() => propData || [], [propData]);
@@ -86,7 +88,8 @@ const KoreaMapChart: React.FC<KoreaMapChartProps> = ({
     }
   }, [maxValue, theme]);
 
-  const containerHeight = large ? "h-[550px]" : "h-[565px]";
+  // 동적 높이: mapHeight가 있으면 사용, 없으면 large prop에 따라 기본값 사용
+  const containerHeightPx = mapHeight ? mapHeight : (large ? 700 : 565);
   const projectionScale = defaultFitAll ? 6000 : large ? 8500 : 7000;
   const projectionCenter = defaultFitAll ? [127.5, 36.3] : [127.8, 36.4];
 
@@ -107,11 +110,12 @@ const KoreaMapChart: React.FC<KoreaMapChartProps> = ({
 
   return (
     <div
-      className={`w-full ${containerHeight} relative rounded-xl shadow-md overflow-hidden flex ${
+      className={`w-full relative rounded-xl shadow-md overflow-hidden flex ${
         theme === "dark"
           ? "bg-linear-to-br from-gray-900 to-gray-800"
           : "bg-white"
       }`}
+      style={{ height: `${containerHeightPx}px` }}
     >
       {/* 좌측 지역 리스트 */}
       <div
