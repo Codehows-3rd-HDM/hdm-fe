@@ -121,10 +121,10 @@ export const TextSummarySection = () => {
         <div className="text-center flex-1" style={{ padding: 'var(--spacing-md) 0' }}>
           <div className="text-gray-300 font-bold mb-2 tracking-wide uppercase" style={{ fontSize: 'clamp(1.5rem, 3vw, 3rem)' }}>목표 달성도</div>
           <div className={`font-extrabold leading-tight drop-shadow-lg transition-all ${isGood ? 'text-emerald-400' : 'text-rose-400'}`} style={{ fontSize: 'clamp(2rem, 4vw, 4.5rem)' }}>
-            {isGood ? '✓' : '✕'} {Math.abs(Number(diffPercent))}%
+            {isGood ? '↑' : '↓'} {Math.abs(Number(diffPercent))}%
           </div>
           <div className={`mt-2 font-semibold ${isGood ? 'text-emerald-300' : 'text-rose-300'}`} style={{ fontSize: 'clamp(1rem, 2vw, 1.875rem)' }}>
-            {isGood ? '감축률' : '목표 초과'}
+            {isGood ? '목표 달성' : '미달성'}
           </div>
         </div>
       </div>
@@ -154,10 +154,10 @@ export const ChartSummarySection = () => {
       <h3 className="font-extrabold text-white text-center mb-0" style={{ fontSize: 'clamp(1.5rem, 2.5vw, 2.25rem)' }}>{currentYear}년 배출량 현황</h3>
       <div className="flex-1 min-h-35">
         <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={summaryBarData} barCategoryGap={60} barSize={160} margin={{ top: 8, right: 30, left: 30, bottom:0 }}>
+          <BarChart data={summaryBarData} layout="vertical" barCategoryGap={40} barSize={60} margin={{ top: 8, right: 30, left: 30, bottom:0 }}>
             <CartesianGrid strokeDasharray="5 5" stroke="#ffffff22" strokeWidth={2} />
-            <XAxis dataKey="name" tick={{ fill: '#fff', fontSize: 24, fontWeight: 800 }} axisLine={axisStyle} tickLine={axisStyle} />
-            <YAxis tick={{ fill: '#fff', fontSize: 24, fontWeight: 800 }} axisLine={axisStyle} tickLine={axisStyle} width={90} tickFormatter={formatNumber} />
+            <XAxis type="number" tick={{ fill: '#fff', fontSize: 24, fontWeight: 800 }} axisLine={axisStyle} tickLine={axisStyle} tickFormatter={formatNumber} />
+            <YAxis type="category" dataKey="name" tick={{ fill: '#fff', fontSize: 24, fontWeight: 800 }} axisLine={axisStyle} tickLine={axisStyle} width={120} />
             <Tooltip
               contentStyle={tooltipStyle}
               labelStyle={{ color: '#fff', fontWeight: 800, fontSize: 18 }}
@@ -442,7 +442,7 @@ export const ReductionListSection = () => {
   return (
     <div className={cardBase}>
       <h3 className="text-4xl font-extrabold mb-10 text-white text-center">최근 저감 활동 {activities.length}건</h3>
-      <ul className="space-y-0 text-white h-full flex flex-col justify-center">
+      <ul className="space-y-0 text-white h-full flex flex-col justify-start">
         {activities.map((item) => (
           <li key={item.id} className="flex items-start gap-3 py-8 px-4 border-b border-white/10 hover:bg-white/5 transition-colors rounded">
             <span className="mt-1 block w-4 h-4 rounded-full bg-linear-to-br from-emerald-400 to-teal-500 shrink-0 shadow-lg" />
