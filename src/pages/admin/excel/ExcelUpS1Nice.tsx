@@ -396,65 +396,52 @@ const ExcelUpS1NicePage: React.FC = () => {
     const resultMessages: string[] = [];
 
     try {
-      // 비동기 함수들을 미리 정의하여 Promise.all에 던집니다.
-      const uploadTasks = [];
-
+      // 1. [나이스파크] 먼저 실행
       if (niceParkData.length > 0) {
-        uploadTasks.push(
-          (async () => {
-            // 1. 프론트엔드에서 미리 계산 (전체 - 에러 = 저장될 개수)
-            const total = niceParkData.length;
-            const invalid = niceParkData.filter((row) => row.isInvalid).length;
-            const success = total - invalid;
+        // 1. 프론트엔드에서 미리 계산 (전체 - 에러 = 저장될 개수)
+        const total = niceParkData.length;
+        const invalid = niceParkData.filter((row) => row.isInvalid).length;
+        const success = total - invalid;
 
-            const responseData = await uploadNiceParkData(
-              niceParkData,
-              selectedYear,
-              selectedMonth
-            );
-
-            // (3) 결과 메시지 직접 조립 (백엔드 응답 무시)
-            let msg = `[나이스파크] 총 ${total}건 중 ${success}건 저장 완료`;
-            if (invalid > 0) {
-              msg += `\n(기준정보 미등록 ${invalid}건 제외)`;
-            }
-            // 백엔드에서 온 "임직원 제외" 추가
-            if (
-              typeof responseData === "string" &&
-              responseData.startsWith("EXCLUDED:")
-            ) {
-              const excludedCars = responseData.replace("EXCLUDED:", "");
-              msg += `\n(임직원 차량 추가 제외: ${excludedCars})`;
-            }
-
-            resultMessages.push(msg);
-          })()
+        const responseData = await uploadNiceParkData(
+          niceParkData,
+          selectedYear,
+          selectedMonth
         );
+
+        // (3) 결과 메시지 직접 조립 (백엔드 응답 무시)
+        let msg = `[나이스파크] 총 ${total}건 중 ${success}건 저장 완료`;
+        if (invalid > 0) {
+          msg += `\n(기준정보 미등록 ${invalid}건 제외)`;
+        }
+        // 백엔드에서 온 "임직원 제외" 추가
+        if (
+          typeof responseData === "string" &&
+          responseData.startsWith("EXCLUDED:")
+        ) {
+          const excludedCars = responseData.replace("EXCLUDED:", "");
+          msg += `\n(임직원 차량 추가 제외: ${excludedCars})`;
+        }
+
+        resultMessages.push(msg);
       }
 
+      // 2. [에스원] 나이스파크 끝나면 실행
       if (s1Data.length > 0) {
-        uploadTasks.push(
-          (async () => {
-            // (1) 프론트엔드에서 개수 계산
-            const total = s1Data.length;
-            const invalid = s1Data.filter((row) => row.isInvalid).length;
-            const success = total - invalid;
+        // (1) 프론트엔드에서 개수 계산
+        const total = s1Data.length;
+        const invalid = s1Data.filter((row) => row.isInvalid).length;
+        const success = total - invalid;
 
-            await uploadS1Data(s1Data, selectedYear, selectedMonth);
+        await uploadS1Data(s1Data, selectedYear, selectedMonth);
 
-            // (3) 결과 메시지 직접 조립
-            let msg = `[에스원] 총 ${total}건 중 ${success}건 저장 완료`;
-            if (invalid > 0) {
-              msg += `\n(기준정보 미등록 ${invalid}건 제외)`;
-            }
-            resultMessages.push(msg);
-          })()
-        );
+        // (3) 결과 메시지 직접 조립
+        let msg = `[에스원] 총 ${total}건 중 ${success}건 저장 완료`;
+        if (invalid > 0) {
+          msg += `\n(기준정보 미등록 ${invalid}건 제외)`;
+        }
+        resultMessages.push(msg);
       }
-
-      // 동시 출발
-      await Promise.all(uploadTasks);
-
       console.log("백엔드 응답 데이터:", resultMessages);
 
       setAlertState({
@@ -1000,14 +987,20 @@ const ExcelUpS1NicePage: React.FC = () => {
                     <table className="w-full text-xs border-collapse min-w-[300px]">
                       <thead className="sticky top-0 bg-red-100">
                         <tr>
-                          <th className="p-1.5 sm:p-2 text-left whitespace-nowrap">차량번호</th>
-                          <th className="p-1.5 sm:p-2 text-left whitespace-nowrap">입차일시</th>
+                          <th className="p-1.5 sm:p-2 text-left whitespace-nowrap">
+                            차량번호
+                          </th>
+                          <th className="p-1.5 sm:p-2 text-left whitespace-nowrap">
+                            입차일시
+                          </th>
                         </tr>
                       </thead>
                       <tbody>
                         {invalidNiceRows.map((row, idx) => (
                           <tr key={idx} className="border-t">
-                            <td className="p-1.5 sm:p-2 font-bold whitespace-nowrap">{row.carNumber}</td>
+                            <td className="p-1.5 sm:p-2 font-bold whitespace-nowrap">
+                              {row.carNumber}
+                            </td>
                             <td className="p-1.5 sm:p-2 whitespace-nowrap">
                               {row.accessDate} {row.accessTime}
                             </td>
@@ -1030,15 +1023,23 @@ const ExcelUpS1NicePage: React.FC = () => {
                     <table className="w-full text-xs border-collapse min-w-[250px]">
                       <thead className="sticky top-0 bg-red-100">
                         <tr>
-                          <th className="p-1.5 sm:p-2 text-left whitespace-nowrap">사원번호</th>
-                          <th className="p-1.5 sm:p-2 text-left whitespace-nowrap">출입일자</th>
+                          <th className="p-1.5 sm:p-2 text-left whitespace-nowrap">
+                            사원번호
+                          </th>
+                          <th className="p-1.5 sm:p-2 text-left whitespace-nowrap">
+                            출입일자
+                          </th>
                         </tr>
                       </thead>
                       <tbody>
                         {invalidS1Rows.map((row, idx) => (
                           <tr key={idx} className="border-t">
-                            <td className="p-1.5 sm:p-2 font-bold whitespace-nowrap">{row.memberId}</td>
-                            <td className="p-1.5 sm:p-2 whitespace-nowrap">{row.accessDate}</td>
+                            <td className="p-1.5 sm:p-2 font-bold whitespace-nowrap">
+                              {row.memberId}
+                            </td>
+                            <td className="p-1.5 sm:p-2 whitespace-nowrap">
+                              {row.accessDate}
+                            </td>
                           </tr>
                         ))}
                       </tbody>
