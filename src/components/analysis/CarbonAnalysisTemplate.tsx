@@ -352,8 +352,8 @@ const CarbonAnalysisTemplate: React.FC<CarbonAnalysisTemplateProps> = ({
                 }
               `}
               style={{
-                padding: "var(--spacing-xs) var(--spacing-md)",
-                fontSize: "var(--text-base)",
+                padding: "var(--spacing-md) var(--spacing-xl)",
+                fontSize: "var(--text-xl)",
               }}
             >
               {tab.label}
@@ -368,7 +368,7 @@ const CarbonAnalysisTemplate: React.FC<CarbonAnalysisTemplateProps> = ({
         style={{
           gap: "var(--spacing-md)",
           padding: "var(--spacing-md)",
-          marginBottom: "var(--spacing-md)",
+          marginBottom: "var(--spacing-lg)",
         }}
       >
         {/* 연도 선택 */}
@@ -385,11 +385,10 @@ const CarbonAnalysisTemplate: React.FC<CarbonAnalysisTemplateProps> = ({
               onChange={(e) => {
                 setSelectedYear(e.target.value);
               }}
-              className="bg-white border border-gray-300 rounded-md outline-none appearance-none cursor-pointer focus:ring-2 focus:ring-blue-500"
+              className="bg-white border border-gray-300 rounded-md outline-none cursor-pointer"
               style={{
                 width: "clamp(7rem, 10vw, 8rem)",
-                padding: "var(--spacing-xs)",
-                paddingRight: "var(--spacing-lg)",
+                padding: "var(--spacing-sm) 2rem var(--spacing-sm) var(--spacing-sm)",
                 fontSize: "var(--text-base)",
               }}
             >
@@ -400,10 +399,6 @@ const CarbonAnalysisTemplate: React.FC<CarbonAnalysisTemplateProps> = ({
                 </option>
               ))}
             </select>
-            <ChevronDown
-              size={16}
-              className="absolute text-gray-400 -translate-y-1/2 pointer-events-none right-2 top-1/2"
-            />
           </div>
         </div>
 
@@ -420,11 +415,10 @@ const CarbonAnalysisTemplate: React.FC<CarbonAnalysisTemplateProps> = ({
               <select
                 value={selectedMonth}
                 onChange={(e) => setSelectedMonth(e.target.value)}
-                className="bg-white border border-gray-300 rounded-md outline-none appearance-none cursor-pointer focus:ring-2 focus:ring-blue-500"
+                className="bg-white border border-gray-300 rounded-md outline-none cursor-pointer"
                 style={{
                   width: "clamp(7rem, 10vw, 8rem)",
-                  padding: "var(--spacing-xs)",
-                  paddingRight: "var(--spacing-lg)",
+                  padding: "var(--spacing-sm) 2rem var(--spacing-sm) var(--spacing-sm)",
                   fontSize: "var(--text-base)",
                 }}
               >
@@ -435,10 +429,6 @@ const CarbonAnalysisTemplate: React.FC<CarbonAnalysisTemplateProps> = ({
                   </option>
                 ))}
               </select>
-              <ChevronDown
-                size={16}
-                className="absolute text-gray-400 -translate-y-1/2 pointer-events-none right-2 top-1/2"
-              />
             </div>
           </div>
         )}

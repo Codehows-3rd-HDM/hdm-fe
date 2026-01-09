@@ -9,6 +9,7 @@ import {
   Tooltip,
   ResponsiveContainer,
   Cell,
+  LabelList,
 } from "recharts";
 import { Download, ChevronDown, Search } from "lucide-react";
 import KoreaMapChart from "../../components/analysis/KoreaMapChart";
@@ -368,7 +369,7 @@ const CompanyEmissionPage: React.FC = () => {
             <ResponsiveContainer width="100%" height="100%">
               <BarChart
                 data={top5Data}
-                margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
+                margin={{ top: 20, right: 30, left: 0, bottom: 60 }}
                 layout="vertical"
               >
                 <CartesianGrid
@@ -381,7 +382,7 @@ const CompanyEmissionPage: React.FC = () => {
                   dataKey="name"
                   type="category"
                   tick={{ fontSize: 16 }}
-                  width={80}
+                  width={150}
                 />
                 <Tooltip
                   formatter={(val: string | number | undefined) =>
@@ -400,6 +401,20 @@ const CompanyEmissionPage: React.FC = () => {
                       fill={"#1E3A8A"}
                     />
                   ))}
+                  <LabelList
+                    dataKey="value"
+                    position="insideRight"
+                    offset={10}
+                    fill="#fff"
+                    fontSize="clamp(12px, 2vw, 16px)"
+                    fontWeight="bold"
+                    formatter={(val: number) =>
+                      Number(val).toLocaleString(undefined, {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })
+                    }
+                  />
                 </Bar>
               </BarChart>
             </ResponsiveContainer>
