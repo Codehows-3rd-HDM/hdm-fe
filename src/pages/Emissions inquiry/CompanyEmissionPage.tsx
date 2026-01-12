@@ -362,7 +362,7 @@ const CompanyEmissionPage: React.FC = () => {
 
         {/* 오른쪽: 협력사별 탄소 배출량 Top5 */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 h-150" style={{ padding: 'var(--spacing-md)' }}>
-          <h3 className="text-3xl font-bold text-gray-800" style={{ marginBottom: 'var(--spacing-lg)' }}>
+          <h3 className="text-3xl font-bold text-gray-800" style={{ marginBottom: 'var(--spacing-lg)', paddingLeft: 'var(--spacing-md)', paddingTop: 'var(--spacing-md)' }}>
             협력사별 탄소 배출량 Top5
           </h3>
           <div className="h-125">

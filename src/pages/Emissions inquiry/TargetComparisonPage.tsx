@@ -199,18 +199,6 @@ const TargetComparisonPage: React.FC = () => {
     { name: `${selectedYear}년 총 배출량`, value: chartData.totalActual },
   ];
 
-  //   const handleDownloadExcel = () => {
-  //     const headers = "Month,Actual Emission,Target Emission\n";
-  //     const rows = data.monthlyData.map(d => `${d.month},${d.actual},${d.target}`).join("\n");
-  //     const csvContent = `\ufeffYear: ${selectedYear}, Scope: ${selectedScope}\n${headers}${rows}`;
-
-  //     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-  //     const link = document.createElement('a');
-  //     link.href = URL.createObjectURL(blob);
-  //     link.download = `Target_vs_Emission_${selectedYear}.csv`;
-  //     link.click();
-  //   };
-
   return (
     <div className="min-h-full font-sans bg-gray-50" style={{ padding: 'var(--padding-responsive)' }}>
       {/* 브레드크럼 */}
@@ -277,10 +265,10 @@ const TargetComparisonPage: React.FC = () => {
           <div className="flex-1 flex flex-col md:flex-row" style={{ gap: 'var(--spacing-lg)' }}>
             {/* 목표 배출량 */}
             <div className="flex-1 border-r border-gray-200" style={{ paddingRight: 'var(--spacing-md)' }}>
-              <div className="text-gray-600" style={{ marginBottom: 'var(--spacing-xs)', fontSize: 'var(--text-base)' }}>
+              <div className="text-gray-600" style={{ marginBottom: 'var(--spacing-xs)', fontSize: 'var(--text-lg)' }}>
                 {selectedYear}년 목표 배출량
               </div>
-              <div className="font-extrabold text-gray-800" style={{ marginBottom: 'var(--spacing-xs)', fontSize: 'clamp(1.75rem, 3vw, 2.5rem)' }}>
+              <div className="font-extrabold text-gray-800" style={{ marginBottom: 'var(--spacing-xs)', fontSize: 'clamp(2rem, 3vw, 2.75rem)' }}>
                 {chartData.totalTarget.toLocaleString()}{" "}
                 <span className="text-gray-700" style={{ fontSize: 'clamp(1rem, 1.5vw, 1.5rem)' }}>tCO2eq</span>
               </div>
@@ -288,10 +276,10 @@ const TargetComparisonPage: React.FC = () => {
 
             {/* 총 배출량 (실적) */}
             <div className="flex-1">
-              <div className="text-gray-600" style={{ marginBottom: 'var(--spacing-xs)', fontSize: 'var(--text-base)' }}>
+              <div className="text-gray-600" style={{ marginBottom: 'var(--spacing-xs)', fontSize: 'var(--text-lg)' }}>
                 {selectedYear}년도 총 배출량
               </div>
-              <div className={`font-extrabold ${statusColorClass}`} style={{ marginBottom: 'var(--spacing-xs)', fontSize: 'clamp(1.75rem, 3vw, 2.5rem)' }}>
+              <div className={`font-extrabold ${statusColorClass}`} style={{ marginBottom: 'var(--spacing-xs)', fontSize: 'clamp(2rem, 3vw, 2.75rem)' }}>
                 {chartData.totalActual.toLocaleString()}{" "}
                 <span className="text-gray-700" style={{ fontSize: 'clamp(1rem, 1.5vw, 1.5rem)' }}>tCO2eq</span>
               </div>
@@ -316,7 +304,7 @@ const TargetComparisonPage: React.FC = () => {
       <div className="flex flex-col" style={{ gap: 'var(--spacing-lg)' }}>
         {/* 연간 비교 차트 */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-100" style={{ padding: 'var(--spacing-md)', height: 'clamp(20rem, 40vh, 25rem)' }}>
-          <h3 className="text-center text-gray-800 font-bold" style={{ marginBottom: 'var(--spacing-sm)', fontSize: 'var(--text-xl)' }}>
+          <h3 className="text-center text-gray-800 font-bold text-3xl" style={{ marginBottom: 'var(--spacing-lg)' }}>
             {selectedYear}년 탄소 배출량 비교 (실적 vs 목표)
           </h3>
         <ResponsiveContainer width="100%" height="90%">
@@ -330,7 +318,7 @@ const TargetComparisonPage: React.FC = () => {
               vertical={false}
               className="stroke-gray-200"
             />
-            <XAxis dataKey="name" tick={{ fontSize: 14, fontWeight: "bold" }} />
+            <XAxis dataKey="name" tick={{ fontSize: 16, fontWeight: "bold" }} />
             <YAxis
               label={{
                 value: "tCO2eq",
@@ -384,7 +372,7 @@ const TargetComparisonPage: React.FC = () => {
 
         {/* 월별 추이 차트 */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-100" style={{ padding: 'var(--spacing-md)', height: 'clamp(25rem, 50vh, 31.25rem)' }}>
-          <h3 className="text-center text-gray-800 font-bold" style={{ marginBottom: 'var(--spacing-xs)', fontSize: 'var(--text-xl)' }}>
+          <h3 className="text-center text-gray-800 font-bold text-3xl" style={{ marginBottom: 'var(--spacing-sm)' }}>
             {selectedYear}년 월별 탄소 배출량 추이
           </h3>
           <div className="text-right text-gray-500" style={{ marginBottom: 'var(--spacing-md)', fontSize: 'var(--text-sm)' }}>
@@ -401,7 +389,7 @@ const TargetComparisonPage: React.FC = () => {
               vertical={false}
               className="stroke-gray-200"
             />
-            <XAxis dataKey="month" tick={{ fontSize: 12 }} />
+            <XAxis dataKey="month" tick={{ fontSize: 16 }} tickMargin={8} />
             <YAxis
               label={{
                 value: "tCO2eq",
@@ -411,7 +399,9 @@ const TargetComparisonPage: React.FC = () => {
                 offset: 5,
                 dx: -10,
               }}
-              width={70}
+              width={80}
+              tick={{ fontSize: 16 }}
+              tickMargin={8}
             />
             <Tooltip
               formatter={(val: any) => [`${val?.toLocaleString()} tCO2eq`, ""]}
