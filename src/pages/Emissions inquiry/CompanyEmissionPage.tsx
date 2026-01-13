@@ -408,7 +408,7 @@ const CompanyEmissionPage: React.FC = () => {
                     fill="#fff"
                     fontSize="clamp(12px, 2vw, 16px)"
                     fontWeight="bold"
-                    formatter={(val: number) =>
+                    formatter={(val: number | any) =>
                       Number(val).toLocaleString(undefined, {
                         minimumFractionDigits: 2,
                         maximumFractionDigits: 2,

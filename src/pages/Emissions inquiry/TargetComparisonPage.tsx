@@ -14,7 +14,7 @@ import {
   LabelList,
   Legend,
 } from "recharts";
-import { ChevronDown, TrendingUp, TrendingDown } from "lucide-react";
+import { TrendingUp, TrendingDown } from "lucide-react";
 import Breadcrumb from "../../components/Breadcrumb";
 import { getBreadcrumbItems } from "../../utils/breadcrumbHelper";
 
