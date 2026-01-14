@@ -71,7 +71,7 @@ const labelFormatter = (value: unknown) => {
   return Number.isNaN(parsed) ? String(value ?? '') : formatNumber(parsed);
 };
 
-// 값이 0이면 숨기고, 충분히 높으면 내부 상단, 부족하면 막대 바로 위에 살짝 띄움
+// 값이 0이면 숨기고, 막대의 세로 중앙에 배치
 const renderStackLabel = (props: LabelProps) => {
   const { x = 0, y = 0, width = 0, height = 0, value } = props;
   const numX = Number(x);
@@ -82,15 +82,7 @@ const renderStackLabel = (props: LabelProps) => {
   if (!numeric) return null;
 
   const labelX = numX + numWidth / 2;
-  const safeHeight = Math.max(numHeight, 0);
-  const textHeight = 24;
-  const padding = 6;
-  const hasRoomInside = safeHeight >= textHeight;
-
-  // 내부 여유가 있으면 상단 패딩으로 걸치기, 없으면 글자 높이만큼 고정 간격으로 위로 올려서 통일감 유지
-  const outsideOffset = textHeight + padding; // 글자 높이 + 살짝 띄우기
-  const labelY = hasRoomInside ? numY + padding : numY - outsideOffset;
-  const baseline = 'hanging';
+  const labelY = numY + numHeight / 2;
 
   return (
     <text
@@ -100,7 +92,7 @@ const renderStackLabel = (props: LabelProps) => {
       fontSize={24}
       fontWeight={800}
       textAnchor="middle"
-      dominantBaseline={baseline}
+      dominantBaseline="middle"
     >
       {labelFormatter(numeric)}
     </text>
@@ -180,12 +172,11 @@ export const ChartSummarySection = () => {
 
   return (
     <div className={cardBase}>
-      <h3 className="font-extrabold text-white text-center mb-2" style={{ fontSize: 'clamp(1.5rem, 2.5vw, 2.25rem)' }}>{currentYear}년 배출량 현황</h3>
       <div className="flex-1 w-full">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={summaryBarData} layout="vertical" barCategoryGap={40} barSize={60} margin={{ top: 0, right: 15, left: 30, bottom: 0 }}>
             <CartesianGrid strokeDasharray="5 5" stroke="#ffffff22" strokeWidth={2} />
-            <XAxis type="number" tick={{ fill: '#fff', fontSize: getChartAxisFontSize(), fontWeight: 800 }} axisLine={axisStyle} tickLine={axisStyle} tickFormatter={formatNumber} />
+            <XAxis type="number" hide={true} />
             <YAxis type="category" dataKey="name" tick={{ fill: '#fff', fontSize: getChartAxisFontSize(), fontWeight: 800 }} axisLine={axisStyle} tickLine={axisStyle} width={120} />
             <Tooltip
               contentStyle={tooltipStyle}
