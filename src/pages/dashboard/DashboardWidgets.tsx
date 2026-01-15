@@ -177,7 +177,7 @@ export const ChartSummarySection = () => {
           <BarChart data={summaryBarData} layout="vertical" barCategoryGap={40} barSize={60} margin={{ top: 0, right: 15, left: 30, bottom: 0 }}>
             <CartesianGrid strokeDasharray="5 5" stroke="#ffffff22" strokeWidth={2} />
             <XAxis type="number" hide={true} />
-            <YAxis type="category" dataKey="name" tick={{ fill: '#fff', fontSize: getChartAxisFontSize(), fontWeight: 800 }} axisLine={axisStyle} tickLine={axisStyle} width={120} />
+            <YAxis type="category" dataKey="name" tick={{ fill: '#fff', fontSize: getChartAxisFontSize() + 8, fontWeight: 800 }} axisLine={axisStyle} tickLine={axisStyle} width={120} />
             <Tooltip
               contentStyle={tooltipStyle}
               labelStyle={{ color: '#fff', fontWeight: 800, fontSize: getChartLabelFontSize() }}
