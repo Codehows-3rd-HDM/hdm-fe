@@ -15,6 +15,7 @@ interface KoreaMapChartProps {
   theme?: "dark" | "light"; // Dark theme for dashboard, light for other pages
   showNoDecimals?: boolean; // Remove decimals from value display (for dashboard)
   mapHeight?: number; // Dynamic height from parent container
+  hideTitle?: boolean; // Hide the title in the left panel (for dashboard)
 }
 
 // TopoJSON 영문명 → 실제 지역 한글명 매핑
@@ -45,6 +46,7 @@ const KoreaMapChart: React.FC<KoreaMapChartProps> = ({
   theme = "light",
   showNoDecimals = false,
   mapHeight,
+  hideTitle = false,
 }) => {
 
   const data = useMemo(() => propData || [], [propData]);
@@ -125,13 +127,15 @@ const KoreaMapChart: React.FC<KoreaMapChartProps> = ({
             : "border-r border-gray-200 bg-linear-to-b from-gray-50 to-white text-gray-800"
         }`}
       >
-        <h4
-          className={`text-3xl font-extrabold mb-5 ${
-            theme === "dark" ? "text-white" : "text-gray-800"
-          }`}
-        >
-          협력사 지역별 배출량
-        </h4>
+        {!hideTitle && (
+          <h4
+            className={`text-3xl font-extrabold mb-5 ${
+              theme === "dark" ? "text-white" : "text-gray-800"
+            }`}
+          >
+            협력사 지역별 배출량
+          </h4>
+        )}
         <div className="space-y-4">
           {leftRegions.map(({ regionName, value }) => (
             <div

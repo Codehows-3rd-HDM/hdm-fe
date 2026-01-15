@@ -326,7 +326,7 @@ export const PartnerMapSection = ({ theme }: { theme?: 'dark' | 'light' }) => {
     <div ref={containerRef} className={cardBase}>
       <h3 ref={titleRef} className="font-extrabold mb-2 text-white text-center" style={{ fontSize: 'clamp(1.5rem, 2.5vw, 2.25rem)' }}>협력사 지역별 배출량 현황</h3>
       <div className="flex-1 w-full">
-        <KoreaMapChart data={mapData} large defaultFitAll theme={theme} showNoDecimals mapHeight={mapHeight} />
+        <KoreaMapChart data={mapData} large defaultFitAll theme={theme} showNoDecimals mapHeight={mapHeight} hideTitle />
       </div>
     </div>
   );
