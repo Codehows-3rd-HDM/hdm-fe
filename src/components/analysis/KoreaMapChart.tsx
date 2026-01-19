@@ -14,6 +14,8 @@ interface KoreaMapChartProps {
   defaultFitAll?: boolean; // Show full country on load
   theme?: "dark" | "light"; // Dark theme for dashboard, light for other pages
   showNoDecimals?: boolean; // Remove decimals from value display (for dashboard)
+  mapHeight?: number; // Dynamic height from parent container
+  hideTitle?: boolean; // Hide the title in the left panel (for dashboard)
 }
 
 // TopoJSON 영문명 → 실제 지역 한글명 매핑
@@ -43,6 +45,8 @@ const KoreaMapChart: React.FC<KoreaMapChartProps> = ({
   defaultFitAll = false,
   theme = "light",
   showNoDecimals = false,
+  mapHeight,
+  hideTitle = false,
 }) => {
 
   const data = useMemo(() => propData || [], [propData]);
@@ -74,10 +78,10 @@ const KoreaMapChart: React.FC<KoreaMapChartProps> = ({
   // 색상 스케일: theme에 따라 분기
   const colorScale = useMemo(() => {
     if (theme === "dark") {
-      // Dark theme: low=청록색, high=파란색 (차분한 그라데이션)
+      // Dark theme: use more yellow than target color (#fbbf24)
       return scaleLinear<string>()
         .domain([0, maxValue])
-        .range(["#475569", "#60a5fa"]);
+        .range(["#fef3c7", "#facc15"]); // low: amber-100, high: yellow-400
     } else {
       // Light theme: original light blue->dark blue
       return scaleLinear<string>()
@@ -86,7 +90,8 @@ const KoreaMapChart: React.FC<KoreaMapChartProps> = ({
     }
   }, [maxValue, theme]);
 
-  const containerHeight = large ? "h-[550px]" : "h-[565px]";
+  // 동적 높이: mapHeight가 있으면 사용, 없으면 large prop에 따라 기본값 사용
+  const containerHeightPx = mapHeight ? mapHeight : (large ? 700 : 565);
   const projectionScale = defaultFitAll ? 6000 : large ? 8500 : 7000;
   const projectionCenter = defaultFitAll ? [127.5, 36.3] : [127.8, 36.4];
 
@@ -107,11 +112,12 @@ const KoreaMapChart: React.FC<KoreaMapChartProps> = ({
 
   return (
     <div
-      className={`w-full ${containerHeight} relative rounded-xl shadow-md overflow-hidden flex ${
+      className={`w-full relative rounded-xl shadow-md overflow-hidden flex ${
         theme === "dark"
           ? "bg-linear-to-br from-gray-900 to-gray-800"
           : "bg-white"
       }`}
+      style={{ height: `${containerHeightPx}px` }}
     >
       {/* 좌측 지역 리스트 */}
       <div
@@ -121,13 +127,15 @@ const KoreaMapChart: React.FC<KoreaMapChartProps> = ({
             : "border-r border-gray-200 bg-linear-to-b from-gray-50 to-white text-gray-800"
         }`}
       >
-        <h4
-          className={`text-3xl font-extrabold mb-5 ${
-            theme === "dark" ? "text-white" : "text-gray-800"
-          }`}
-        >
-          협력사 지역별 배출량
-        </h4>
+        {!hideTitle && (
+          <h4
+            className={`text-3xl font-extrabold mb-5 ${
+              theme === "dark" ? "text-white" : "text-gray-800"
+            }`}
+          >
+            협력사 지역별 배출량
+          </h4>
+        )}
         <div className="space-y-4">
           {leftRegions.map(({ regionName, value }) => (
             <div
@@ -197,11 +205,11 @@ const KoreaMapChart: React.FC<KoreaMapChartProps> = ({
                         outline: "none",
                       },
                       hover: {
-                        fill: theme === "dark" ? "#3b82f6" : "#F59E0B",
+                        fill: theme === "dark" ? "#f59e0b" : "#F59E0B",
                         cursor: "default",
                       },
                       pressed: {
-                        fill: theme === "dark" ? "#2563eb" : "#D97706",
+                        fill: theme === "dark" ? "#fbbf24" : "#D97706",
                       },
                     }}
                   />
