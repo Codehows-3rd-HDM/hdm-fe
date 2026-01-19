@@ -276,7 +276,7 @@ const CarbonAnalysisTemplate: React.FC<CarbonAnalysisTemplateProps> = ({
 
     return (
       <ul
-        className="w-full p-0 m-0 text-sm list-none"
+        className="w-full p-0 m-0 text-lg list-none"
         style={{ minHeight: LEGEND_HEIGHT }}
       >
         {sorted.map((entry: any, index: number) => (
@@ -352,8 +352,8 @@ const CarbonAnalysisTemplate: React.FC<CarbonAnalysisTemplateProps> = ({
                 }
               `}
               style={{
-                padding: "var(--spacing-xs) var(--spacing-md)",
-                fontSize: "var(--text-base)",
+                padding: "var(--spacing-md) var(--spacing-xl)",
+                fontSize: "var(--text-xl)",
               }}
             >
               {tab.label}
@@ -368,7 +368,7 @@ const CarbonAnalysisTemplate: React.FC<CarbonAnalysisTemplateProps> = ({
         style={{
           gap: "var(--spacing-md)",
           padding: "var(--spacing-md)",
-          marginBottom: "var(--spacing-md)",
+          marginBottom: "var(--spacing-lg)",
         }}
       >
         {/* 연도 선택 */}
@@ -385,11 +385,10 @@ const CarbonAnalysisTemplate: React.FC<CarbonAnalysisTemplateProps> = ({
               onChange={(e) => {
                 setSelectedYear(e.target.value);
               }}
-              className="bg-white border border-gray-300 rounded-md outline-none appearance-none cursor-pointer focus:ring-2 focus:ring-blue-500"
+              className="bg-white border border-gray-300 rounded-md outline-none cursor-pointer"
               style={{
                 width: "clamp(7rem, 10vw, 8rem)",
-                padding: "var(--spacing-xs)",
-                paddingRight: "var(--spacing-lg)",
+                padding: "var(--spacing-sm) 2rem var(--spacing-sm) var(--spacing-sm)",
                 fontSize: "var(--text-base)",
               }}
             >
@@ -400,10 +399,6 @@ const CarbonAnalysisTemplate: React.FC<CarbonAnalysisTemplateProps> = ({
                 </option>
               ))}
             </select>
-            <ChevronDown
-              size={16}
-              className="absolute text-gray-400 -translate-y-1/2 pointer-events-none right-2 top-1/2"
-            />
           </div>
         </div>
 
@@ -420,11 +415,10 @@ const CarbonAnalysisTemplate: React.FC<CarbonAnalysisTemplateProps> = ({
               <select
                 value={selectedMonth}
                 onChange={(e) => setSelectedMonth(e.target.value)}
-                className="bg-white border border-gray-300 rounded-md outline-none appearance-none cursor-pointer focus:ring-2 focus:ring-blue-500"
+                className="bg-white border border-gray-300 rounded-md outline-none cursor-pointer"
                 style={{
                   width: "clamp(7rem, 10vw, 8rem)",
-                  padding: "var(--spacing-xs)",
-                  paddingRight: "var(--spacing-lg)",
+                  padding: "var(--spacing-sm) 2rem var(--spacing-sm) var(--spacing-sm)",
                   fontSize: "var(--text-base)",
                 }}
               >
@@ -435,10 +429,6 @@ const CarbonAnalysisTemplate: React.FC<CarbonAnalysisTemplateProps> = ({
                   </option>
                 ))}
               </select>
-              <ChevronDown
-                size={16}
-                className="absolute text-gray-400 -translate-y-1/2 pointer-events-none right-2 top-1/2"
-              />
             </div>
           </div>
         )}
@@ -467,77 +457,85 @@ const CarbonAnalysisTemplate: React.FC<CarbonAnalysisTemplateProps> = ({
           <div
             className={`
                 ${selectedMonth === "all" ? "lg:flex-1" : "w-full"} 
-                bg-white rounded-xl shadow-sm border border-gray-100 flex flex-col items-center justify-center relative h-full
+                bg-white rounded-xl shadow-sm border border-gray-100 flex flex-col h-full
             `}
-            style={{ padding: "var(--spacing-lg)" }}
+            style={{ padding: "var(--spacing-md)" }}
           >
-            <h4 className="absolute text-lg font-bold text-gray-800 top-5 left-5">
+            <h3 className="text-3xl font-bold text-gray-800 text-center w-full" style={{ marginBottom: "var(--spacing-lg)", marginTop: "var(--spacing-md)" }}>
               {selectedYear === "all" ? "전체" : selectedYear}년{" "}
               {selectedMonth === "all" ? "연간" : `${selectedMonth}월`} {title}
-            </h4>
+            </h3>
 
-            {/* 중앙 텍스트 */}
-            <div className="absolute top-[40%] left-1/2 -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none">
-              <div className="text-2xl font-bold text-gray-800">100%</div>
-              <div className="text-xs text-gray-500">Total</div>
-            </div>
+            {/* 차트와 Legend를 좌우로 배치 */}
+            <div className="flex flex-1 items-center">
+              {/* 왼쪽: 파이차트 */}
+              <div className="flex-1 relative" style={{ height: "100%" }}>
+                {/* 중앙 텍스트 */}
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none">
+                  <div className="text-2xl font-bold text-gray-800">100%</div>
+                  <div className="text-xs text-gray-500">Total</div>
+                </div>
 
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={pieChartData}
-                  dataKey="totalEmission"
-                  nameKey="name"
-                  cx="50%"
-                  cy="52.5%"
-                  innerRadius={80}
-                  outerRadius={120}
-                  paddingAngle={2}
-                >
-                  {pieChartData.map((_, index) => (
-                    <Cell
-                      key={`cell-${index}`}
-                      fill={COLORS[index % COLORS.length]}
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={pieChartData}
+                      dataKey="totalEmission"
+                      nameKey="name"
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={80}
+                      outerRadius={120}
+                      paddingAngle={2}
+                    >
+                      {pieChartData.map((_, index) => (
+                        <Cell
+                          key={`cell-${index}`}
+                          fill={COLORS[index % COLORS.length]}
+                        />
+                      ))}
+                    </Pie>
+                    <RechartsTooltip
+                      formatter={(value: any) => [
+                        `${parseFloat(
+                          roundEmission(value).toFixed(2)
+                        ).toLocaleString(undefined, {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        })} tCO2eq`,
+                        "",
+                      ]}
+                      contentStyle={{
+                        borderRadius: "8px",
+                        border: "none",
+                        boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+                      }}
                     />
-                  ))}
-                </Pie>
-                <Legend
-                  layout="horizontal"
-                  verticalAlign="bottom"
-                  align="center"
-                  wrapperStyle={{ height: LEGEND_HEIGHT, paddingTop: 8 }}
-                  content={<CustomLegend />}
-                />
-                <RechartsTooltip
-                  formatter={(value: any) => [
-                    `${parseFloat(
-                      roundEmission(value).toFixed(2)
-                    ).toLocaleString(undefined, {
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2,
-                    })} tCO2eq`,
-                    "",
-                  ]}
-                  contentStyle={{
-                    borderRadius: "8px",
-                    border: "none",
-                    boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-                  }}
-                />
-              </PieChart>
-            </ResponsiveContainer>
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+
+              {/* 오른쪽: Legend */}
+              <div className="flex items-center justify-center" style={{ width: "280px", paddingLeft: "var(--spacing-md)" }}>
+                <CustomLegend payload={pieChartData.map((item, index) => ({
+                  value: item.name,
+                  color: COLORS[index % COLORS.length],
+                  payload: item
+                }))} />
+              </div>
+            </div>
           </div>
 
           {/* 라인 차트 */}
           {selectedMonth === "all" && (
-            <div className="flex-1 bg-white rounded-xl p-6 shadow-sm border border-gray-100 flex flex-col h-full">
-              <h4 className="mb-6 text-lg font-bold text-gray-800">
+            <div className="flex-1 bg-white rounded-xl shadow-sm border border-gray-100 flex flex-col h-full" style={{ padding: "var(--spacing-md)" }}>
+              <h3 className="text-3xl font-bold text-gray-800" style={{ marginBottom: "var(--spacing-lg)", marginTop: "var(--spacing-md)", paddingLeft: "var(--spacing-md)" }}>
                 {selectedYear}년 월별 추이
-              </h4>
+              </h3>
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart
                   data={lineChartData}
-                  margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                  margin={{ top: 20, right: 40, left: 60, bottom: 24 }}
                 >
                   <CartesianGrid
                     strokeDasharray="3 3"
@@ -546,12 +544,15 @@ const CarbonAnalysisTemplate: React.FC<CarbonAnalysisTemplateProps> = ({
                   />
                   <XAxis
                     dataKey="name"
-                    tick={{ fontSize: 12, fill: "#666" }}
+                    padding={{ left: 10, right: 10 }}
+                    tick={{ fontSize: 16, fill: "#666" }}
+                    tickMargin={8}
                     axisLine={false}
                     tickLine={false}
                   />
                   <YAxis
-                    tick={{ fontSize: 12, fill: "#666" }}
+                    tick={{ fontSize: 16, fill: "#666" }}
+                    tickMargin={8}
                     axisLine={false}
                     tickLine={false}
                   />

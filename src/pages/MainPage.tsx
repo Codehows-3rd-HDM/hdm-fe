@@ -1,11 +1,10 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { BarChart2, Clock, Monitor, Settings, UserPlus } from 'lucide-react';
-import { getBusinessYear } from '../utils/dateUtils';
 import { useAuth } from '../hooks/useAuth';
 
 const MainPage: React.FC = () => {
-  const currentYear = getBusinessYear();
+  const currentYear = new Date().getFullYear();
   const navigate = useNavigate();
   const { role } = useAuth();
 

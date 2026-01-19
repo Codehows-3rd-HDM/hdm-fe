@@ -91,10 +91,33 @@ const ExcelUpDownBaseInfoPage: React.FC = () => {
       }
     } catch (e: any) {
       console.error("검증 실패:", e);
-      alert("서버 검증 중 오류가 발생했습니다.");
-      setExcelData(parsedData);
-      // 에러나도 헤더는 설정
-      if (parsedData.length > 0) setHeaders(Object.keys(parsedData[0]));
+
+      // [수정 1] 백엔드에서 보낸 에러 메시지("데이터 불일치..." 등) 꺼내기
+      // GlobalExceptionHandler가 보낸 JSON 구조: { success: false, message: "...", ... }
+      const serverErrorMsg = e.response?.data?.message;
+
+      // 메시지가 없으면 기본 메시지 출력
+      const finalMessage =
+        serverErrorMsg || "서버 검증 중 알 수 없는 오류가 발생했습니다.";
+
+      // [수정 2] 모달창(Alert)으로 에러 띄우기 (줄바꿈 지원)
+      setAlertState({
+        title: "데이터 검증 오류 (업로드 불가)",
+        message: finalMessage,
+        isSuccess: false,
+      });
+      setAlertModalOpen(true);
+
+      // [수정 3] 검증 실패했으므로 미리보기 데이터를 싹 비워야 함
+      // (기존 코드 setExcelData(parsedData)는 에러난 데이터를 보여주므로 위험함)
+      setExcelData([]);
+      setHeaders([]);
+
+      // 4. 파일 입력 초기화 (같은 파일 다시 선택 가능하게)
+      if (fileInputRef.current) fileInputRef.current.value = "";
+
+      // 5. 로딩 끄기
+      setIsLoading(false);
     }
   };
 

@@ -2,7 +2,7 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
   Line, ComposedChart, PieChart, Pie, Cell, LabelList, type LabelProps
 } from 'recharts';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { getBusinessYear } from '../../utils/dateUtils';
 import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
@@ -27,6 +27,35 @@ const cardBase = 'bg-white/10 backdrop-blur-sm rounded-xl shadow-md p-6 h-full f
 const axisStyle = { stroke: '#fff', strokeWidth: 3 };
 const tooltipStyle = { backgroundColor: 'rgba(15,23,42,0.9)', borderRadius: 8, border: '2px solid #334155' };
 
+// 반응형 폰트 크기 계산
+const getResponsiveFontSize = () => {
+  const width = typeof window !== 'undefined' ? window.innerWidth : 1200;
+  if (width < 768) return 12;
+  if (width < 1024) return 16;
+  return 20;
+};
+
+const getChartAxisFontSize = () => {
+  const width = typeof window !== 'undefined' ? window.innerWidth : 1200;
+  if (width < 768) return 12;
+  if (width < 1024) return 18;
+  return 24;
+};
+
+const getChartLabelFontSize = () => {
+  const width = typeof window !== 'undefined' ? window.innerWidth : 1200;
+  if (width < 768) return 12;
+  if (width < 1024) return 14;
+  return 16;
+};
+
+const getChartTooltipFontSize = () => {
+  const width = typeof window !== 'undefined' ? window.innerWidth : 1200;
+  if (width < 768) return 14;
+  if (width < 1024) return 16;
+  return 20;
+};
+
 // 숫자 포맷터 (천 단위 구분, 소수점 제거)
 const formatNumber = (v: number) => {
   try {
@@ -42,7 +71,7 @@ const labelFormatter = (value: unknown) => {
   return Number.isNaN(parsed) ? String(value ?? '') : formatNumber(parsed);
 };
 
-// 값이 0이면 숨기고, 충분히 높으면 내부 상단, 부족하면 막대 바로 위에 살짝 띄움
+// 값이 0이면 숨기고, 막대의 세로 중앙에 배치
 const renderStackLabel = (props: LabelProps) => {
   const { x = 0, y = 0, width = 0, height = 0, value } = props;
   const numX = Number(x);
@@ -53,15 +82,7 @@ const renderStackLabel = (props: LabelProps) => {
   if (!numeric) return null;
 
   const labelX = numX + numWidth / 2;
-  const safeHeight = Math.max(numHeight, 0);
-  const textHeight = 24;
-  const padding = 6;
-  const hasRoomInside = safeHeight >= textHeight;
-
-  // 내부 여유가 있으면 상단 패딩으로 걸치기, 없으면 글자 높이만큼 고정 간격으로 위로 올려서 통일감 유지
-  const outsideOffset = textHeight + padding; // 글자 높이 + 살짝 띄우기
-  const labelY = hasRoomInside ? numY + padding : numY - outsideOffset;
-  const baseline = 'hanging';
+  const labelY = numY + numHeight / 2;
 
   return (
     <text
@@ -71,7 +92,7 @@ const renderStackLabel = (props: LabelProps) => {
       fontSize={24}
       fontWeight={800}
       textAnchor="middle"
-      dominantBaseline={baseline}
+      dominantBaseline="middle"
     >
       {labelFormatter(numeric)}
     </text>
@@ -98,33 +119,33 @@ export const TextSummarySection = () => {
 
   return (
     <div className={`${cardBase}`}>
-      <div className="flex justify-around items-center gap-6 h-full" style={{ padding: '0 var(--spacing-md)' }}>
+      <div className="flex justify-around items-center gap-4 h-full" style={{ padding: '0 var(--spacing-md)' }}>
         {/* 목표 배출량 */}
-        <div className="text-center flex-1 border-r-2 border-emerald-400/30" style={{ padding: 'var(--spacing-md) 0' }}>
-          <div className="text-emerald-300 font-bold mb-2 tracking-wide uppercase" style={{ fontSize: 'clamp(1.5rem, 3vw, 3rem)' }}>목표 배출량</div>
-          <div className="font-extrabold text-white leading-tight drop-shadow-lg" style={{ fontSize: 'clamp(2rem, 4vw, 4.5rem)' }}>
+        <div className="text-center flex-1 border-r-2 border-emerald-400/30" style={{ padding: 'var(--spacing-sm) 0' }}>
+          <div className="text-emerald-300 font-bold mb-0 tracking-wide uppercase" style={{ fontSize: 'clamp(1.5rem, 3vw, 2.75rem)' }}>목표 배출량</div>
+          <div className="font-extrabold text-white leading-tight drop-shadow-lg" style={{ fontSize: 'clamp(2rem, 4.2vw, 4rem)' }}>
             {target.toLocaleString()}
           </div>
-          <div className="text-emerald-200 mt-2 font-semibold" style={{ fontSize: 'clamp(1rem, 2vw, 1.875rem)' }}>tCO₂eq</div>
+          <div className="text-emerald-200 font-semibold" style={{ fontSize: 'clamp(1.125rem, 1.9vw, 1.75rem)' }}>tCO₂eq</div>
         </div>
 
         {/* 올해 총 배출량 */}
-        <div className="text-center flex-1 border-r-2 border-emerald-400/30" style={{ padding: 'var(--spacing-md) 0' }}>
-          <div className="text-gray-300 font-bold mb-2 tracking-wide uppercase" style={{ fontSize: 'clamp(1.5rem, 3vw, 3rem)' }}>올해 총 배출량</div>
-          <div className={`font-extrabold leading-tight drop-shadow-lg transition-all ${isGood ? 'text-emerald-300' : 'text-rose-400'}`} style={{ fontSize: 'clamp(2rem, 4vw, 4.5rem)' }}>
+        <div className="text-center flex-1 border-r-2 border-emerald-400/30" style={{ padding: 'var(--spacing-sm) 0' }}>
+          <div className="text-gray-300 font-bold mb-0 tracking-wide uppercase" style={{ fontSize: 'clamp(1.5rem, 3vw, 2.75rem)' }}>올해 총 배출량</div>
+          <div className={`font-extrabold leading-tight drop-shadow-lg transition-all ${isGood ? 'text-emerald-300' : 'text-rose-400'}`} style={{ fontSize: 'clamp(2rem, 4.2vw, 4rem)' }}>
             {Math.floor(total).toLocaleString()}
           </div>
-          <div className="text-gray-300 mt-2 font-semibold" style={{ fontSize: 'clamp(1rem, 2vw, 1.875rem)' }}>tCO₂eq</div>
+          <div className="text-gray-300 font-semibold" style={{ fontSize: 'clamp(1.125rem, 1.9vw, 1.75rem)' }}>tCO₂eq</div>
         </div>
 
         {/* 목표 달성도 */}
-        <div className="text-center flex-1" style={{ padding: 'var(--spacing-md) 0' }}>
-          <div className="text-gray-300 font-bold mb-2 tracking-wide uppercase" style={{ fontSize: 'clamp(1.5rem, 3vw, 3rem)' }}>목표 달성도</div>
-          <div className={`font-extrabold leading-tight drop-shadow-lg transition-all ${isGood ? 'text-emerald-400' : 'text-rose-400'}`} style={{ fontSize: 'clamp(2rem, 4vw, 4.5rem)' }}>
-            {isGood ? '✓' : '✕'} {Math.abs(Number(diffPercent))}%
+        <div className="text-center flex-1" style={{ padding: 'var(--spacing-sm) 0' }}>
+          <div className="text-gray-300 font-bold mb-0 tracking-wide uppercase" style={{ fontSize: 'clamp(1.5rem, 3vw, 2.75rem)' }}>목표 달성도</div>
+          <div className={`font-extrabold leading-tight drop-shadow-lg transition-all ${isGood ? 'text-emerald-400' : 'text-rose-400'}`} style={{ fontSize: 'clamp(2rem, 4.2vw, 4rem)' }}>
+            {isGood ? '↑' : '↓'}{Math.abs(Number(diffPercent))}%
           </div>
-          <div className={`mt-2 font-semibold ${isGood ? 'text-emerald-300' : 'text-rose-300'}`} style={{ fontSize: 'clamp(1rem, 2vw, 1.875rem)' }}>
-            {isGood ? '감축률' : '목표 초과'}
+          <div className={`font-semibold ${isGood ? 'text-emerald-300' : 'text-rose-300'}`} style={{ fontSize: 'clamp(1.125rem, 1.9vw, 1.75rem)' }}>
+            {isGood ? '목표 달성' : '미달성'}
           </div>
         </div>
       </div>
@@ -151,23 +172,22 @@ export const ChartSummarySection = () => {
 
   return (
     <div className={cardBase}>
-      <h3 className="font-extrabold text-white text-center mb-0" style={{ fontSize: 'clamp(1.5rem, 2.5vw, 2.25rem)' }}>{currentYear}년 배출량 현황</h3>
-      <div className="flex-1 min-h-35">
+      <div className="flex-1 w-full">
         <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={summaryBarData} barCategoryGap={60} barSize={160} margin={{ top: 8, right: 30, left: 30, bottom:0 }}>
+          <BarChart data={summaryBarData} layout="vertical" barCategoryGap={40} barSize={60} margin={{ top: 0, right: 15, left: 30, bottom: 0 }}>
             <CartesianGrid strokeDasharray="5 5" stroke="#ffffff22" strokeWidth={2} />
-            <XAxis dataKey="name" tick={{ fill: '#fff', fontSize: 24, fontWeight: 800 }} axisLine={axisStyle} tickLine={axisStyle} />
-            <YAxis tick={{ fill: '#fff', fontSize: 24, fontWeight: 800 }} axisLine={axisStyle} tickLine={axisStyle} width={90} tickFormatter={formatNumber} />
+            <XAxis type="number" hide={true} />
+            <YAxis type="category" dataKey="name" tick={{ fill: '#fff', fontSize: getChartAxisFontSize() + 8, fontWeight: 1000 }} axisLine={axisStyle} tickLine={axisStyle} width={70} />
             <Tooltip
               contentStyle={tooltipStyle}
-              labelStyle={{ color: '#fff', fontWeight: 800, fontSize: 18 }}
-              itemStyle={{ color: '#fff', fontWeight: 800, fontSize: 16 }}
+              labelStyle={{ color: '#fff', fontWeight: 800, fontSize: getChartLabelFontSize() }}
+              itemStyle={{ color: '#fff', fontWeight: 800, fontSize: getChartLabelFontSize() - 2 }}
               formatter={(value: number | undefined, name: string | undefined) => [
                 value !== undefined ? formatNumber(value) : '0',
                 name ?? ''
               ]}
             />
-            <Legend layout="vertical" verticalAlign="middle" align="right" wrapperStyle={{ fontSize: 24, color: '#fff', fontWeight: 800, paddingLeft: '40px' }} formatter={(v) => <span style={{ color: '#fff', fontWeight: 800 }}>{v}</span>} />
+            <Legend layout="vertical" verticalAlign="middle" align="right" wrapperStyle={{ fontSize: getChartAxisFontSize(), color: '#fff', fontWeight: 800, paddingLeft: '40px' }} formatter={(v) => <span style={{ color: '#fff', fontWeight: 800 }}>{v}</span>} />
             <Bar dataKey="scope1" name="Scope 1" stackId="a" fill="#60a5fa" radius={[2, 2, 0, 0]}>
               <LabelList dataKey="scope1" content={renderStackLabel} />
             </Bar>
@@ -202,23 +222,23 @@ export const MonthlyScopeSection = () => {
 
   return (
     <div className={cardBase}>
-      <h3 className="text-4xl font-extrabold mb-5 text-white text-center">올해 월별 배출량 (Scope)</h3>
-      <div className="flex-1 min-h-75">
+      <h3 className="font-extrabold mb-2 text-white text-center" style={{ fontSize: 'clamp(1.5rem, 2.5vw, 2.25rem)' }}>올해 월별 배출량 (Scope)</h3>
+      <div className="flex-1 w-full">
         <ResponsiveContainer width="100%" height="100%">
-          <ComposedChart data={monthlyChartData} margin={{ top: 15, right: 15, left: 10, bottom: 10 }}>
+          <ComposedChart data={monthlyChartData} margin={{ top: 10, right: 10, left: 10, bottom: 5 }}>
             <CartesianGrid strokeDasharray="5 5" stroke="#ffffff22" strokeWidth={2} />
-            <XAxis dataKey="name" tick={{ fill: '#fff', fontSize: 24, fontWeight: 800 }} axisLine={axisStyle} tickLine={axisStyle} />
-            <YAxis tick={{ fill: '#fff', fontSize: 24, fontWeight: 800 }} axisLine={axisStyle} tickLine={axisStyle} width={70} tickFormatter={formatNumber} />
+            <XAxis dataKey="name" tick={{ fill: '#fff', fontSize: getChartAxisFontSize(), fontWeight: 800 }} axisLine={axisStyle} tickLine={axisStyle} />
+            <YAxis tick={{ fill: '#fff', fontSize: getChartAxisFontSize(), fontWeight: 800 }} axisLine={axisStyle} tickLine={axisStyle} width={70} tickFormatter={formatNumber} />
             <Tooltip
               contentStyle={tooltipStyle}
-              labelStyle={{ color: '#fff', fontWeight: 800, fontSize: 20 }}
-              itemStyle={{ color: '#fff', fontWeight: 800, fontSize: 19 }}
+              labelStyle={{ color: '#fff', fontWeight: 800, fontSize: getChartTooltipFontSize() }}
+              itemStyle={{ color: '#fff', fontWeight: 800, fontSize: getChartTooltipFontSize() - 1 }}
               formatter={(value: number | undefined, name: string | undefined) => [
                 value !== undefined ? formatNumber(value) : '0',
                 name ?? ''
               ]}
             />
-            <Legend wrapperStyle={{ fontSize: 24, color: '#fff', fontWeight: 800, paddingTop: 15 }} formatter={(v) => <span style={{ color: '#fff', fontWeight: 800 }}>{v}</span>} />
+            <Legend wrapperStyle={{ fontSize: getChartAxisFontSize(), color: '#fff', fontWeight: 800, paddingTop: 15 }} formatter={(v) => <span style={{ color: '#fff', fontWeight: 800 }}>{v}</span>} />
             <Bar dataKey="scope1" name="Scope 1" stackId="a" fill="#60a5fa" barSize={120} radius={[2, 2, 0, 0]}>
               <LabelList dataKey="scope1" content={renderStackLabel} />
             </Bar>
@@ -238,7 +258,27 @@ export const MonthlyScopeSection = () => {
 // -----------------------------------------------------------------------
 export const PartnerMapSection = ({ theme }: { theme?: 'dark' | 'light' }) => {
   const [mapData, setMapData] = useState<{ region: string; value: number }[]>([]);
+  const [mapHeight, setMapHeight] = useState(0);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const titleRef = useRef<HTMLHeadingElement>(null);
   const businessYear = getBusinessYear();
+
+  useEffect(() => {
+    const calculateMapHeight = () => {
+      if (containerRef.current && titleRef.current) {
+        const containerHeight = containerRef.current.clientHeight;
+        const titleHeight = titleRef.current.clientHeight;
+        const titleMargin = 8; // 제목의 mb-2 (8px)
+        const bottomGap = 44; // 위젯 내부 아래 여백 추가
+        const calculatedHeight = containerHeight - titleHeight - titleMargin - bottomGap;
+        setMapHeight(Math.max(calculatedHeight, 300)); // 최소 높이 300px
+      }
+    };
+
+    calculateMapHeight();
+    window.addEventListener('resize', calculateMapHeight);
+    return () => window.removeEventListener('resize', calculateMapHeight);
+  }, []);
 
   useEffect(() => {
     const loadCompanyData = async () => {
@@ -283,10 +323,10 @@ export const PartnerMapSection = ({ theme }: { theme?: 'dark' | 'light' }) => {
   }, [businessYear]);
 
   return (
-    <div className={`${cardBase} max-h-full`}>
-      <h3 className="text-4xl font-extrabold mb-5 text-white text-center">협력사 지역별 배출량 현황</h3>
-      <div className="flex-1 h-full">
-        <KoreaMapChart data={mapData} large defaultFitAll theme={theme} showNoDecimals />
+    <div ref={containerRef} className={cardBase}>
+      <h3 ref={titleRef} className="font-extrabold mb-2 text-white text-center" style={{ fontSize: 'clamp(1.5rem, 2.5vw, 2.25rem)' }}>협력사 지역별 배출량 현황</h3>
+      <div className="flex-1 w-full">
+        <KoreaMapChart data={mapData} large defaultFitAll theme={theme} showNoDecimals mapHeight={mapHeight} hideTitle />
       </div>
     </div>
   );
@@ -306,23 +346,23 @@ export const YearlyHistorySection = () => {
 
   return (
     <div className={cardBase}>
-      <h4 className="text-4xl font-extrabold text-white text-center mb-5">연간 탄소 배출량 (최근 5년)</h4>
-      <div className="flex-1 min-h-60">
+      <h4 className="font-extrabold text-white text-center mb-2" style={{ fontSize: 'clamp(1.5rem, 2.5vw, 2.25rem)' }}>연간 탄소 배출량 (최근 5년)</h4>
+      <div className="flex-1 w-full">
         <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={data} margin={{ top: 15, right: 15, left: 10, bottom: 0 }}>
+          <BarChart data={data} margin={{ top: 10, right: 10, left: 10, bottom: 0 }}>
             <CartesianGrid strokeDasharray="5 5" stroke="#ffffff22" strokeWidth={2} />
-            <XAxis dataKey="year" tick={{ fill: '#fff', fontSize: 24, fontWeight: 800 }} axisLine={axisStyle} tickLine={axisStyle} />
-            <YAxis tick={{ fill: '#fff', fontSize: 24, fontWeight: 800 }} axisLine={axisStyle} tickLine={axisStyle} width={100} tickFormatter={formatNumber} />
+            <XAxis dataKey="year" tick={{ fill: '#fff', fontSize: getChartAxisFontSize(), fontWeight: 800 }} axisLine={axisStyle} tickLine={axisStyle} />
+            <YAxis tick={{ fill: '#fff', fontSize: getChartAxisFontSize(), fontWeight: 800 }} axisLine={axisStyle} tickLine={axisStyle} width={100} tickFormatter={formatNumber} />
             <Tooltip
               contentStyle={tooltipStyle}
-              labelStyle={{ color: '#fff', fontWeight: 800, fontSize: 20 }}
-              itemStyle={{ color: '#fff', fontWeight: 800, fontSize: 19 }}
+              labelStyle={{ color: '#fff', fontWeight: 800, fontSize: getChartTooltipFontSize() }}
+              itemStyle={{ color: '#fff', fontWeight: 800, fontSize: getChartTooltipFontSize() - 1 }}
               formatter={(value: number | undefined, name: string | undefined) => [
                 value !== undefined ? formatNumber(value) : '0',
                 name ?? ''
               ]}
             />
-            <Legend wrapperStyle={{ fontSize: 24, color: '#fff', fontWeight: 800, paddingTop: 12 }} formatter={(v) => <span style={{ color: '#fff', fontWeight: 800 }}>{v}</span>} />
+            <Legend wrapperStyle={{ fontSize: getChartAxisFontSize(), color: '#fff', fontWeight: 800, paddingTop: 12 }} formatter={(v) => <span style={{ color: '#fff', fontWeight: 800 }}>{v}</span>} />
             <Bar dataKey="scope1" name="Scope 1" stackId="a" fill="#60a5fa" barSize={120} radius={[2, 2, 0, 0]}>
               <LabelList dataKey="scope1" content={renderStackLabel} />
             </Bar>
@@ -346,10 +386,11 @@ export const PurposePieSection = () => {
 
   const renderCenterLabel = ({ cx, cy }: { cx?: number; cy?: number }) => {
     if (cx === undefined || cy === undefined) return null;
+    const baseSize = getResponsiveFontSize();
     return (
       <text x={cx} y={cy} textAnchor="middle" dominantBaseline="middle" pointerEvents="none">
-        <tspan fill="#fff" fontSize={48} fontWeight={800}>100%</tspan>
-        <tspan x={cx} dy={28} fill="#e5e7eb" fontSize={16} fontWeight={700}>Total</tspan>
+        <tspan fill="#fff" fontSize={baseSize + 32} fontWeight={800}>100%</tspan>
+        <tspan x={cx} dy={baseSize + 10} fill="#e5e7eb" fontSize={baseSize - 4} fontWeight={700}>Total</tspan>
       </text>
     );
   };
@@ -373,7 +414,7 @@ export const PurposePieSection = () => {
   const renderLegend = () => (
     <div className="flex flex-col gap-3 pr-4">
       {legendItems.map((item, index) => (
-        <div key={`${item.label}-${index}`} className="flex items-center gap-3 text-white text-2xl font-extrabold">
+        <div key={`${item.label}-${index}`} className="flex items-center gap-3 text-white font-extrabold" style={{ fontSize: `clamp(0.875rem, 1.5vw, 1.5rem)` }}>
           <span className="w-4 h-4 rounded-sm border border-white/30" style={{ backgroundColor: item.color }} />
           <span>
             {item.label} : <b>{item.value}%</b>
@@ -385,8 +426,8 @@ export const PurposePieSection = () => {
 
   return (
     <div className={cardBase}>
-      <h3 className="text-4xl font-extrabold mb-5 text-white text-center">{currentYear}년 운행 목적별 배출량</h3>
-      <div className="flex-1 relative w-full h-full">
+      <h3 className="font-extrabold mb-2 text-white text-center" style={{ fontSize: 'clamp(1.5rem, 2.5vw, 2.25rem)' }}>{currentYear}년 운행 목적별 배출량</h3>
+      <div className="flex-1 relative w-full">
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
             <Pie
@@ -404,13 +445,13 @@ export const PurposePieSection = () => {
                 <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} stroke="#0f172a" strokeWidth={3} />
               ))}
             </Pie>
-            <Tooltip contentStyle={tooltipStyle} labelStyle={{ color: '#fff', fontWeight: 800, fontSize: 20 }} itemStyle={{ color: '#fff', fontWeight: 800, fontSize: 19 }} />
+            <Tooltip contentStyle={tooltipStyle} labelStyle={{ color: '#fff', fontWeight: 800, fontSize: getChartTooltipFontSize() }} itemStyle={{ color: '#fff', fontWeight: 800, fontSize: getChartTooltipFontSize() - 1 }} />
             <Legend
               layout="vertical"
               verticalAlign="middle"
               align="right"
               content={renderLegend}
-              wrapperStyle={{ fontSize: 24, color: '#fff', fontWeight: 800, paddingRight: '20px' }}
+              wrapperStyle={{ fontSize: getChartAxisFontSize(), color: '#fff', fontWeight: 800, paddingRight: '20px' }}
             />
           </PieChart>
         </ResponsiveContainer>
@@ -441,13 +482,13 @@ export const ReductionListSection = () => {
 
   return (
     <div className={cardBase}>
-      <h3 className="text-4xl font-extrabold mb-10 text-white text-center">최근 저감 활동 {activities.length}건</h3>
-      <ul className="space-y-0 text-white h-full flex flex-col justify-center">
+      <h3 className="font-extrabold mb-2 text-white text-center" style={{ fontSize: 'clamp(1.5rem, 2.5vw, 2.25rem)' }}>최근 저감 활동 {activities.length}건</h3>
+      <ul className="flex-1 space-y-0 text-white flex flex-col justify-start">
         {activities.map((item) => (
           <li key={item.id} className="flex items-start gap-3 py-8 px-4 border-b border-white/10 hover:bg-white/5 transition-colors rounded">
             <span className="mt-1 block w-4 h-4 rounded-full bg-linear-to-br from-emerald-400 to-teal-500 shrink-0 shadow-lg" />
             <div className="flex-1">
-              <div className="font-bold text-white leading-snug text-2xl">
+              <div className="font-bold text-white leading-snug" style={{ fontSize: `clamp(0.875rem, 1.5vw, 1.5rem)` }}>
                 {item.date && <span className="text-gray-400 mr-3">{formatDate(item.date)}</span>}
                 {item.description}
               </div>

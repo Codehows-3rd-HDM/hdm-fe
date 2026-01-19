@@ -9,6 +9,7 @@ import {
   Tooltip,
   ResponsiveContainer,
   Cell,
+  LabelList,
 } from "recharts";
 import { Download, ChevronDown, Search } from "lucide-react";
 import KoreaMapChart from "../../components/analysis/KoreaMapChart";
@@ -361,14 +362,14 @@ const CompanyEmissionPage: React.FC = () => {
 
         {/* 오른쪽: 협력사별 탄소 배출량 Top5 */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 h-150" style={{ padding: 'var(--spacing-md)' }}>
-          <h3 className="text-3xl font-bold text-gray-800" style={{ marginBottom: 'var(--spacing-lg)' }}>
+          <h3 className="text-3xl font-bold text-gray-800" style={{ marginBottom: 'var(--spacing-lg)', paddingLeft: 'var(--spacing-md)', paddingTop: 'var(--spacing-md)' }}>
             협력사별 탄소 배출량 Top5
           </h3>
           <div className="h-125">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart
                 data={top5Data}
-                margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
+                margin={{ top: 20, right: 30, left: 0, bottom: 60 }}
                 layout="vertical"
               >
                 <CartesianGrid
@@ -381,7 +382,7 @@ const CompanyEmissionPage: React.FC = () => {
                   dataKey="name"
                   type="category"
                   tick={{ fontSize: 16 }}
-                  width={80}
+                  width={150}
                 />
                 <Tooltip
                   formatter={(val: string | number | undefined) =>
@@ -400,6 +401,20 @@ const CompanyEmissionPage: React.FC = () => {
                       fill={"#1E3A8A"}
                     />
                   ))}
+                  <LabelList
+                    dataKey="value"
+                    position="insideRight"
+                    offset={10}
+                    fill="#fff"
+                    fontSize="clamp(12px, 2vw, 16px)"
+                    fontWeight="bold"
+                    formatter={(val: number | any) =>
+                      Number(val).toLocaleString(undefined, {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })
+                    }
+                  />
                 </Bar>
               </BarChart>
             </ResponsiveContainer>
