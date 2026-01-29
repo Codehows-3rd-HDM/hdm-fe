@@ -520,7 +520,7 @@ const ActivityFormModal: React.FC<ActivityFormModalProps> = ({
                   {preview.map((url, idx) => (
                     <img
                       key={`preview-${idx}`}
-                      src={`/api${url}`}
+                      src={url.startsWith("data:") ? url : `/api${url}`}
                       alt={`preview-${idx}`}
                       onClick={() => handleImageClick(idx)}
                       className="w-full object-contain rounded border bg-white cursor-pointer transition-transform hover:scale-[1.02]"
@@ -628,7 +628,7 @@ const ActivityFormModal: React.FC<ActivityFormModalProps> = ({
             onClick={(e) => e.stopPropagation()}
           >
             <img
-              src={`/api${viewerImages[currentImageIndex]}`}
+              src={viewerImages[currentImageIndex].startsWith("data:") ? viewerImages[currentImageIndex] : `/api${viewerImages[currentImageIndex]}`}
               alt={`activity-${currentImageIndex}`}
               style={{
                 transform: `scale(${zoomLevel})`,
